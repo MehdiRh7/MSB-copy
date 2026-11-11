@@ -22,6 +22,14 @@ npm run build
 npm start            # PORT=3000 به‌صورت پیش‌فرض
 ```
 
+## انتشار روی Vercel
+
+پروژه آماده انتشار روی Vercel است (`vercel.json` + توابع `api/ai/*` برای پراکسی هوش مصنوعی):
+
+1. در vercel.com ← **Add New → Project** ← مخزن GitHub را Import کنید (تنظیمات Build خودکار از `vercel.json` خوانده می‌شود).
+2. در **Settings → Environment Variables** کلیدها را اضافه کنید (`GEMINI_API_KEY` و/یا `OPENROUTER_API_KEY`، ...).
+3. هر برنچ یک آدرس Preview جداگانه می‌گیرد؛ برای انتشار یک برنچ خاص، در **Deployments** آن را Deploy کنید یا برنچ را به Production Branch تبدیل کنید.
+
 ## هوش مصنوعی
 
 سامانه می‌تواند از یکی از سه ارائه‌دهنده **Gemini**، **DeepSeek** یا **Grok** استفاده کند. انتخاب ارائه‌دهنده، مدل و قابلیت‌های فعال **فقط توسط مدیر سیستم** در «تنظیمات ← هوش مصنوعی» انجام می‌شود.
