@@ -22,6 +22,7 @@ export const OPERATIONAL_STORAGE_KEYS = [
   'archiveItems',           // محتوای بایگانی و ارتباط آن با پرونده‌های قبلی
   'notificationLetterSequence', // شمارنده شماره نامه ابلاغیه
   'smsMockLog',             // لاگ پیامک‌های شبیه‌سازی‌شده
+  'aiUsageLog',             // لاگ مصرف هوش مصنوعی
 ] as const;
 
 /**
@@ -40,6 +41,8 @@ export const PRESERVED_STORAGE_KEYS = [
   'ldapSettings',     // تنظیمات دایرکتوری سازمانی
   'signatureWorkflowSettings', // امضاکننده هر مرحله گردش امضا (تنظیم سامانه)
   'signatureDelegations',      // جانشین امضای کاربران (تنظیم شخصی کاربر)
+  'workflowTemplates',         // قالب‌های گردش کار پویا (تنظیم سامانه)
+  'aiSettings',                // تنظیمات ارائه‌دهنده هوش مصنوعی (فقط مدیر سیستم)
 ] as const;
 
 /**

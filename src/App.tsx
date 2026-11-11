@@ -26,6 +26,7 @@ import { UsersView } from './modules/users/UsersView';
 import { UserGuideView } from './modules/guide/UserGuideView';
 import { SettingsView } from './modules/settings/SettingsView';
 import { WorkflowMapLauncher } from './modules/workflowMap/WorkflowMapLauncher';
+import { CommandPalette } from './components/ai/CommandPalette';
 
 import { Sparkles, Bot, ShieldAlert } from 'lucide-react';
 
@@ -137,6 +138,9 @@ const AppContent: React.FC = () => {
           تنها نقطه اتصال این Feature به سامانه همین یک خط است؛ حذف این خط
           و پوشه src/modules/workflowMap آن را کاملاً برمی‌دارد. */}
       <WorkflowMapLauncher />
+
+      {/* فرمان سریع هوشمند (Ctrl+K) */}
+      <CommandPalette />
 
       {/* Global Modals & Notifications */}
       <ToastContainer />

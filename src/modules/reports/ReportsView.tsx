@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AiReportNarrative } from './AiReportNarrative';
 import {
   BarChart3,
   FileDown,
@@ -157,6 +158,7 @@ export const ReportsView: React.FC = () => {
 
   return (
     <div className="space-y-6 pb-12">
+      <AiReportNarrative kpis={kpis} departments={departments} period={`${fromDate} تا ${toDate}`} actorId={currentUser.id} />
       {/* Header */}
       <div className="bg-white rounded-2xl p-4 sm:p-5 shadow-xs border border-slate-100 flex flex-wrap items-center justify-between gap-3">
         <div>

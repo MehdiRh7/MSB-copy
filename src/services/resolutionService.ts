@@ -108,7 +108,34 @@ class MockResolutionService implements IResolutionService {
    * بعدی تنظیمات، مصوبات در حال گردش را جابه‌جا نمی‌کند.
    * پیش‌فرض تنظیمات همان مسئول دفتر → مدیرعامل → مدیر سیستم است.
    */
-  private createSignatureWorkflow() {
+  private createSignatureWorkflow(meetingId?: string): NonNullable<Resolution['signatureWorkflow']> {
+    // گردش کار پویا: اگر جلسه زنجیره امضای اختصاصی دارد، همان (با ترتیب و
+    // حالت ترتیبی/موازی تعیین‌شده) روی مصوبه Snapshot می‌شود.
+    const meeting = meetingId ? loadLocalCollection('meetings', mockMeetings).find((item) => item.id === meetingId) : undefined;
+    const chain = meeting?.workflow?.resolutionSignature;
+    if (chain && chain.signerUserIds.length > 0) {
+      const users = loadLocalCollection('users', mockUsers);
+      const parallel = chain.mode === 'PARALLEL';
+      const stamp = Date.now();
+      return {
+        status: 'PENDING_SIGNATURES',
+        currentStepIndex: 0,
+        mode: chain.mode,
+        source: 'MEETING',
+        steps: chain.signerUserIds.map((userId, index) => {
+          const user = users.find((item) => item.id === userId);
+          return {
+            id: `sig-${stamp}-${index + 1}`,
+            signerUserId: userId,
+            signerName: user?.fullName || 'امضاکننده',
+            signerTitle: user?.title || '',
+            signerRole: 'CUSTOM' as const,
+            order: index + 1,
+            status: parallel || index === 0 ? 'PENDING' as const : 'WAITING_TURN' as const,
+          };
+        }),
+      };
+    }
     const stage1 = resolveStageSigner('RESOLUTION_STEP_1');
     const stage2 = resolveStageSigner('RESOLUTION_STEP_2');
     const stage3 = resolveStageSigner('RESOLUTION_STEP_3');
@@ -116,6 +143,8 @@ class MockResolutionService implements IResolutionService {
     return {
       status: 'PENDING_OFFICE_SIGNATURE' as const,
       currentStepIndex: 0,
+      mode: 'SEQUENTIAL',
+      source: 'DEFAULT',
       steps: [
         { id: `sig-${Date.now()}-1`, signerUserId: stage1.userId, signerName: stage1.name, signerTitle: stage1.title, signerRole: 'OFFICE_MANAGER' as const, order: 1 as const, status: 'PENDING' as const },
         { id: `sig-${Date.now()}-2`, signerUserId: stage2.userId, signerName: stage2.name, signerTitle: stage2.title, signerRole: 'CEO' as const, order: 2 as const, status: 'WAITING_TURN' as const },
@@ -290,7 +319,7 @@ class MockResolutionService implements IResolutionService {
       assignedDateJalali: isApproved ? (dto.assignedDateJalali || getCurrentJalaliDate()) : undefined,
       deadlineJalali: isApproved ? dto.deadlineJalali : undefined,
       priority: dto.priority || 'MEDIUM',
-      executionStatus: isApproved ? 'PENDING_OFFICE_SIGNATURE' : 'NOT_STARTED',
+      executionStatus: 'NOT_STARTED',
       referrals: dto.referrals || [],
       verificationConfig: dto.verificationConfig || {
         requiresVerification: false,
@@ -298,12 +327,13 @@ class MockResolutionService implements IResolutionService {
         currentStepIndex: 0,
         steps: [],
       },
-      signatureWorkflow: isApproved ? this.createSignatureWorkflow() : undefined,
+      signatureWorkflow: isApproved ? this.createSignatureWorkflow(dto.meetingId) : undefined,
       attachments: dto.attachments || [],
       createdAt: new Date().toISOString(),
       followUp: dto.followUp,
     };
 
+    if (newResolution.signatureWorkflow) newResolution.executionStatus = newResolution.signatureWorkflow.status as Resolution['executionStatus'];
     this.resolutions.unshift(newResolution);
 
     // Add activity logs to the existing resolution timeline.
@@ -330,7 +360,9 @@ class MockResolutionService implements IResolutionService {
         actorRole: 'دبیرخانه جلسات',
         timestampJalali: getCurrentJalaliDate(),
         timeString: getCurrentTimeString(),
-        details: 'صورت‌جلسه رسمی برای امضای ترتیبی مسئول دفتر، مدیرعامل و ادمین ایجاد گردید.',
+        details: newResolution.signatureWorkflow?.source === 'MEETING'
+          ? `صورت‌جلسه رسمی برای ${newResolution.signatureWorkflow.mode === 'PARALLEL' ? 'امضای همزمان' : 'امضای ترتیبی'} ${newResolution.signatureWorkflow.steps.map((step) => step.signerName).join('، ')} (گردش اختصاصی جلسه) ایجاد گردید.`
+          : 'صورت‌جلسه رسمی برای امضای ترتیبی مسئول دفتر، مدیرعامل و ادمین ایجاد گردید.',
         badgeColor: 'blue',
       });
     }
@@ -345,11 +377,15 @@ class MockResolutionService implements IResolutionService {
     if (!resolution?.signatureWorkflow) throw new Error('صورت‌جلسه امضای مصوبه یافت نشد');
     if (resolution.signatureWorkflow.status === 'COMPLETED') throw new Error('تمام امضاهای این مصوبه قبلاً تکمیل شده است');
 
-    const currentIndex = resolution.signatureWorkflow.currentStepIndex;
-    const currentStep = resolution.signatureWorkflow.steps[currentIndex];
-    if (!currentStep || currentStep.status !== 'PENDING') throw new Error('مرحله فعالی برای امضا وجود ندارد');
-    // امضاکننده تعیین‌شده، یا جانشین فعال او. بررسی در همین Service Layer
-    // انجام می‌شود، نه فقط در UI.
+    const workflow = resolution.signatureWorkflow;
+    const isParallel = workflow.mode === 'PARALLEL';
+    // ترتیبی: فقط مرحله جاری. موازی: هر مرحله باز که این کاربر (یا جانشین
+    // فعالش) امضاکننده آن است. بررسی در همین Service Layer انجام می‌شود.
+    const currentStep = isParallel
+      ? workflow.steps.find((step) => step.status === 'PENDING' && resolveSigningAuthority(step.signerUserId, signerUserId).allowed)
+      : workflow.steps[workflow.currentStepIndex];
+    const currentIndex = currentStep ? workflow.steps.indexOf(currentStep) : -1;
+    if (!currentStep || currentStep.status !== 'PENDING') throw new Error(isParallel ? 'امضای در انتظاری برای این کاربر وجود ندارد' : 'مرحله فعالی برای امضا وجود ندارد');
     const authority = resolveSigningAuthority(currentStep.signerUserId, signerUserId);
     if (!authority.allowed) throw new Error('نوبت امضای این کاربر نیست');
 
@@ -396,8 +432,19 @@ class MockResolutionService implements IResolutionService {
       badgeColor: 'teal',
     });
 
-    const nextStep = resolution.signatureWorkflow.steps[currentIndex + 1];
-    if (nextStep) {
+    const remaining = workflow.steps.filter((step) => step.status !== 'SIGNED');
+    const nextStep = isParallel ? remaining[0] : workflow.steps[currentIndex + 1];
+    if (nextStep && workflow.source === 'MEETING') {
+      // زنجیره اختصاصی جلسه: وضعیت عمومی «در انتظار امضا».
+      if (!isParallel) {
+        nextStep.status = 'PENDING';
+        workflow.currentStepIndex = currentIndex + 1;
+      } else {
+        workflow.currentStepIndex = workflow.steps.indexOf(nextStep);
+      }
+      workflow.status = 'PENDING_SIGNATURES';
+      resolution.executionStatus = 'PENDING_SIGNATURES';
+    } else if (nextStep) {
       nextStep.status = 'PENDING';
       resolution.signatureWorkflow.currentStepIndex = currentIndex + 1;
       // ترتیب Sequential دست‌نخورده است؛ برچسب وضعیت از شماره مرحله مشتق
@@ -421,7 +468,7 @@ class MockResolutionService implements IResolutionService {
         actorRole: currentStep.signerTitle,
         timestampJalali: currentStep.signedDateJalali,
         timeString: currentStep.signedTimeString,
-        details: 'هر سه امضای اصلی مصوبه تکمیل شد؛ مصوبه در کارتابل ابلاغ مسئول دفتر منتظر است.',
+        details: `${workflow.source === 'MEETING' ? 'همه امضاهای تعیین‌شده' : 'هر سه امضای اصلی'} مصوبه تکمیل شد؛ مصوبه در کارتابل ابلاغ مسئول دفتر منتظر است.`,
         badgeColor: 'blue',
       });
       this.notifyOfficeManagersReadyForNotification(resolution);
@@ -634,7 +681,13 @@ class MockResolutionService implements IResolutionService {
     // دبیر جلسه فقط به‌عنوان «امضاکننده موردانتظار» ثبت می‌شود؛ رکورد امضا
     // (secretarySignature) عمداً اینجا ساخته نمی‌شود، چون هنوز امضایی انجام
     // نشده است و PDF نباید امضای جعلی/زودهنگام نشان دهد.
-    const noticeSigner = resolveStageSigner('RESOLUTION_NOTICE', { meeting });
+    // گردش کار پویا: امضاکننده ابلاغیه ممکن است برای همین جلسه مشخص شده باشد.
+    const overrideSigner = meeting?.workflow?.noticeSignerUserId
+      ? loadLocalCollection('users', mockUsers).find((user) => user.id === meeting.workflow!.noticeSignerUserId)
+      : undefined;
+    const noticeSigner = overrideSigner
+      ? { userId: overrideSigner.id, name: overrideSigner.fullName, title: overrideSigner.title }
+      : resolveStageSigner('RESOLUTION_NOTICE', { meeting });
     const recipientName = resolution.mainResponsibleName || resolution.proposerName;
     const recipientDepartment = resolution.responsibleDepartmentName || resolution.proposerDepartment;
     // Reserved only now — every validation above has already passed, so an

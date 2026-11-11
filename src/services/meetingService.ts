@@ -1,10 +1,23 @@
-import { Meeting, MeetingStatus, ApiResponse, ApiFilterParams, PagedResult, User, MeetingGuest, AgendaItem, MeetingOutcomeLetter, Proposal, DocumentSignature } from '../types';
+import { Meeting, MeetingStatus, ApiResponse, ApiFilterParams, PagedResult, User, MeetingGuest, AgendaItem, MeetingOutcomeLetter, Proposal, DocumentSignature, MeetingWorkflowConfig } from '../types';
 import { mockDepartments, mockMeetings, mockResolutions, mockUsers } from '../mock/data';
 import { apiClient } from './api/apiClient';
 import { resolveSignatureImageUrl } from '../utils/signatureImage';
 import { loadLocalCollection, loadLocalValue, saveLocalCollection, saveLocalValue } from './localStore';
 import { smsService } from './smsService';
 import { scopeMeetingAgendaToUser } from './userScope';
+import {
+  buildDecision,
+  evaluateApproval,
+  getAgendaApprovalPolicy,
+  getTemplateForMeetingType,
+  meetingWorkflowParticipantIds,
+  namesOf,
+  resolveApprovalAuthority,
+  workflowFromTemplate,
+} from './workflowPolicyService';
+
+/** آیا کاربر جزو تأییدکنندگان دستورکار این جلسه است؟ */
+const isAgendaApprover = (meeting: Meeting, actor: User) => getAgendaApprovalPolicy(meeting).approverUserIds.includes(actor.id);
 
 export interface CreateMeetingDto {
   title: string;
@@ -22,6 +35,8 @@ export interface CreateMeetingDto {
   members: Meeting['members'];
   agendaItems: Meeting['agendaItems'];
   attachments: Meeting['attachments'];
+  /** گردش کار اختصاصی این جلسه؛ نبود آن = قالب متناسب با نوع جلسه. */
+  workflow?: MeetingWorkflowConfig;
 }
 
 export interface AppendToMeetingDto {
@@ -126,6 +141,7 @@ class MockMeetingService implements IMeetingService {
         meeting.createdByUserId === params.participantUserId ||
         meeting.agendaApproverUserIds?.includes(params.participantUserId) ||
         meeting.members.some((member) => member.userId === params.participantUserId) ||
+        meetingWorkflowParticipantIds(meeting).includes(params.participantUserId!) ||
         (canCoordinateActiveMeetings && activeCoordinationStatuses.includes(meeting.status))
       );
     }
@@ -192,9 +208,12 @@ class MockMeetingService implements IMeetingService {
     // مدیرعامل «تأییدکنندهٔ دستورکار» است، نه لزوماً عضو حاضر در جلسه.
     // بنابراین جدا از فهرست اعضا ذخیره می‌شود تا هم جلسه را ببیند و هم
     // اطلاعات حضور و دعوت‌شدگان دستکاری نشود.
-    const agendaApproverUserIds = loadLocalCollection('users', mockUsers)
-      .filter((user) => user.role === 'CEO' && user.isActive)
-      .map((user) => user.id);
+    // گردش کار پویا: یا همان که سازنده جلسه انتخاب کرده، یا قالب متناسب با
+    // نوع جلسه. قالب پیش‌فرض دقیقاً رفتار تاریخی است (مدیرعامل، یک نفر کافی).
+    const workflow: MeetingWorkflowConfig = dto.workflow && dto.workflow.agendaApproval.approverUserIds.length > 0
+      ? dto.workflow
+      : workflowFromTemplate(getTemplateForMeetingType(dto.type));
+    const agendaApproverUserIds = workflow.agendaApproval.approverUserIds;
     const newMeeting: Meeting = {
       id: `meet-${Date.now()}`,
       meetingNumber: `جلسه-۱۴۰۳-${nextNumber}`,
@@ -211,6 +230,8 @@ class MockMeetingService implements IMeetingService {
       createdByUserId: dto.createdByUserId,
       createdByName: dto.createdByName,
       agendaApproverUserIds,
+      workflow,
+      agendaDecisions: [],
       departmentId: dto.departmentId,
       departmentName: mockDepartments.find((department) => department.id === dto.departmentId)?.name || 'واحد برگزارکننده',
       status: 'WAITING_FOR_CEO_APPROVAL',
@@ -228,7 +249,7 @@ class MockMeetingService implements IMeetingService {
 
     newMeeting.history = [{
       id: `meeting-history-${Date.now()}`,
-      action: 'تهیه دستورکار و ارسال برای تأیید مدیرعامل',
+      action: `تهیه دستورکار و ارسال برای تأیید ${namesOf(agendaApproverUserIds).join('، ') || 'مدیرعامل'}`,
       actorUserId: dto.createdByUserId,
       actorName: dto.createdByName,
       actorRole: 'سازندهٔ جلسه',
@@ -270,10 +291,10 @@ class MockMeetingService implements IMeetingService {
   }
 
   public async reorderAgenda(id: string, agendaItemIds: string[], actor: User): Promise<ApiResponse<Meeting>> {
-    if (!['CEO', 'SECRETARY', 'ADMIN'].includes(actor.role)) throw new Error('دسترسی تغییر ترتیب دستورکار را ندارید');
     const meetings = this.getMeetingsData();
     const meeting = meetings.find((item) => item.id === id);
     if (!meeting) throw new Error('جلسه یافت نشد');
+    if (!['CEO', 'SECRETARY', 'ADMIN'].includes(actor.role) && !isAgendaApprover(meeting, actor)) throw new Error('دسترسی تغییر ترتیب دستورکار را ندارید');
     if (!['WAITING_FOR_CEO_APPROVAL', 'AGENDA_RETURNED'].includes(meeting.status)) throw new Error('پس از تأیید دستورکار امکان تغییر ترتیب وجود ندارد');
     if (agendaItemIds.length !== meeting.agendaItems.length || new Set(agendaItemIds).size !== agendaItemIds.length) throw new Error('فهرست ترتیب دستورکار نامعتبر است');
     const byId = new Map(meeting.agendaItems.map((item) => [item.id, item]));
@@ -284,12 +305,12 @@ class MockMeetingService implements IMeetingService {
   }
 
   public async removeAgendaItem(id: string, agendaItemId: string, reason: string, actor: User): Promise<ApiResponse<Meeting>> {
-    if (!['CEO', 'ADMIN'].includes(actor.role)) throw new Error('فقط مدیرعامل می‌تواند موضوع را از دستورکار خارج کند');
     if (!reason.trim()) throw new Error('دلیل حذف موضوع از این جلسه الزامی است');
     const meetings = this.getMeetingsData();
     const meeting = meetings.find((item) => item.id === id);
     const agenda = meeting?.agendaItems.find((item) => item.id === agendaItemId);
     if (!meeting || !agenda) throw new Error('جلسه یا بند دستورکار یافت نشد');
+    if (!['CEO', 'ADMIN'].includes(actor.role) && !isAgendaApprover(meeting, actor)) throw new Error('فقط تأییدکننده دستورکار می‌تواند موضوع را از دستورکار خارج کند');
     if (meeting.status !== 'WAITING_FOR_CEO_APPROVAL') throw new Error('حذف موضوع فقط هنگام بررسی مدیرعامل امکان‌پذیر است');
     agenda.isRemoved = true;
     agenda.removalReason = reason.trim();
@@ -300,17 +321,42 @@ class MockMeetingService implements IMeetingService {
   }
 
   public async reviewAgenda(id: string, decision: 'APPROVE' | 'RETURN', notes: string, actor: User): Promise<ApiResponse<Meeting>> {
-    if (!['CEO', 'ADMIN'].includes(actor.role)) throw new Error('فقط مدیرعامل مجاز به بررسی دستورکار است');
     const meetings = this.getMeetingsData();
     const meeting = meetings.find((item) => item.id === id);
     if (!meeting) throw new Error('جلسه یافت نشد');
-    if (meeting.status !== 'WAITING_FOR_CEO_APPROVAL') throw new Error('دستورکار در انتظار تأیید مدیرعامل نیست');
+    if (meeting.status !== 'WAITING_FOR_CEO_APPROVAL') throw new Error('دستورکار در انتظار تأیید نیست');
     if (decision === 'RETURN' && !notes.trim()) throw new Error('دلیل بازگشت دستورکار الزامی است');
     if (decision === 'APPROVE' && !meeting.agendaItems.some((item) => !item.isRemoved)) throw new Error('دستورکار بدون موضوع فعال قابل تأیید نیست');
+
+    // سیاست پویای همین جلسه. جلسات قدیمی بدون تنظیم: هر مدیرعامل فعال
+    // (همان قاعده تاریخی) و یک تأیید کافی است.
+    const policy = getAgendaApprovalPolicy(meeting);
+    const decisions = meeting.agendaDecisions || [];
+    const authority = resolveApprovalAuthority(policy, decisions, actor, meeting.workflow ? undefined : (user) => user.role === 'CEO');
+    if (!authority.allowed) throw new Error(authority.reason || 'شما مجاز به بررسی این دستورکار نیستید');
+
     const previousStatus = meeting.status;
-    meeting.status = decision === 'APPROVE' ? 'READY_FOR_INVITATION' : 'AGENDA_RETURNED';
+    const record = buildDecision(actor, decision === 'APPROVE' ? 'APPROVED' : 'RETURNED', notes, authority.approverUserId);
+    meeting.agendaDecisions = [...decisions, record];
     meeting.agendaApprovalNotes = notes.trim();
-    this.addHistory(meeting, actor, decision === 'APPROVE' ? 'تأیید نهایی دستورکار' : 'بازگشت دستورکار به دبیرخانه', previousStatus, notes.trim());
+
+    if (decision === 'RETURN') {
+      meeting.status = 'AGENDA_RETURNED';
+      this.addHistory(meeting, actor, 'بازگشت دستورکار به دبیرخانه', previousStatus, notes.trim());
+    } else {
+      const evaluation = evaluateApproval(policy, meeting.agendaDecisions);
+      // در حالت «یک نفر کافی» با جلسات قدیمی، تأیید مدیرعامل خارج از فهرست هم
+      // مرحله را کامل می‌کند (رفتار تاریخی).
+      const legacySatisfied = !meeting.workflow && authority.approverUserId === actor.id;
+      if (evaluation.isSatisfied || legacySatisfied) {
+        meeting.status = 'READY_FOR_INVITATION';
+        this.addHistory(meeting, actor, 'تأیید نهایی دستورکار', previousStatus, notes.trim());
+      } else {
+        const progress = `${evaluation.approvedCount} از ${evaluation.requiredCount}`;
+        const next = evaluation.currentTurnId ? namesOf([evaluation.currentTurnId])[0] : namesOf(evaluation.pendingIds).join('، ');
+        this.addHistory(meeting, actor, `تأیید دستورکار (${progress})${authority.onBehalfOf ? ' به نمایندگی' : ''}`, previousStatus, `${notes.trim() ? `${notes.trim()} | ` : ''}در انتظار: ${next}`);
+      }
+    }
     this.saveMeetingsData(meetings);
     return apiClient.simulateNetwork(meeting, 140);
   }
@@ -321,7 +367,9 @@ class MockMeetingService implements IMeetingService {
     const meeting = meetings.find((item) => item.id === id);
     if (!meeting || meeting.status !== 'AGENDA_RETURNED') throw new Error('فقط دستورکار برگشتی قابل ارسال مجدد است');
     meeting.status = 'WAITING_FOR_CEO_APPROVAL';
-    this.addHistory(meeting, actor, 'اصلاح و ارسال مجدد دستورکار برای مدیرعامل', 'AGENDA_RETURNED');
+    // دور جدید بررسی: تصمیم‌های دور قبل در تاریخچه می‌مانند اما دوباره لازم‌اند.
+    meeting.agendaDecisions = [];
+    this.addHistory(meeting, actor, 'اصلاح و ارسال مجدد دستورکار برای تأییدکنندگان', 'AGENDA_RETURNED');
     this.saveMeetingsData(meetings);
     return apiClient.simulateNetwork(meeting, 120);
   }
@@ -401,10 +449,10 @@ class MockMeetingService implements IMeetingService {
     // agenda (see reviewAgenda callers), so the CEO must also be an
     // authorized actor here — not just SECRETARY/ADMIN as when this was a
     // separate manual secretariat action.
-    if (!['SECRETARY', 'ADMIN', 'CEO'].includes(actor.role)) throw new Error('فقط دبیرخانه یا مدیرعامل مجاز به ارسال دعوتنامه است');
     const meetings = this.getMeetingsData();
     const meeting = meetings.find((item) => item.id === id);
     if (!meeting) throw new Error('جلسه یافت نشد');
+    if (!['SECRETARY', 'ADMIN', 'CEO'].includes(actor.role) && !isAgendaApprover(meeting, actor)) throw new Error('فقط دبیرخانه یا تأییدکننده دستورکار مجاز به ارسال دعوتنامه است');
     if (meeting.status !== 'READY_FOR_INVITATION') throw new Error('دعوتنامه فقط پس از تأیید نهایی دستورکار قابل ارسال است');
     const sentAt = new Date().toISOString();
     meeting.invitations = [

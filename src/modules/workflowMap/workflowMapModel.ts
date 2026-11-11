@@ -58,6 +58,7 @@ export const STEP_OWNERS = {
   SYSTEM_ADMIN: 'مدیر سیستم',
   ASSIGNEE: 'مجری مصوبه',
   VERIFIER: 'صحه‌گذار',
+  CUSTOM_SIGNER: 'امضاکننده تعیین‌شده جلسه',
 } as const;
 
 export type StepOwnerKey = keyof typeof STEP_OWNERS;
@@ -349,7 +350,7 @@ const buildResolutionSteps = (
       id: `resolution-signature-${step.id}`,
       title: `امضای ${step.signerTitle}`,
       phase: 'RESOLUTION',
-      ownerKey: step.signerRole === 'CEO' ? 'CEO' : step.signerRole === 'ADMIN' ? 'SYSTEM_ADMIN' : 'OFFICE_MANAGER',
+      ownerKey: step.signerRole === 'CEO' ? 'CEO' : step.signerRole === 'ADMIN' ? 'SYSTEM_ADMIN' : step.signerRole === 'CUSTOM' ? 'CUSTOM_SIGNER' : 'OFFICE_MANAGER',
       ownerName: step.signerName,
       state: step.status === 'SIGNED' ? 'DONE' : step.status === 'PENDING' ? 'CURRENT' : 'WAITING',
       dateJalali: step.signedDateJalali,

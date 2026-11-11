@@ -24,6 +24,8 @@ import { ResolutionDetailModal } from '../resolutions/ResolutionDetailModal';
 import { ListViewActions, ListViewMode } from '../../components/common/ListViewActions';
 import { exportListToPdf } from '../../utils/pdfExport';
 import { buildAttachmentFromFile } from '../../utils/attachmentFile';
+import { AiButton, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
+import { draftProgressReport } from '../../services/ai/aiService';
 
 export const MyTasksView: React.FC = () => {
   const { currentUser, showToast, refreshTrigger } = useApp();
@@ -47,6 +49,8 @@ export const MyTasksView: React.FC = () => {
   const [progressAction, setProgressAction] = useState('');
   const [progressObstacles, setProgressObstacles] = useState('');
   const [progressFiles, setProgressFiles] = useState<File[]>([]);
+  const aiWriter = useAiFeature('writer');
+  const [draftingReport, setDraftingReport] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -311,7 +315,7 @@ export const MyTasksView: React.FC = () => {
             <FormHero icon={TrendingUp} title="ثبت گزارش پیشرفت" subtitle="هر گزارش با نام شما، تاریخ و ساعت در سابقه مصوبه ذخیره می‌شود." meta={[activeProgressTask.resolutionNumber, activeProgressTask.resolutionTitle, `مهلت ${toPersianDigits(activeProgressTask.deadlineJalali)}`]} onClose={() => setActiveProgressTask(null)} />
             <div><label className="text-xs font-bold text-slate-700">درصد پیشرفت: {toPersianDigits(progressPercent)}٪</label><input type="range" min="0" max="100" step="5" value={progressPercent} onChange={(e) => setProgressPercent(Number(e.target.value))} className="w-full accent-teal-700 mt-2" /></div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><div><label className="block text-xs font-bold text-slate-700 mb-1">وضعیت پیگیری</label><select value={progressStatus} onChange={(e) => setProgressStatus(e.target.value as typeof progressStatus)} className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl"><option value="IN_PROGRESS">در حال اقدام</option><option value="WAITING_RESPONSE">در انتظار پاسخ</option><option value="NEEDS_FOLLOW_UP">نیازمند پیگیری دبیرخانه</option><option value="OVERDUE">دارای تأخیر</option></select></div><div><label className="block text-xs font-bold text-slate-700 mb-1">مستندات</label><label className="flex items-center gap-2 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer"><Paperclip className="w-4 h-4" /><span>{progressFiles.length ? `${toPersianDigits(progressFiles.length)} فایل انتخاب شد` : 'انتخاب فایل‌ها'}</span><input type="file" multiple className="hidden" onChange={(e) => setProgressFiles(Array.from(e.target.files || []))} /></label></div></div>
-            <div><label className="block text-xs font-bold text-slate-700 mb-1">شرح آخرین اقدام *</label><textarea rows={3} value={progressAction} onChange={(e) => setProgressAction(e.target.value)} placeholder="اقدامات انجام‌شده از گزارش قبلی تا امروز" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" /></div>
+            <div><label className="block text-xs font-bold text-slate-700 mb-1">شرح آخرین اقدام *</label><textarea rows={3} value={progressAction} onChange={(e) => setProgressAction(e.target.value)} placeholder="اقدامات انجام‌شده از گزارش قبلی تا امروز — می‌توانید فقط چند کلمه بنویسید یا بگویید" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" /><div className="flex flex-wrap items-center gap-2"><AiTextAssist value={progressAction} onChange={setProgressAction} purpose="progress" actorId={currentUser.id} />{aiWriter && activeProgressTask && <AiButton variant="soft" loading={draftingReport} disabled={!progressAction.trim()} onClick={async () => { setDraftingReport(true); try { const res = await draftProgressReport(progressAction, { topicTitle: activeProgressTask.resolutionTitle, resolutionNumber: activeProgressTask.resolutionNumber, deadlineJalali: activeProgressTask.deadlineJalali }, progressPercent, currentUser.id); setProgressAction(res.data); } finally { setDraftingReport(false); } }}>تبدیل یادداشت به گزارش رسمی</AiButton>}</div></div>
             <div><label className="block text-xs font-bold text-slate-700 mb-1">مشکلات و موانع</label><textarea rows={2} value={progressObstacles} onChange={(e) => setProgressObstacles(e.target.value)} placeholder="وابستگی‌ها، کمبود منابع یا پاسخ‌های در انتظار" className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-xl" /></div>
             <div className="flex justify-end gap-2"><button onClick={() => setActiveProgressTask(null)} className="app-btn-secondary">انصراف</button><button onClick={handleSubmitProgress} disabled={isSubmitting || !progressAction.trim()} aria-busy={isSubmitting} title={!progressAction.trim() ? 'شرح آخرین اقدام را وارد کنید' : undefined} className="app-btn-primary">{isSubmitting ? <><Clock className="w-4 h-4 animate-spin" />در حال ذخیره...</> : <><TrendingUp className="w-4 h-4" />ثبت گزارش پیشرفت</>}</button></div>
           </div>
@@ -334,6 +338,7 @@ export const MyTasksView: React.FC = () => {
               placeholder="مثال: پیاده‌سازی زیرساخت تکمیل گردید، تست‌های امنیتی اخذ شد و گزارش به پیوست ضمیمه گردید..."
               className="w-full text-xs p-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
+            <AiTextAssist value={completionNotes} onChange={setCompletionNotes} purpose="progress" actorId={currentUser.id} />
 
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl cursor-pointer w-fit">

@@ -7,6 +7,10 @@ import { Attachment } from '../../types';
 import { toPersianDigits } from '../../utils/formatters';
 import { todayJalali } from '../../utils/jalaliDate';
 import { buildAttachmentFromFile } from '../../utils/attachmentFile';
+import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
+import { draftFollowUp } from '../../services/ai/aiService';
+import { resolutionService } from '../../services/resolutionService';
+import type { AiResult } from '../../services/ai/aiClient';
 
 interface RecordFollowUpFormProps {
   resolutionId: string;
@@ -26,6 +30,19 @@ export const RecordFollowUpForm: React.FC<RecordFollowUpFormProps> = ({ resoluti
   const [nextDeadlineJalali, setNextDeadlineJalali] = useState('');
   const [files, setFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const aiWriter = useAiFeature('writer');
+  const [drafting, setDrafting] = useState(false);
+  const [draftResult, setDraftResult] = useState<AiResult<string> | null>(null);
+  const handleDraft = async () => {
+    setDrafting(true);
+    try {
+      const [resolutionRes, recordsRes] = await Promise.all([resolutionService.getResolutionById(resolutionId), followUpService.getFollowUpRecords(resolutionId)]);
+      if (!resolutionRes.data) return;
+      const res = await draftFollowUp(resolutionRes.data, recordsRes.data.map((record) => record.text), currentUser.id);
+      setText(res.data);
+      setDraftResult(res);
+    } finally { setDrafting(false); }
+  };
 
   // Even though the caller already hides this form, the permission is checked
   // here too — and again in the service, which is the real gate.
@@ -65,7 +82,10 @@ export const RecordFollowUpForm: React.FC<RecordFollowUpFormProps> = ({ resoluti
 
   return (
     <div className="p-3.5 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-3">
-      <div className="text-xs font-bold text-amber-950">ثبت پیگیری جدید</div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-xs font-bold text-amber-950">ثبت پیگیری جدید</div>
+        {aiWriter && <div className="flex items-center gap-2"><AiSourceBadge result={draftResult} /><AiButton variant="soft" onClick={handleDraft} loading={drafting}>پیشنهاد متن پیگیری</AiButton></div>}
+      </div>
 
       <div>
         <label className="block text-xs font-bold text-slate-700 mb-1">شرح / متن پیگیری *</label>
@@ -76,6 +96,7 @@ export const RecordFollowUpForm: React.FC<RecordFollowUpFormProps> = ({ resoluti
           placeholder="شرح اقدامات انجام‌شده، نتیجه تماس یا مکاتبه پیگیری..."
           className="w-full text-xs p-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 focus:outline-none"
         />
+        <AiTextAssist value={text} onChange={setText} purpose="followup" actorId={currentUser.id} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

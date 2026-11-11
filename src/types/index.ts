@@ -415,6 +415,64 @@ export interface Attachment {
   downloadUrl: string;
 }
 
+// ——— Dynamic workflow («گردش کار پویا») ———
+// هر جلسه می‌تواند سیاست تأیید/امضای مخصوص خودش را داشته باشد: چه کسانی،
+// با چه منطقی (همه / یک نفر کافی / ترتیبی). نبودِ این تنظیم یعنی رفتار
+// تاریخی سامانه بدون هیچ تغییر.
+export type ApprovalMode =
+  | 'ALL'         // همه تأییدکنندگان باید تأیید کنند (بدون ترتیب)
+  | 'ANY'         // تأیید یک نفر کافی است
+  | 'SEQUENTIAL'; // همه، به ترتیب تعیین‌شده
+
+export interface ApprovalPolicy {
+  approverUserIds: string[];
+  mode: ApprovalMode;
+}
+
+export interface ApprovalDecision {
+  userId: string;
+  userName: string;
+  userTitle?: string;
+  decision: 'APPROVED' | 'RETURNED';
+  notes?: string;
+  at: string;
+  dateJalali: string;
+  timeString: string;
+  // اگر مدیر سیستم به نمایندگی از تأییدکننده اقدام کرده باشد.
+  onBehalfOfUserId?: string;
+}
+
+export type SignatureChainMode = 'SEQUENTIAL' | 'PARALLEL';
+
+export interface SignatureChainPolicy {
+  signerUserIds: string[];
+  mode: SignatureChainMode;
+}
+
+export interface MeetingWorkflowConfig {
+  templateId?: string;
+  templateName?: string;
+  /** تأیید دستورکار پیش از ارسال دعوتنامه. */
+  agendaApproval: ApprovalPolicy;
+  /** تأیید صورت‌جلسه پیش از نهایی‌سازی؛ خالی = مثل قبل، بدون تأیید. */
+  minutesApproval?: ApprovalPolicy;
+  /** زنجیره امضای مصوبات این جلسه؛ undefined = «تنظیمات گردش امضا» سراسری. */
+  resolutionSignature?: SignatureChainPolicy;
+  /** امضاکننده ابلاغیه مصوبات این جلسه؛ undefined = تنظیم سراسری. */
+  noticeSignerUserId?: string;
+}
+
+/** قالب گردش کار قابل تعریف توسط مدیر سیستم، به تفکیک نوع جلسه. */
+export interface WorkflowTemplate extends Omit<MeetingWorkflowConfig, 'templateId' | 'templateName'> {
+  id: string;
+  name: string;
+  description?: string;
+  /** مقادیر نوع جلسه همان‌طور که در فرم ایجاد جلسه انتخاب می‌شوند. */
+  meetingTypes: string[];
+  isDefault?: boolean;
+  updatedAt: string;
+}
+
 export interface Meeting {
   id: string;
   meetingNumber: string;        // e.g. "جلسه-۱۴۰۳-۱۴۲"
@@ -431,6 +489,10 @@ export interface Meeting {
   // افرادِ مسئول بررسی دستورکار، لزوماً عضو یا مدعو جلسه نیستند.
   // این فیلد برای جدا نگه‌داشتن «دسترسی تأیید» از «حضور در جلسه» است.
   agendaApproverUserIds?: string[];
+  /** سیاست پویای تأیید و امضای همین جلسه (اختیاری؛ جلسات قدیمی ندارند). */
+  workflow?: MeetingWorkflowConfig;
+  /** تصمیم‌های ثبت‌شده تأییدکنندگان دستورکار در دور جاری بررسی. */
+  agendaDecisions?: ApprovalDecision[];
   createdByUserId?: string;
   createdByName?: string;
   departmentId: string;
@@ -510,6 +572,8 @@ export interface BoardMinutes {
   signatures?: BoardMinutesSignature[];
   // The secretariat's own signature, recorded when the minutes are finalized.
   finalizedSignature?: DocumentSignature;
+  /** تأییدهای صورت‌جلسه طبق سیاست پویای جلسه (در صورت تعریف). */
+  approvals?: ApprovalDecision[];
   createdByUserId: string;
   createdByName: string;
   createdAt: string;
@@ -565,6 +629,7 @@ export type ResolutionExecutionStatus =
   | 'PENDING_OFFICE_SIGNATURE' // در انتظار امضای مسئول دفتر
   | 'PENDING_CEO_SIGNATURE'    // در انتظار امضای مدیرعامل
   | 'PENDING_ADMIN_SIGNATURE'  // در انتظار امضای ادمین
+  | 'PENDING_SIGNATURES'       // در انتظار امضا (زنجیره امضای سفارشی جلسه)
   | 'WAITING_MINUTES_SIGNATURE' // در انتظار صورت‌جلسه تجمیعی
   | 'WAITING_NOTIFICATION'     // در انتظار ابلاغ رسمی
   // ابلاغ توسط مسئول دفتر ثبت شده (شماره نامه ابلاغیه، تاریخ/ساعت و
@@ -616,7 +681,7 @@ export interface VerificationConfig {
   steps: VerificationStep[];
 }
 
-export type ResolutionSignerRole = 'OFFICE_MANAGER' | 'CEO' | 'ADMIN';
+export type ResolutionSignerRole = 'OFFICE_MANAGER' | 'CEO' | 'ADMIN' | 'CUSTOM';
 export type ResolutionSignatureStatus = 'WAITING_TURN' | 'PENDING' | 'SIGNED';
 
 export interface ResolutionSignature {
@@ -628,7 +693,7 @@ export interface ResolutionSignature {
   signerName: string;
   signerTitle: string;
   signerRole: ResolutionSignerRole;
-  order: 1 | 2 | 3;
+  order: number;
   status: ResolutionSignatureStatus;
   signedAt?: string;
   signedDateJalali?: string;
@@ -650,9 +715,13 @@ export interface ResolutionSignature {
 }
 
 export interface ResolutionSignatureWorkflow {
-  status: 'PENDING_OFFICE_SIGNATURE' | 'PENDING_CEO_SIGNATURE' | 'PENDING_ADMIN_SIGNATURE' | 'COMPLETED';
+  status: 'PENDING_OFFICE_SIGNATURE' | 'PENDING_CEO_SIGNATURE' | 'PENDING_ADMIN_SIGNATURE' | 'PENDING_SIGNATURES' | 'COMPLETED';
   currentStepIndex: number;
   steps: ResolutionSignature[];
+  /** ترتیبی (پیش‌فرض) یا موازی — فقط برای زنجیره‌های سفارشی جلسه. */
+  mode?: SignatureChainMode;
+  /** DEFAULT = سه امضای سراسری؛ MEETING = زنجیره اختصاصی جلسه. */
+  source?: 'DEFAULT' | 'MEETING';
 }
 
 export interface Resolution {

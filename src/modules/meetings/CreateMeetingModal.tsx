@@ -8,10 +8,16 @@ import { PersianTimePicker } from '../../components/common/PersianTimePicker';
 import { FormStepTabs, FormErrorSummary, FormFieldError, focusField } from '../../components/common/FormStepTabs';
 import { SearchableUserMultiSelect } from '../../components/common/SearchableUserMultiSelect';
 import { AttachmentList } from '../../components/common/AttachmentList';
-import { X, Plus, Trash2, Calendar, Clock, MapPin, Users, FileText, UserCheck, Lightbulb, ListChecks, ClipboardCheck } from 'lucide-react';
-import { MeetingType, MeetingMember, AgendaItem, Proposal, Attachment } from '../../types';
+import { X, Plus, Trash2, Calendar, Clock, MapPin, Users, FileText, UserCheck, Lightbulb, ListChecks, ClipboardCheck, GitBranch } from 'lucide-react';
+import { MeetingType, MeetingMember, AgendaItem, Proposal, Attachment, MeetingWorkflowConfig } from '../../types';
+import { MeetingWorkflowEditor } from '../../components/workflow/WorkflowEditors';
+import { describePolicy, getTemplateForMeetingType, getWorkflowTemplates, namesOf, SIGNATURE_MODE_LABELS, workflowFromTemplate } from '../../services/workflowPolicyService';
+import { describeAssignment, getStageAssignment } from '../../services/signatureWorkflowSettingsService';
 // منطق زمان‌بندی/همپوشانی بندها فقط در همین یک ماژول است (بدون کپی موازی).
-import { getMinutesDiff, validateAgendaTimeSlot, formatAgendaTimeRange } from '../../utils/agendaTime';
+import { getMinutesDiff, validateAgendaTimeSlot, formatAgendaTimeRange, timeToMinutes } from '../../utils/agendaTime';
+import { AiButton, AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
+import { planAgenda, AgendaPlan } from '../../services/ai/aiService';
+import type { AiResult } from '../../services/ai/aiClient';
 import { getCurrentJalaliDate } from '../../utils/date';
 
 export const CreateMeetingModal: React.FC = () => {
@@ -36,6 +42,14 @@ export const CreateMeetingModal: React.FC = () => {
   const [organizerId, setOrganizerId] = useState('');
   const [secretaryId, setSecretaryId] = useState('');
   const [description, setDescription] = useState('');
+  // گردش کار پویای همین جلسه — از قالب متناسب با نوع جلسه شروع می‌شود و
+  // برای همین یک جلسه قابل تغییر است.
+  const [workflow, setWorkflow] = useState<MeetingWorkflowConfig>(() => workflowFromTemplate(getTemplateForMeetingType('COMMISSION')));
+  const [workflowTouched, setWorkflowTouched] = useState(false);
+  // ——— برنامه‌ریز هوشمند دستورکار ———
+  const aiPlanner = useAiFeature('meetingPlanner');
+  const [planning, setPlanning] = useState(false);
+  const [planResult, setPlanResult] = useState<AiResult<AgendaPlan> | null>(null);
   // پیوست‌های خودِ جلسه (متعلق به توضیحات کلی) — جدا از پیوست بندهای
   // دستور جلسه که روی همان AgendaItem می‌نشینند.
   const [meetingAttachments, setMeetingAttachments] = useState<Attachment[]>([]);
@@ -65,8 +79,15 @@ export const CreateMeetingModal: React.FC = () => {
       setAgendaError(null);
       setActiveStep(0);
       setShowErrors(false);
+      setWorkflow(workflowFromTemplate(getTemplateForMeetingType(type)));
+      setWorkflowTouched(false);
     }
   }, [isCreateMeetingOpen, createMeetingInitialDate]);
+
+  // تغییر نوع جلسه، قالب متناسب را پیشنهاد می‌دهد — مگر کاربر دستی تغییر داده باشد.
+  useEffect(() => {
+    if (!workflowTouched) setWorkflow(workflowFromTemplate(getTemplateForMeetingType(type)));
+  }, [type]);
 
   // Proposed resolutions confirmed for a meeting ("تایید جلسه"), ready to be picked as a ready-made agenda item
   const [confirmedProposals, setConfirmedProposals] = useState<Proposal[]>([]);
@@ -205,6 +226,32 @@ export const CreateMeetingModal: React.FC = () => {
     setProposalAgendaAttachments([]);
   };
 
+  /** ترتیب و زمان‌بندی پیشنهادی هوش مصنوعی را روی بندها اعمال می‌کند (داخل پنجره زمانی جلسه، بدون همپوشانی). */
+  const handleSmartPlan = async () => {
+    if (agendas.length === 0) return;
+    setPlanning(true);
+    try {
+      const res = await planAgenda({ meetingTitle: title || 'جلسه', startTime, endTime, agendas }, currentUser.id);
+      const fmt = (total: number) => `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+      const meetingStart = timeToMinutes(startTime);
+      const meetingEnd = timeToMinutes(endTime);
+      const available = Math.max(5 * res.data.order.length, meetingEnd - meetingStart);
+      const requested = res.data.order.reduce((sum, item) => sum + item.minutes, 0);
+      const scale = requested > available ? available / requested : 1;
+      let cursor = meetingStart;
+      const byId = new Map(agendas.map((agenda) => [agenda.id, agenda]));
+      const next = res.data.order.map((item, index) => {
+        const minutes = Math.max(5, Math.floor((item.minutes * scale) / 5) * 5);
+        const slotStart = cursor;
+        cursor = Math.min(meetingEnd, cursor + minutes);
+        return { ...(byId.get(item.id) as AgendaItem), order: index + 1, rowNumber: index + 1, startTime: fmt(slotStart), endTime: fmt(cursor), allocatedMinutes: cursor - slotStart, estimatedMinutes: cursor - slotStart };
+      });
+      setAgendas(next);
+      setPlanResult(res);
+      setAgendaError(null);
+    } finally { setPlanning(false); }
+  };
+
   const handleRemoveAgenda = (id: string) => {
     setAgendas(agendas.filter((a) => a.id !== id).map((a, idx) => ({ ...a, rowNumber: idx + 1, order: idx + 1 })));
   };
@@ -252,6 +299,7 @@ export const CreateMeetingModal: React.FC = () => {
         members,
         agendaItems: agendas,
         attachments: meetingAttachments,
+        workflow,
       });
 
       if (res.isSuccess) {
@@ -279,17 +327,21 @@ export const CreateMeetingModal: React.FC = () => {
     ...(!location.trim() ? [{ step: 0, fieldId: 'mf-location', message: 'مکان یا شیوه برگزاری جلسه را وارد کنید.' }] : []),
     ...(!organizerId ? [{ step: 1, fieldId: 'mf-organizer', message: 'برگزارکننده جلسه را انتخاب کنید.' }] : []),
     ...(!secretaryId ? [{ step: 1, fieldId: 'mf-secretary', message: 'دبیر جلسه را انتخاب کنید.' }] : []),
+    ...(workflow.agendaApproval.approverUserIds.length === 0 ? [{ step: 3, fieldId: 'mf-workflow', message: 'حداقل یک تأییدکننده دستورکار انتخاب کنید.' }] : []),
+    ...(workflow.minutesApproval && workflow.minutesApproval.approverUserIds.length === 0 ? [{ step: 3, fieldId: 'mf-workflow', message: 'تأییدکنندگان صورت‌جلسه را انتخاب کنید یا گزینه را غیرفعال کنید.' }] : []),
+    ...(workflow.resolutionSignature && workflow.resolutionSignature.signerUserIds.length === 0 ? [{ step: 3, fieldId: 'mf-workflow', message: 'امضاکنندگان اختصاصی مصوبات را انتخاب کنید یا تنظیمات سراسری را برگزینید.' }] : []),
   ];
   const errorOf = (fieldId: string) => (showErrors ? fieldErrors.find((e) => e.fieldId === fieldId)?.message : undefined);
   const steps = [
     { label: 'مشخصات و زمان', icon: Calendar, errorCount: fieldErrors.filter((e) => e.step === 0).length, complete: !fieldErrors.some((e) => e.step === 0) },
     { label: 'اعضا و مدعوین', icon: Users, errorCount: fieldErrors.filter((e) => e.step === 1).length, complete: !fieldErrors.some((e) => e.step === 1) && selectedMemberIds.length > 0 },
     { label: 'دستور جلسه', icon: ListChecks, errorCount: 0, complete: agendas.length > 0 },
+    { label: 'گردش کار', icon: GitBranch, errorCount: fieldErrors.filter((e) => e.step === 3).length, complete: !fieldErrors.some((e) => e.step === 3) },
     { label: 'بازبینی و ثبت', icon: ClipboardCheck, errorCount: 0 },
   ];
   // جابه‌جایی بین تب‌ها هرگز قفل نمی‌شود و داده‌ها در state فرم می‌مانند.
   const goToStep = (nextStep: number) => {
-    if (nextStep === 3) setShowErrors(true);
+    if (nextStep === 4) setShowErrors(true);
     setActiveStep(nextStep);
   };
   const jumpToError = (error: FormFieldError) => { setActiveStep(error.step); focusField(error.fieldId); };
@@ -323,7 +375,7 @@ export const CreateMeetingModal: React.FC = () => {
         {/* Modal Form Content */}
         <form noValidate onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-5 flex-1">
           <FormStepTabs steps={steps} active={activeStep} onSelect={goToStep} showErrors={showErrors} ariaLabel="بخش‌های فرم جلسه" />
-          {activeStep === 3 && showErrors && <FormErrorSummary errors={fieldErrors} steps={steps} onJump={jumpToError} />}
+          {activeStep === 4 && showErrors && <FormErrorSummary errors={fieldErrors} steps={steps} onJump={jumpToError} />}
           {/* Basic Info */}
           {activeStep === 0 && (
           <div className="space-y-3">
@@ -466,6 +518,21 @@ export const CreateMeetingModal: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-teal-600"></span>
               دستور کار جلسه (Agendas)
             </h4>
+
+            {aiPlanner && agendas.length > 0 && (
+              <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] font-extrabold text-indigo-950">✨ برنامه‌ریز هوشمند: ترتیب و زمان هر بند را بر اساس اهمیت و مدت جلسه پیشنهاد می‌دهد</span>
+                  <div className="flex items-center gap-2"><AiSourceBadge result={planResult} /><AiButton onClick={handleSmartPlan} loading={planning}>زمان‌بندی هوشمند</AiButton></div>
+                </div>
+                {planResult && (
+                  <ul className="text-[10.5px] text-slate-600 space-y-0.5">
+                    {planResult.data.order.filter((o) => o.reason).map((o) => <li key={o.id}>• <b>{agendas.find((a) => a.id === o.id)?.title}</b>: {o.reason}</li>)}
+                    {planResult.data.tips.map((tip) => <li key={tip} className="text-indigo-700">💡 {tip}</li>)}
+                  </ul>
+                )}
+              </div>
+            )}
 
             {agendaError && (
               <div className="p-3 bg-rose-50 border border-rose-300 rounded-2xl flex items-start justify-between gap-2.5">
@@ -685,6 +752,35 @@ export const CreateMeetingModal: React.FC = () => {
           )}
 
           {activeStep === 3 && (
+            <div id="mf-workflow" tabIndex={-1} className="space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-gradient-to-l from-indigo-50 to-white border border-indigo-100 p-3">
+                <div>
+                  <h4 className="text-xs font-extrabold text-indigo-950 flex items-center gap-1.5"><GitBranch className="w-4 h-4" />گردش کار اختصاصی این جلسه</h4>
+                  <p className="text-[10px] text-slate-500 mt-0.5">قالب پیشنهادی بر اساس نوع جلسه انتخاب شده؛ برای همین جلسه هر بخش را آزادانه تغییر دهید.</p>
+                </div>
+                <select
+                  aria-label="قالب گردش کار"
+                  value={workflow.templateId || ''}
+                  onChange={(event) => {
+                    const template = getWorkflowTemplates().find((item) => item.id === event.target.value);
+                    if (template) { setWorkflow(workflowFromTemplate(template)); setWorkflowTouched(true); }
+                  }}
+                  className="text-[11px] p-2 bg-white border border-indigo-200 rounded-xl font-bold text-indigo-900"
+                >
+                  {getWorkflowTemplates().map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
+                </select>
+              </div>
+              <MeetingWorkflowEditor
+                users={availableUsers}
+                value={workflow}
+                onChange={(next) => { setWorkflow(next); setWorkflowTouched(true); }}
+                defaultSignatureDescription={`سه امضای ترتیبی سراسری: ${['RESOLUTION_STEP_1', 'RESOLUTION_STEP_2', 'RESOLUTION_STEP_3'].map((stage) => describeAssignment(getStageAssignment(stage as 'RESOLUTION_STEP_1'), availableUsers)).join(' ← ')}`}
+                defaultNoticeDescription={`طبق تنظیم سراسری (${describeAssignment(getStageAssignment('RESOLUTION_NOTICE'), availableUsers)})`}
+              />
+            </div>
+          )}
+
+          {activeStep === 4 && (
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <h4 className="text-sm font-extrabold text-slate-900">بازبینی پیش از ثبت</h4>
               <div className="grid grid-cols-1 gap-3 text-xs text-slate-600 sm:grid-cols-2">
@@ -693,6 +789,13 @@ export const CreateMeetingModal: React.FC = () => {
                 <div><span className="font-bold text-slate-800">دبیر:</span> {availableUsers.find((u) => u.id === secretaryId)?.fullName || '—'}</div><div><span className="font-bold text-slate-800">اعضا:</span> {selectedMemberIds.length} نفر</div>
               </div>
               <div className="rounded-xl bg-white p-3 text-xs text-slate-600"><span className="font-bold text-slate-800">دستور جلسه ({agendas.length} بند): </span>{agendas.length ? agendas.map((agenda) => agenda.title).join('، ') : 'هنوز بندی ثبت نشده است.'}</div>
+              <div className="rounded-xl bg-white p-3 text-xs text-slate-600 space-y-1">
+                <div className="font-bold text-slate-800 flex items-center gap-1"><GitBranch className="w-3.5 h-3.5" />گردش کار{workflow.templateName ? ` (${workflow.templateName})` : ''}</div>
+                <div>تأیید دستورکار: {describePolicy(workflow.agendaApproval)}</div>
+                <div>تأیید صورت‌جلسه: {describePolicy(workflow.minutesApproval)}</div>
+                <div>امضای مصوبات: {workflow.resolutionSignature ? `${SIGNATURE_MODE_LABELS[workflow.resolutionSignature.mode]} — ${namesOf(workflow.resolutionSignature.signerUserIds).join(' ← ')}` : 'تنظیمات سراسری'}</div>
+                <div>امضای ابلاغیه: {workflow.noticeSignerUserId ? namesOf([workflow.noticeSignerUserId])[0] : 'تنظیم سراسری'}</div>
+              </div>
               <p className="text-[11px] leading-5 text-slate-500">پیش‌نویس این فرم در این نسخه ذخیره نمی‌شود؛ با بستن پنجره اطلاعات واردشده از بین می‌رود.</p>
             </div>
           )}
@@ -736,7 +839,7 @@ export const CreateMeetingModal: React.FC = () => {
             >
               {activeStep > 0 ? 'مرحله قبل' : 'انصراف'}
             </button>
-            {activeStep < 3 ? <button type="button" onClick={(event) => { event.preventDefault(); goToStep(activeStep + 1); }} className="app-btn-primary">مرحله بعد</button> : <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="app-btn-primary">{isSubmitting ? 'در حال ثبت جلسه...' : 'تایید و ایجاد جلسه'}</button>}
+            {activeStep < 4 ? <button type="button" onClick={(event) => { event.preventDefault(); goToStep(activeStep + 1); }} className="app-btn-primary">مرحله بعد</button> : <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="app-btn-primary">{isSubmitting ? 'در حال ثبت جلسه...' : 'تایید و ایجاد جلسه'}</button>}
           </div>
         </form>
       </div>

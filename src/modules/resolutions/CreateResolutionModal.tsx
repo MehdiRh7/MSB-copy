@@ -26,6 +26,9 @@ import { FormStepTabs, FormErrorSummary, FormFieldError, focusField } from '../.
 import { buildFollowUpPlan } from '../../services/followUpService';
 import { Meeting } from '../../types';
 import { addDaysToJalaliDate, getCurrentJalaliDate } from '../../utils/date';
+import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
+import { suggestResolution, ResolutionSuggestion } from '../../services/ai/aiService';
+import type { AiResult } from '../../services/ai/aiClient';
 
 interface CreateResolutionModalProps {
   isOpen: boolean;
@@ -42,7 +45,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
   defaultAgendaItemId,
   defaultTopicTitle,
 }) => {
-  const { availableUsers, showToast, triggerRefresh, hasPermission } = useApp();
+  const { availableUsers, showToast, triggerRefresh, hasPermission, currentUser } = useApp();
   const [meetingOptions, setMeetingOptions] = useState<Meeting[]>(mockMeetings);
 
   const [selectedMeetingId, setSelectedMeetingId] = useState(defaultMeetingId || '');
@@ -74,6 +77,22 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
   const [verifierId, setVerifierId] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // ——— دستیار هوشمند ثبت مصوبه ———
+  const aiResolution = useAiFeature('resolutionDraft');
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestion, setSuggestion] = useState<AiResult<ResolutionSuggestion> | null>(null);
+  const handleSuggest = async () => {
+    setSuggesting(true);
+    try {
+      const res = await suggestResolution({ topic: topicTitle, request: requestDescription, reviewNotes: reviewResultNotes, presenterName: proposerName, users: availableUsers, departments: mockDepartments }, currentUser.id);
+      setSuggestion(res);
+      setExecutionDescription(res.data.executionDescription);
+      if (res.data.mainResponsibleUserId) setMainResponsibleUserId(res.data.mainResponsibleUserId);
+      if (res.data.responsibleDepartmentId) setResponsibleDepartmentId(res.data.responsibleDepartmentId);
+      setPriority(res.data.priority);
+      setDeadlineJalali(addDaysToJalaliDate(assignedDateJalali || getCurrentJalaliDate(), res.data.deadlineDays));
+    } finally { setSuggesting(false); }
+  };
   const [activeSection, setActiveSection] = useState(0);
   const [showErrors, setShowErrors] = useState(false);
 
@@ -395,6 +414,16 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                 دستور اجرا، ارجاع و مهلت اقدام
               </h4>
 
+              {aiResolution && (
+                <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-1.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[11px] font-extrabold text-indigo-950">✨ متن اجرایی، مسئول، واحد، اولویت و مهلت را هوش مصنوعی پیشنهاد دهد</span>
+                    <div className="flex items-center gap-2"><AiSourceBadge result={suggestion} /><AiButton onClick={handleSuggest} loading={suggesting} disabled={!topicTitle.trim() && !requestDescription.trim()}>پیشنهاد هوشمند</AiButton></div>
+                  </div>
+                  {suggestion?.data.rationale && <p className="text-[10.5px] text-slate-600">{suggestion.data.rationale} — همه موارد قابل ویرایش است.</p>}
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold text-slate-700 mb-1">متن نهایی مصوبه و شرح اقدام اجرایی *</label>
@@ -405,6 +434,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                     placeholder="شرح تکالیف محوله به واحد مجری..."
                     className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium"
                   />
+                  <AiTextAssist value={executionDescription} onChange={setExecutionDescription} purpose="resolution" actorId={currentUser.id} />
                 </div>
 
                 {/* Responsible User Select */}

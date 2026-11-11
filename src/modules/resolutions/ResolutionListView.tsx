@@ -136,6 +136,7 @@ export const ResolutionListView: React.FC = () => {
             <option value="PENDING_OFFICE_SIGNATURE">در انتظار امضای مسئول دفتر</option>
             <option value="PENDING_CEO_SIGNATURE">در انتظار امضای مدیرعامل</option>
             <option value="PENDING_ADMIN_SIGNATURE">در انتظار امضای ادمین</option>
+            <option value="PENDING_SIGNATURES">در انتظار امضا (گردش اختصاصی)</option>
             <option value="WAITING_MINUTES_SIGNATURE">در انتظار امضای صورت‌جلسه</option>
             <option value="WAITING_NOTIFICATION">در انتظار ابلاغ رسمی</option>
             <option value="NOTIFIED">ابلاغ شده</option>
@@ -189,7 +190,8 @@ export const ResolutionListView: React.FC = () => {
             const sMeta = getResolutionExecutionMeta(res.executionStatus);
             const pMeta = getPriorityMeta(res.priority);
             const aMeta = getResolutionApprovalMeta(res.approvalStatus);
-            const activeSigner = res.signatureWorkflow?.steps[res.signatureWorkflow.currentStepIndex];
+            const activeSigner = res.signatureWorkflow?.steps.find((step) => step.status === 'PENDING' && step.signerUserId === currentUser.id)
+              || res.signatureWorkflow?.steps[res.signatureWorkflow.currentStepIndex];
             const isCurrentUserSignatureTurn = activeSigner?.status === 'PENDING' && activeSigner.signerUserId === currentUser.id;
 
             return (

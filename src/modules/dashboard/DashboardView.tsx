@@ -22,6 +22,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useApp } from '../../context/AppContext';
 import { getMeetingStatusMeta, toPersianDigits } from '../../utils/formatters';
 import { buildDashboardModel, daysFromToday, DashboardActionItem } from './dashboardData';
+import { AiDailyBrief } from './AiDailyBrief';
 
 const greeting = () => {
   const hour = new Date().getHours();
@@ -127,6 +128,8 @@ export const DashboardView: React.FC = () => {
         </div>
         {primaryAction}
       </section>
+
+      <AiDailyBrief user={currentUser} model={model} onOpenTodo={() => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
 
       {/* این نمودار فقط از مصوبات قابل مشاهده همین کاربر ساخته می‌شود؛ هیچ
           شمارنده نمونه یا داده خارج از Scope نقش در آن وارد نمی‌شود. */}

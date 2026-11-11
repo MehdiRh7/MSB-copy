@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Settings, Users2, PieChart, BookOpen, Network, PenTool, UserCheck, Database } from 'lucide-react';
+import { Settings, Users2, PieChart, BookOpen, Network, PenTool, UserCheck, Database, GitBranch, Sparkles } from 'lucide-react';
+import { WorkflowTemplatesTab } from './WorkflowTemplatesTab';
+import { AiSettingsTab } from './AiSettingsTab';
 import { GeneralSettingsTab } from './GeneralSettingsTab';
 import { UserManagementTab } from './UserManagementTab';
 import { LdapSettingsTab } from './LdapSettingsTab';
@@ -11,7 +13,7 @@ import { UserGuideView } from '../guide/UserGuideView';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useApp } from '../../context/AppContext';
 
-type SettingsMainTab = 'GENERAL' | 'USERS' | 'SIGNATURE_WORKFLOW' | 'LDAP' | 'DELEGATION' | 'INFOGRAPHICS' | 'GUIDE' | 'DEMO';
+type SettingsMainTab = 'GENERAL' | 'USERS' | 'SIGNATURE_WORKFLOW' | 'WORKFLOW_TEMPLATES' | 'AI' | 'LDAP' | 'DELEGATION' | 'INFOGRAPHICS' | 'GUIDE' | 'DEMO';
 
 export const SettingsView: React.FC = () => {
   const { currentUser, hasPermission } = useApp();
@@ -26,10 +28,13 @@ export const SettingsView: React.FC = () => {
           { id: 'GENERAL' as SettingsMainTab, label: 'تنظیمات عمومی', icon: Settings },
           { id: 'USERS' as SettingsMainTab, label: 'مدیریت کاربران', icon: Users2 },
           { id: 'SIGNATURE_WORKFLOW' as SettingsMainTab, label: 'تنظیمات گردش امضا', icon: PenTool },
+          { id: 'WORKFLOW_TEMPLATES' as SettingsMainTab, label: 'قالب‌های گردش کار', icon: GitBranch },
           { id: 'LDAP' as SettingsMainTab, label: 'LDAP', icon: Network },
           { id: 'DEMO' as SettingsMainTab, label: 'داده نمایشی', icon: Database },
         ]
       : []),
+    // انتخاب و پیکربندی ارائه‌دهنده هوش مصنوعی فقط با مدیر سیستم است.
+    ...(currentUser.role === 'ADMIN' ? [{ id: 'AI' as SettingsMainTab, label: 'هوش مصنوعی', icon: Sparkles }] : []),
     { id: 'DELEGATION' as SettingsMainTab, label: 'جانشین امضا', icon: UserCheck },
     { id: 'INFOGRAPHICS' as SettingsMainTab, label: 'اینفوگراف', icon: PieChart },
     { id: 'GUIDE' as SettingsMainTab, label: 'راهنمای کاربری', icon: BookOpen },
@@ -69,6 +74,8 @@ export const SettingsView: React.FC = () => {
       {activeTab === 'GENERAL' && <GeneralSettingsTab />}
       {activeTab === 'USERS' && <UserManagementTab />}
       {activeTab === 'SIGNATURE_WORKFLOW' && <SignatureWorkflowTab />}
+      {activeTab === 'WORKFLOW_TEMPLATES' && <WorkflowTemplatesTab />}
+      {activeTab === 'AI' && currentUser.role === 'ADMIN' && <AiSettingsTab />}
       {activeTab === 'LDAP' && <LdapSettingsTab />}
       {activeTab === 'DEMO' && <DemoDataTab />}
       {activeTab === 'DELEGATION' && <SignatureDelegationTab />}

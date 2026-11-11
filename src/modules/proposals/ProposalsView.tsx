@@ -9,6 +9,7 @@ import { mockDepartments } from '../../mock/data';
 import { toPersianDigits } from '../../utils/formatters';
 import { BulkSelectionBar } from '../../components/common/BulkSelectionBar';
 import { CreateProposalModal } from './CreateProposalModal';
+import { ProposalAiInsight } from './ProposalAiInsight';
 import { ExcelImportModal } from './ExcelImportModal';
 import { PersianDatePicker } from '../../components/common/PersianDatePicker';
 import { downloadProposalExcelTemplate, parseProposalExcelFile, ProposalImportParseResult } from '../../services/proposalExcelImportService';
@@ -649,6 +650,7 @@ export const ProposalsView: React.FC = () => {
                 )}
               </div>
               <div className="rounded-lg border border-teal-100 bg-teal-50 px-2.5 py-2 text-[11px] text-teal-900"><span className="font-bold">اقدام بعدی: </span>{getNextAction(p.status)}</div>
+              <ProposalAiInsight proposal={p} allProposals={proposals} actorId={currentUser.id} onUseNote={(text) => setDecisionNotes((prev) => ({ ...prev, [p.id]: text }))} />
               <input
                 type="text"
                 value={decisionNotes[p.id] || ''}

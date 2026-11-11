@@ -3,7 +3,8 @@ import { apiClient } from './api/apiClient';
 import { loadLocalCollection, saveLocalCollection } from './localStore';
 import { resolutionService } from './resolutionService';
 import { resolveSignatureImageUrl } from '../utils/signatureImage';
-import { mockUsers } from '../mock/data';
+import { mockMeetings, mockUsers } from '../mock/data';
+import { buildDecision, evaluateApproval, namesOf, resolveApprovalAuthority } from './workflowPolicyService';
 
 const clock = () => { const now = new Date(); return { iso: now.toISOString(), date: new Intl.DateTimeFormat('fa-IR-u-ca-persian', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now).replace(/[\u200e\u200f]/g, ''), time: now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }) }; };
 
@@ -13,6 +14,50 @@ class BoardSecretariatService {
   private requireSecretary(actor: User) { if (!['SECRETARY', 'ADMIN'].includes(actor.role)) throw new Error('فقط دبیرخانه مجاز به انجام این عملیات است'); }
   private entry(actor: User, action: string, toStatus: string, fromStatus?: string, notes?: string): WorkflowHistoryEntry { const now = clock(); return { id: `audit-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, action, actorUserId: actor.id, actorName: actor.fullName, actorRole: actor.title, fromStatus, toStatus, dateJalali: now.date, timeString: now.time, notes }; }
   private audit(entry: WorkflowHistoryEntry) { const items = loadLocalCollection<WorkflowHistoryEntry[]>('governanceAudit', []); items.unshift(entry); saveLocalCollection('governanceAudit', items); }
+
+  private minutesPolicy(meetingId: string) {
+    const meeting = loadLocalCollection<Meeting[]>('meetings', mockMeetings).find((item) => item.id === meetingId);
+    const policy = meeting?.workflow?.minutesApproval;
+    return policy && policy.approverUserIds.length > 0 ? policy : undefined;
+  }
+
+  /** گردش کار پویا: ارسال پیش‌نویس صورت‌جلسه برای تأییدکنندگان تعیین‌شده جلسه. */
+  async submitMinutesForApproval(meetingId: string, actor: User): Promise<ApiResponse<BoardMinutes>> {
+    this.requireSecretary(actor);
+    const policy = this.minutesPolicy(meetingId);
+    if (!policy) throw new Error('برای این جلسه تأییدکننده صورت‌جلسه تعریف نشده است');
+    const all = this.minutes(); const item = all.find((value) => value.meetingId === meetingId);
+    if (!item) throw new Error('صورت‌جلسه یافت نشد');
+    if (item.status !== 'DRAFT') throw new Error('فقط پیش‌نویس قابل ارسال برای تأیید است');
+    if (!item.content.trim()) throw new Error('متن صورت‌جلسه خالی است');
+    const entry = this.entry(actor, `ارسال صورت‌جلسه برای تأیید: ${namesOf(policy.approverUserIds).join('، ')}`, 'WAITING_SIGNATURES', item.status);
+    item.status = 'WAITING_SIGNATURES'; item.approvals = []; item.history.push(entry);
+    saveLocalCollection('boardMinutes', all); this.audit(entry);
+    return apiClient.simulateNetwork(item, 80);
+  }
+
+  /** تأیید یا برگشت صورت‌جلسه توسط تأییدکنندگان (همه / یک نفر / ترتیبی). */
+  async reviewMinutes(meetingId: string, decision: 'APPROVE' | 'RETURN', notes: string, actor: User): Promise<ApiResponse<BoardMinutes>> {
+    const policy = this.minutesPolicy(meetingId);
+    if (!policy) throw new Error('برای این جلسه تأییدکننده صورت‌جلسه تعریف نشده است');
+    const all = this.minutes(); const item = all.find((value) => value.meetingId === meetingId);
+    if (!item || !['WAITING_SIGNATURES', 'PARTIALLY_SIGNED'].includes(item.status)) throw new Error('صورت‌جلسه در انتظار تأیید نیست');
+    if (decision === 'RETURN' && !notes.trim()) throw new Error('دلیل برگشت صورت‌جلسه الزامی است');
+    const authority = resolveApprovalAuthority(policy, item.approvals || [], actor);
+    if (!authority.allowed) throw new Error(authority.reason || 'شما مجاز به تأیید این صورت‌جلسه نیستید');
+    const previous = item.status;
+    item.approvals = [...(item.approvals || []), buildDecision(actor, decision === 'APPROVE' ? 'APPROVED' : 'RETURNED', notes, authority.approverUserId)];
+    let action: string;
+    if (decision === 'RETURN') { item.status = 'DRAFT'; action = 'برگشت صورت‌جلسه جهت اصلاح'; }
+    else {
+      const evaluation = evaluateApproval(policy, item.approvals);
+      item.status = evaluation.isSatisfied ? 'SIGNED' : 'PARTIALLY_SIGNED';
+      action = evaluation.isSatisfied ? 'تأیید کامل صورت‌جلسه — آماده نهایی‌سازی' : `تأیید صورت‌جلسه (${evaluation.approvedCount} از ${evaluation.requiredCount})`;
+    }
+    const entry = this.entry(actor, action, item.status, previous, notes.trim() || undefined);
+    item.history.push(entry); saveLocalCollection('boardMinutes', all); this.audit(entry);
+    return apiClient.simulateNetwork(item, 80);
+  }
 
   async getMinutes(meetingId: string): Promise<ApiResponse<BoardMinutes | null>> { return apiClient.simulateNetwork(this.minutes().find((item) => item.meetingId === meetingId) || null, 60); }
 
@@ -35,6 +80,7 @@ class BoardSecretariatService {
   // they are simply never asked for a signature.
   async finalizeMinutes(meetingId: string, actor: User): Promise<ApiResponse<BoardMinutes>> {
     this.requireSecretary(actor); const all = this.minutes(); const item = all.find((value) => value.meetingId === meetingId); if (!item) throw new Error('صورت‌جلسه یافت نشد'); if (item.status === 'FINALIZED') throw new Error('این صورت‌جلسه قبلاً نهایی شده است'); if (!item.content.trim()) throw new Error('متن صورت‌جلسه خالی است');
+    if (this.minutesPolicy(meetingId) && item.status !== 'SIGNED') throw new Error('طبق گردش کار این جلسه، ابتدا صورت‌جلسه باید توسط تأییدکنندگان تأیید شود');
     const now = clock(); const entry = this.entry(actor, 'نهایی‌سازی صورت‌جلسه در سه نسخه', 'FINALIZED', item.status); item.status = 'FINALIZED'; item.finalizedAt = now.iso;
     // The secretariat's own signature is the only one this document needs. The
     // image is resolved from the signer's stored user record — the one central

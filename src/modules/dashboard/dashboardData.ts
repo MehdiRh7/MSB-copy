@@ -1,8 +1,9 @@
 import type { AppRoute } from '../../context/AppContext';
 import { mockApprovals, mockActivityLogs, mockMeetings, mockResolutions, mockTasks } from '../../mock/data';
 import { loadLocalCollection, loadLocalValue } from '../../services/localStore';
+import { getAgendaApprovalPolicy, resolveApprovalAuthority } from '../../services/workflowPolicyService';
 import { hasOrgWideMeetingAccess, hasOrgWideResolutionAccess, isMeetingRelatedToUser, isResolutionRelatedToUser } from '../../services/userScope';
-import type { ActivityLog, ApprovalCartableItem, Meeting, Proposal, Resolution, ResolutionNotice, Task, User } from '../../types';
+import type { ActivityLog, ApprovalCartableItem, BoardMinutes, Meeting, Proposal, Resolution, ResolutionNotice, Task, User } from '../../types';
 import { jalaliToGregorian, parseJalali, todayJalali } from '../../utils/jalaliDate';
 
 /**
@@ -47,7 +48,7 @@ export interface DashboardModel {
 }
 
 const CLOSED = ['APPROVED_CLOSED', 'ARCHIVED'];
-const SIGNATURE_STATES = ['PENDING_OFFICE_SIGNATURE', 'PENDING_CEO_SIGNATURE', 'PENDING_ADMIN_SIGNATURE'];
+const SIGNATURE_STATES = ['PENDING_OFFICE_SIGNATURE', 'PENDING_CEO_SIGNATURE', 'PENDING_ADMIN_SIGNATURE', 'PENDING_SIGNATURES'];
 const EXECUTION_STATES = ['NOTIFIED', 'IN_PROGRESS', 'WAITING_RESPONSE', 'NEEDS_FOLLOW_UP', 'DONE_BY_ASSIGNEE', 'REJECTED_RETURNED', 'NOT_STARTED'];
 
 const toDate = (value?: string): Date | null => {
@@ -124,7 +125,12 @@ export const buildDashboardModel = (user: User): DashboardModel => {
     items.push({ id: `task-${t.id}`, kind: late ? 'وظیفه معوق' : 'وظیفه اجرایی', title: t.resolutionTitle, subtitle: `${t.resolutionNumber} · مهلت ${t.deadlineJalali}`, date: t.deadlineJalali, tone: late ? 'danger' : left !== null && left <= 7 ? 'warning' : 'primary', route: 'tasks', cta: late ? 'ثبت گزارش پیشرفت' : 'مشاهده وظیفه', weight: late ? 100 : 60 - Math.min(left ?? 30, 30) });
   });
   allResolutions.forEach((r) => {
-    const step = r.signatureWorkflow && r.signatureWorkflow.status !== 'COMPLETED' ? r.signatureWorkflow.steps[r.signatureWorkflow.currentStepIndex] : undefined;
+    // زنجیره موازی: هر امضای باز این کاربر؛ ترتیبی: فقط مرحله جاری.
+    const step = r.signatureWorkflow && r.signatureWorkflow.status !== 'COMPLETED'
+      ? (r.signatureWorkflow.mode === 'PARALLEL'
+          ? r.signatureWorkflow.steps.find((s) => s.status === 'PENDING' && s.signerUserId === user.id)
+          : r.signatureWorkflow.steps[r.signatureWorkflow.currentStepIndex])
+      : undefined;
     if (step && step.status === 'PENDING' && step.signerUserId === user.id) items.push({ id: `sig-${r.id}`, kind: 'امضای مصوبه', title: r.topicTitle, subtitle: `${r.resolutionNumber} · ${r.meetingTitle}`, tone: 'warning', route: 'resolutions', params: { resolutionId: r.id }, cta: 'بررسی و امضا', weight: 90 });
     if (r.executionStatus === 'WAITING_NOTIFICATION' && perms.includes('NOTIFY_RESOLUTION')) items.push({ id: `notify-${r.id}`, kind: 'آماده ابلاغ', title: r.topicTitle, subtitle: `${r.resolutionNumber} · مجری: ${r.mainResponsibleName || '—'}`, tone: 'primary', route: 'notification-inbox', cta: 'ثبت ابلاغ', weight: 75 });
     if (r.executionStatus === 'PENDING_SECRETARY_NOTICE_SIGNATURE') {
@@ -141,7 +147,15 @@ export const buildDashboardModel = (user: User): DashboardModel => {
     if (persona === 'OFFICE' && p.status === 'APPROVED') items.push({ id: `pconv-${p.id}`, kind: 'تبدیل به تأیید جلسه', title: p.title, subtitle: 'تأییدشده توسط مدیرعامل', date: p.dateJalali, tone: 'primary', route: 'proposals', cta: 'ادامه گردش', weight: 65 });
     if (perms.includes('APPROVE_MEETING_CONFIRMATION') && p.status === 'PENDING_SECRETARY_CONFIRMATION') items.push({ id: `psec-${p.id}`, kind: 'تأیید نهایی دبیر', title: p.title, subtitle: `${p.proposerName} · ${p.proposerDepartmentName}`, date: p.dateJalali, tone: 'warning', route: 'proposals', cta: 'تأیید برای جلسه', weight: 78 });
   });
-  if (isCeo) meetings.filter((m) => m.status === 'WAITING_FOR_CEO_APPROVAL').forEach((m) => items.push({ id: `magenda-${m.id}`, kind: 'تأیید دستور جلسه', title: m.title, subtitle: `${m.dateJalali} · ساعت ${m.startTime}`, date: m.dateJalali, tone: 'warning', route: 'meeting-details', params: { meetingId: m.id }, cta: 'بررسی دستور جلسه', weight: 82 }));
+  // گردش کار پویا: تأییدکننده دستورکار هر کسی است که در سیاست همان جلسه
+  // نوبت/حق تأیید دارد (جلسات قدیمی: مدیرعامل).
+  meetings.filter((m) => m.status === 'WAITING_FOR_CEO_APPROVAL' && user.role !== 'ADMIN' && resolveApprovalAuthority(getAgendaApprovalPolicy(m), m.agendaDecisions || [], user, m.workflow ? undefined : (u) => u.role === 'CEO').allowed).forEach((m) => items.push({ id: `magenda-${m.id}`, kind: 'تأیید دستور جلسه', title: m.title, subtitle: `${m.dateJalali} · ساعت ${m.startTime}`, date: m.dateJalali, tone: 'warning', route: 'meeting-details', params: { meetingId: m.id }, cta: 'بررسی دستور جلسه', weight: 82 }));
+  // تأیید صورت‌جلسه طبق گردش اختصاصی جلسه.
+  loadLocalCollection<BoardMinutes[]>('boardMinutes', []).filter((bm) => ['WAITING_SIGNATURES', 'PARTIALLY_SIGNED'].includes(bm.status)).forEach((bm) => {
+    const meeting = meetings.find((m) => m.id === bm.meetingId);
+    const policy = meeting?.workflow?.minutesApproval;
+    if (meeting && policy?.approverUserIds.length && user.role !== 'ADMIN' && resolveApprovalAuthority(policy, bm.approvals || [], user).allowed) items.push({ id: `minutes-${bm.id}`, kind: 'تأیید صورت‌جلسه', title: meeting.title, subtitle: `${meeting.meetingNumber} · ${meeting.dateJalali}`, date: meeting.dateJalali, tone: 'warning', route: 'meeting-details', params: { meetingId: meeting.id }, cta: 'بررسی صورت‌جلسه', weight: 83 });
+  });
   if (isOfficeManager) resolutions.filter((r) => r.followUp?.enabled && !CLOSED.includes(r.executionStatus) && r.followUp.nextFollowUpDateJalali && (daysFromToday(r.followUp.nextFollowUpDateJalali) ?? 99) <= 2 && perms.includes('VIEW_RESOLUTION_FOLLOWUP')).forEach((r) => items.push({ id: `fu-${r.id}`, kind: 'پیگیری دوره‌ای', title: r.topicTitle, subtitle: `موعد پیگیری ${r.followUp!.nextFollowUpDateJalali}`, tone: 'neutral', route: 'follow-up', cta: 'ثبت پیگیری', weight: 50 }));
   const actionItems = items.filter((i, idx) => items.findIndex((x) => x.id === i.id) === idx).sort((a, b) => b.weight - a.weight);
 

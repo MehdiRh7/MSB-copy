@@ -17,7 +17,7 @@ const STAGES = [
 ] as const;
 
 const stageIndexOf = (status: Resolution['executionStatus']): number => {
-  if (['PENDING_OFFICE_SIGNATURE', 'PENDING_CEO_SIGNATURE', 'PENDING_ADMIN_SIGNATURE', 'WAITING_MINUTES_SIGNATURE'].includes(status)) return 1;
+  if (['PENDING_OFFICE_SIGNATURE', 'PENDING_CEO_SIGNATURE', 'PENDING_ADMIN_SIGNATURE', 'PENDING_SIGNATURES', 'WAITING_MINUTES_SIGNATURE'].includes(status)) return 1;
   if (['WAITING_NOTIFICATION', 'PENDING_SECRETARY_NOTICE_SIGNATURE'].includes(status)) return 2;
   if (['NOTIFIED', 'IN_PROGRESS', 'WAITING_RESPONSE', 'NEEDS_FOLLOW_UP', 'DONE_BY_ASSIGNEE', 'REJECTED_RETURNED', 'OVERDUE', 'NOT_STARTED'].includes(status)) return 3;
   if (status === 'PENDING_APPROVAL') return 4;
@@ -27,11 +27,16 @@ const stageIndexOf = (status: Resolution['executionStatus']): number => {
 
 const nextResponsible = (r: Resolution): string => {
   const sig = r.signatureWorkflow && r.signatureWorkflow.status !== 'COMPLETED' ? r.signatureWorkflow.steps[r.signatureWorkflow.currentStepIndex] : undefined;
+  const pendingSigners = r.signatureWorkflow?.steps.filter((step) => step.status === 'PENDING') || [];
   switch (r.executionStatus) {
     case 'PENDING_OFFICE_SIGNATURE':
     case 'PENDING_CEO_SIGNATURE':
     case 'PENDING_ADMIN_SIGNATURE':
       return sig ? `${sig.signerName} — امضای مرحله ${toPersianDigits(sig.order)}` : 'امضاکننده مرحله جاری';
+    case 'PENDING_SIGNATURES':
+      return pendingSigners.length > 1
+        ? `امضای همزمان: ${pendingSigners.map((step) => step.signerName).join('، ')}`
+        : sig ? `${sig.signerName} — امضای مرحله ${toPersianDigits(sig.order)}` : 'امضاکنندگان تعیین‌شده';
     case 'WAITING_NOTIFICATION':
       return 'مسئول دفتر — ثبت ابلاغ';
     case 'PENDING_SECRETARY_NOTICE_SIGNATURE':
@@ -55,7 +60,7 @@ export const ResolutionProgressTracker: React.FC<{ resolution: Resolution }> = (
   const isClosed = current === 5;
   const late = r.executionStatus === 'OVERDUE';
   const lastDecision = r.verificationConfig.steps.filter((s) => s.comments).slice(-1)[0]?.comments || r.lastAction || r.reviewResultNotes;
-  const stageDate = [r.createdAt ? new Date(r.createdAt).toLocaleDateString('fa-IR-u-ca-persian') : '', r.signatureWorkflow?.steps.find((s) => s.order === 3)?.signedDateJalali, r.notifiedDateJalali, r.executionStartDateJalali || r.assignedDateJalali, r.completionDateJalali, r.verificationConfig.steps.slice(-1)[0]?.actionDateJalali];
+  const stageDate = [r.createdAt ? new Date(r.createdAt).toLocaleDateString('fa-IR-u-ca-persian') : '', r.signatureWorkflow?.steps.slice(-1)[0]?.signedDateJalali, r.notifiedDateJalali, r.executionStartDateJalali || r.assignedDateJalali, r.completionDateJalali, r.verificationConfig.steps.slice(-1)[0]?.actionDateJalali];
 
   return (
     <section className="rpt">

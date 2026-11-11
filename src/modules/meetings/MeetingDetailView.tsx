@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { meetingService, resolutionService, boardSecretariatService } from '../../services';
 import { Meeting, Resolution, AgendaItem, BoardMinutes, ResolutionNotice, MeetingOutcomeLetter } from '../../types';
+import { AgendaApprovalPanel, ApprovalProgress, MeetingWorkflowSummary } from './MeetingWorkflowPanel';
+import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
+import { draftMinutes } from '../../services/ai/aiService';
+import type { AiResult } from '../../services/ai/aiClient';
+import { getAgendaApprovalPolicy, resolveApprovalAuthority } from '../../services/workflowPolicyService';
 import {
   Calendar,
   Clock,
@@ -70,6 +75,9 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
   const [guestTime, setGuestTime] = useState('');
   const [boardMinutes, setBoardMinutes] = useState<BoardMinutes | null>(null);
   const [minutesContent, setMinutesContent] = useState('');
+  const aiMinutes = useAiFeature('minutes');
+  const [minutesDrafting, setMinutesDrafting] = useState(false);
+  const [minutesAiResult, setMinutesAiResult] = useState<AiResult<string> | null>(null);
   const [notices, setNotices] = useState<ResolutionNotice[]>([]);
   const [isAppendModalOpen, setIsAppendModalOpen] = useState(false);
   const [outcomeLetters, setOutcomeLetters] = useState<MeetingOutcomeLetter[]>([]);
@@ -100,7 +108,7 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
         // the CEO as an unauthorized actor — now that sendInvitations also
         // accepts CEO, finish the send instead of leaving it stranded
         // forever with no manual button left to retry it.
-        if (meetRes.data.status === 'READY_FOR_INVITATION' && ['SECRETARY', 'ADMIN', 'CEO'].includes(currentUser.role)) {
+        if (meetRes.data.status === 'READY_FOR_INVITATION' && (['SECRETARY', 'ADMIN', 'CEO'].includes(currentUser.role) || getAgendaApprovalPolicy(meetRes.data).approverUserIds.includes(currentUser.id))) {
           try {
             const sent = await meetingService.sendInvitations(meetingId, currentUser);
             if (sent.isSuccess) setMeeting(sent.data);
@@ -140,15 +148,18 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
     });
   };
 
-  const handleAgendaReview = async (decision: 'APPROVE' | 'RETURN') => {
+  const handleAgendaReview = async (decision: 'APPROVE' | 'RETURN', notesOverride?: string) => {
     try {
-      await meetingService.reviewAgenda(meetingId, decision, agendaReviewNotes, currentUser);
-      if (decision === 'APPROVE') {
+      const reviewed = await meetingService.reviewAgenda(meetingId, decision, notesOverride ?? agendaReviewNotes, currentUser);
+      if (decision === 'APPROVE' && reviewed.data.status === 'READY_FOR_INVITATION') {
         // Invitations are no longer a separate manual step — they go out
         // automatically the moment the agenda is approved, right where the
         // meeting becomes READY_FOR_INVITATION.
         await meetingService.sendInvitations(meetingId, currentUser);
         showToast('بررسی دستورکار', 'دستورکار تأیید شد و دعوتنامه به‌صورت خودکار برای اعضا و مدعوین ارسال شد.', 'success');
+      } else if (decision === 'APPROVE') {
+        // گردش پویا: تأیید شما ثبت شد اما سایر تأییدکنندگان هنوز باقی‌اند.
+        showToast('بررسی دستورکار', 'تأیید شما ثبت شد؛ دستورکار در انتظار تأیید سایر تأییدکنندگان است.', 'success');
       } else {
         showToast('بررسی دستورکار', 'دستورکار برای اصلاح به دبیرخانه بازگشت.', 'success');
       }
@@ -206,12 +217,34 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
     setBoardMinutes(minutesRes.data); setNotices(noticesRes.data); if (minutesRes.data) setMinutesContent(minutesRes.data.content); triggerRefresh();
   };
 
+  /** پیش‌نویس رسمی صورت‌جلسه از بندها، نتایج و مصوبات (AI یا موتور محلی). */
+  const handleAiMinutes = async () => {
+    if (!meeting) return;
+    setMinutesDrafting(true);
+    try {
+      const res = await draftMinutes(meeting, resolutions, currentUser.id);
+      setMinutesAiResult(res);
+      if (!boardMinutes) {
+        await boardSecretariatService.createMinutes(meeting, res.data, currentUser);
+        await refreshGovernance();
+      }
+      setMinutesContent(res.data);
+      showToast('صورت‌جلسه هوشمند', 'پیش‌نویس صورت‌جلسه تولید شد؛ پس از بازبینی ذخیره کنید.', 'success');
+    } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'تولید پیش‌نویس انجام نشد.', 'error'); } finally { setMinutesDrafting(false); }
+  };
+
   const handleCreateMinutes = async () => {
     if (!meeting) return;
     const defaultText = `جلسه ${meeting.meetingNumber} با عنوان «${meeting.title}» در تاریخ ${meeting.dateJalali} برگزار شد. موضوعات دستورکار بررسی و نتایج و مصوبات مطابق جداول این سند ثبت گردید.`;
     try { await boardSecretariatService.createMinutes(meeting, minutesContent || defaultText, currentUser); await refreshGovernance(); showToast('صورت‌جلسه تجمیعی', 'پیش‌نویس رسمی در سه نسخه ایجاد شد.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ایجاد صورت‌جلسه انجام نشد.', 'error'); }
   };
   const handleSaveMinutes = async () => { try { await boardSecretariatService.updateMinutes(meetingId, minutesContent, currentUser); await refreshGovernance(); showToast('ذخیره صورت‌جلسه', 'پیش‌نویس ذخیره شد.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ذخیره انجام نشد.', 'error'); } };
+  const handleSubmitMinutesForApproval = async () => { try { await boardSecretariatService.updateMinutes(meetingId, minutesContent, currentUser); await boardSecretariatService.submitMinutesForApproval(meetingId, currentUser); await refreshGovernance(); showToast('صورت‌جلسه', 'صورت‌جلسه برای تأییدکنندگان تعیین‌شده ارسال شد.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ارسال انجام نشد.', 'error'); } };
+  const handleReviewMinutes = async (decision: 'APPROVE' | 'RETURN') => {
+    const notes = decision === 'RETURN' ? (window.prompt('دلیل برگشت صورت‌جلسه:') || '') : '';
+    if (decision === 'RETURN' && !notes.trim()) return;
+    try { await boardSecretariatService.reviewMinutes(meetingId, decision, notes, currentUser); await refreshGovernance(); showToast('صورت‌جلسه', decision === 'APPROVE' ? 'تأیید شما ثبت شد.' : 'صورت‌جلسه برای اصلاح برگشت داده شد.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'عملیات انجام نشد.', 'error'); }
+  };
   const handleFinalizeMinutes = async () => { try { await boardSecretariatService.finalizeMinutes(meetingId, currentUser); await refreshGovernance(); showToast('نهایی‌سازی', 'صورت‌جلسه نهایی و مصوبات آماده ابلاغ شدند.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'نهایی‌سازی انجام نشد.', 'error'); } };
   // Official letters are a rendering of the meeting's own data — they never
   // duplicate the workflow, and the permission check lives in documentService.
@@ -243,7 +276,12 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
   }
 
   const statusMeta = getMeetingStatusMeta(meeting.status);
-  const isCeo = currentUser.role === 'CEO' || currentUser.role === 'ADMIN';
+  const agendaPolicy = getAgendaApprovalPolicy(meeting);
+  const isAgendaApprover = agendaPolicy.approverUserIds.includes(currentUser.id);
+  // «تأییدکننده دستورکار» دیگر الزاماً مدیرعامل نیست: طبق گردش کار جلسه.
+  const isCeo = currentUser.role === 'CEO' || currentUser.role === 'ADMIN' || isAgendaApprover;
+  const minutesPolicy = meeting.workflow?.minutesApproval?.approverUserIds.length ? meeting.workflow.minutesApproval : undefined;
+  const canReviewMinutesNow = Boolean(minutesPolicy && boardMinutes && ['WAITING_SIGNATURES', 'PARTIALLY_SIGNED'].includes(boardMinutes.status) && resolveApprovalAuthority(minutesPolicy, boardMinutes.approvals || [], currentUser).allowed);
   const isSecretariat = currentUser.id === meeting.secretaryId || currentUser.role === 'SECRETARY' || currentUser.role === 'ADMIN';
   const canArrangeAgenda = (isCeo || isSecretariat) && ['WAITING_FOR_CEO_APPROVAL', 'AGENDA_RETURNED'].includes(meeting.status);
   // Append-only addition of new invitees/agenda items to an already-created
@@ -295,7 +333,10 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
         </div>
       </div>
 
-      {isCeo && meeting.status === 'WAITING_FOR_CEO_APPROVAL' && <div className="no-print bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3"><div className="font-extrabold text-amber-900">بررسی و تأیید دستورکار توسط مدیرعامل</div><textarea rows={2} value={agendaReviewNotes} onChange={(e) => setAgendaReviewNotes(e.target.value)} placeholder="توضیحات تأیید یا دلیل بازگشت" className="w-full text-xs p-3 bg-white border border-amber-200 rounded-xl" /><div className="flex gap-2"><button onClick={() => handleAgendaReview('APPROVE')} className="bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">تأیید نهایی دستورکار</button><button onClick={() => handleAgendaReview('RETURN')} className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold">بازگشت به دبیرخانه</button></div></div>}
+      {meeting.status === 'WAITING_FOR_CEO_APPROVAL' && (isCeo || isSecretariat) && (
+        <AgendaApprovalPanel meeting={meeting} policy={agendaPolicy} currentUser={currentUser} onDecide={(decision, notes) => handleAgendaReview(decision, notes)} />
+      )}
+      <MeetingWorkflowSummary meeting={meeting} />
 
       {/* Main Meeting Banner Header */}
       <div className="no-print bg-white rounded-3xl p-6 shadow-xs border border-slate-200/90 space-y-4">
@@ -702,15 +743,29 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
       {activeTab === 'MINUTES_PRINT' && (
         <div className="space-y-3">
           <div className="no-print bg-white border border-slate-200 rounded-3xl p-5 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-extrabold text-slate-900">صورت‌جلسه تجمیعی هیأت‌مدیره</h3><p className="text-[11px] text-slate-500">پیش‌نویس، نهایی‌سازی سه نسخه و ابلاغ مصوبات (امضای اعضا و مدعوین لازم نیست)</p></div>{boardMinutes && <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold">{boardMinutes.status === 'FINALIZED' ? 'نهایی‌شده' : 'پیش‌نویس'}</span>}</div>
-            {!boardMinutes && isSecretariat && <button onClick={handleCreateMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">ایجاد پیش‌نویس صورت‌جلسه</button>}
+            <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-extrabold text-slate-900">صورت‌جلسه تجمیعی هیأت‌مدیره</h3><p className="text-[11px] text-slate-500">پیش‌نویس، نهایی‌سازی سه نسخه و ابلاغ مصوبات (امضای اعضا و مدعوین لازم نیست)</p></div>{boardMinutes && <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold">{boardMinutes.status === 'FINALIZED' ? 'نهایی‌شده' : boardMinutes.status === 'SIGNED' ? 'تأییدشده — آماده نهایی‌سازی' : boardMinutes.status === 'WAITING_SIGNATURES' || boardMinutes.status === 'PARTIALLY_SIGNED' ? 'در انتظار تأیید' : 'پیش‌نویس'}</span>}</div>
+            {!boardMinutes && isSecretariat && <div className="flex flex-wrap gap-2"><button onClick={handleCreateMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">ایجاد پیش‌نویس صورت‌جلسه</button>{aiMinutes && <AiButton size="md" onClick={handleAiMinutes} loading={minutesDrafting}>نوشتن صورت‌جلسه با هوش مصنوعی</AiButton>}</div>}
+            {boardMinutes && boardMinutes.status === 'DRAFT' && isSecretariat && aiMinutes && <div className="flex flex-wrap items-center gap-2"><AiButton variant="soft" onClick={handleAiMinutes} loading={minutesDrafting}>بازنویسی کامل از روی نتایج جلسه</AiButton><AiSourceBadge result={minutesAiResult} /></div>}
             {boardMinutes && <>
-              <textarea rows={5} value={minutesContent} onChange={(event) => setMinutesContent(event.target.value)} disabled={boardMinutes.status !== 'DRAFT' || !isSecretariat} className="w-full text-xs leading-7 p-4 bg-slate-50 border border-slate-200 rounded-2xl disabled:opacity-80" />
+              <textarea rows={minutesContent.split('\n').length > 6 ? 12 : 5} value={minutesContent} onChange={(event) => setMinutesContent(event.target.value)} disabled={boardMinutes.status !== 'DRAFT' || !isSecretariat} className="w-full text-xs leading-7 p-4 bg-slate-50 border border-slate-200 rounded-2xl disabled:opacity-80" />
+              {boardMinutes.status === 'DRAFT' && isSecretariat && <AiTextAssist value={minutesContent} onChange={setMinutesContent} purpose="minutes" actorId={currentUser.id} />}
               {/* Attendee signatures are no longer collected. Any that already
                   exist on an older minutes record stay visible, read-only. */}
               {(boardMinutes.signatures?.length || 0) > 0 && <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs"><summary className="cursor-pointer font-bold text-slate-700">امضاهای بایگانی‌شده اعضا (مربوط به فرآیند قبلی)</summary><div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">{boardMinutes.signatures!.map((signature) => <div key={signature.memberUserId} className="p-3 rounded-2xl border bg-white border-slate-200"><strong className="text-slate-800">{signature.memberName}</strong><span className="block text-[10px] text-slate-500">{signature.memberTitle}</span><span className="block text-[10px] font-bold mt-2">{signature.status === 'SIGNED' ? `امضا شده — ${toPersianDigits(new Date(signature.signedAt!).toLocaleString('fa-IR'))}` : 'ثبت نشده'}</span></div>)}</div></details>}
               {boardMinutes.finalizedSignature && <div className="flex items-center gap-3 p-3 rounded-2xl border border-emerald-200 bg-emerald-50/60"><div className="text-[11px]"><strong className="block text-slate-800">{boardMinutes.finalizedSignature.signerName}</strong><span className="block text-slate-500">{boardMinutes.finalizedSignature.signerTitle}</span><span className="block text-slate-500">{toPersianDigits(boardMinutes.finalizedSignature.signedDateJalali)} — {toPersianDigits(boardMinutes.finalizedSignature.signedTimeString)}</span></div></div>}
-              <div className="flex flex-wrap gap-2">{isSecretariat && boardMinutes.status !== 'FINALIZED' && <><button onClick={handleSaveMinutes} className="bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold">ذخیره پیش‌نویس</button><button onClick={handleFinalizeMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">نهایی‌سازی در سه نسخه</button></>}<button onClick={handleMinutesDocument} className="bg-blue-800 text-white px-4 py-2 rounded-xl text-xs font-bold">مشاهده و دانلود صورت‌جلسه تجمیعی</button>{isSecretariat && boardMinutes.status === 'FINALIZED' && notices.length === 0 && <button onClick={handleIssueNotices} className="bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold">صدور و ارسال ابلاغیه مصوبات</button>}</div>
+              {minutesPolicy && boardMinutes.status !== 'DRAFT' && boardMinutes.status !== 'FINALIZED' && (
+                <div className="rounded-xl border border-indigo-200 bg-indigo-50/50 p-3 space-y-2">
+                  <div className="text-xs font-extrabold text-indigo-950">تأیید صورت‌جلسه طبق گردش کار جلسه</div>
+                  <ApprovalProgress policy={minutesPolicy} decisions={boardMinutes.approvals} />
+                  {canReviewMinutesNow && (
+                    <div className="flex flex-wrap gap-2">
+                      <button onClick={() => handleReviewMinutes('APPROVE')} className="bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">تأیید صورت‌جلسه</button>
+                      <button onClick={() => handleReviewMinutes('RETURN')} className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold">برگشت جهت اصلاح</button>
+                    </div>
+                  )}
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">{isSecretariat && boardMinutes.status === 'DRAFT' && <button onClick={handleSaveMinutes} className="bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-bold">ذخیره پیش‌نویس</button>}{isSecretariat && minutesPolicy && boardMinutes.status === 'DRAFT' && <button onClick={handleSubmitMinutesForApproval} className="bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-bold">ارسال برای تأیید</button>}{isSecretariat && boardMinutes.status !== 'FINALIZED' && (!minutesPolicy || boardMinutes.status === 'SIGNED') && <button onClick={handleFinalizeMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">نهایی‌سازی در سه نسخه</button>}<button onClick={handleMinutesDocument} className="bg-blue-800 text-white px-4 py-2 rounded-xl text-xs font-bold">مشاهده و دانلود صورت‌جلسه تجمیعی</button>{isSecretariat && boardMinutes.status === 'FINALIZED' && notices.length === 0 && <button onClick={handleIssueNotices} className="bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold">صدور و ارسال ابلاغیه مصوبات</button>}</div>
               <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs"><summary className="cursor-pointer font-bold text-slate-700">ردپای تغییرات صورت‌جلسه ({toPersianDigits(boardMinutes.history.length)})</summary><div className="mt-3 space-y-2">{boardMinutes.history.map((entry) => <div key={entry.id} className="flex flex-wrap justify-between gap-2 border-b border-slate-200 pb-2 last:border-0"><span><strong>{entry.action}</strong> — {entry.actorName}</span><span className="text-slate-500">{toPersianDigits(entry.dateJalali)}، {toPersianDigits(entry.timeString)}</span></div>)}</div></details>
               {notices.length > 0 && <div className="border-t border-slate-100 pt-3"><div className="font-extrabold text-slate-800 mb-2">ابلاغیه‌های صادرشده ({toPersianDigits(notices.length)})</div><div className="grid grid-cols-1 sm:grid-cols-2 gap-2">{notices.map((notice) => <div key={notice.id} className="p-3 bg-blue-50/40 border border-blue-200 rounded-xl"><strong>{notice.noticeNumber} — {notice.resolutionNumber}</strong><span className="block text-[10px] text-slate-600">گیرنده: {notice.recipientName} ({notice.recipientDepartment})</span><span className="block text-[10px] text-blue-700 mt-1">{notice.status === 'RECEIVED' ? 'دریافت شده' : 'ارسال شده'} — مهلت: {toPersianDigits(notice.deadlineJalali || '—')}</span></div>)}</div></div>}
             </>}

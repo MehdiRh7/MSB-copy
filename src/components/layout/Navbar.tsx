@@ -211,7 +211,17 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Center: Global Search Bar */}
-        <div className="hidden lg:flex flex-1 max-w-md mx-4">
+        <div className="hidden lg:flex flex-1 max-w-md mx-4 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('msb-open-command-palette'))}
+            title="فرمان سریع هوشمند (Ctrl+K)"
+            className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold text-white bg-gradient-to-l from-violet-600 via-indigo-600 to-sky-500 shadow-sm hover:shadow-md"
+          >
+            <span aria-hidden>✨</span>
+            <span>فرمان سریع</span>
+            <kbd className="rounded bg-white/20 px-1 text-[9px]">Ctrl K</kbd>
+          </button>
           <div className="relative w-full" ref={searchRef}>
             <input
               type="text"

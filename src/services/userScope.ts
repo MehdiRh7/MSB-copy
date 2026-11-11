@@ -1,4 +1,5 @@
 import { AgendaItem, Meeting, Resolution, User, UserRole } from '../types';
+import { meetingWorkflowParticipantIds } from './workflowPolicyService';
 
 // فقط مدیر سامانه دید فراگیر دارد. مدیرعامل، دبیر و مسئول دفتر همچنان
 // گردش‌های خود را می‌بینند، اما فهرست و تقویم فقط جلسه‌هایی را نشان می‌دهد
@@ -18,6 +19,7 @@ export const isMeetingRelatedToUser = (meeting: Meeting, userId: string): boolea
   meeting.secretaryId === userId ||
   meeting.createdByUserId === userId ||
   meeting.agendaApproverUserIds?.includes(userId) ||
+  meetingWorkflowParticipantIds(meeting).includes(userId) ||
   meeting.members.some((member) => member.userId === userId);
 
 /**

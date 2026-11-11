@@ -44,6 +44,7 @@ import { RecordFollowUpForm } from './RecordFollowUpForm';
 import { buildAttachmentFromFile } from '../../utils/attachmentFile';
 import { SignNotificationLetterAction } from './SignNotificationLetterAction';
 import { resolveSigningAuthority } from '../../services/signatureDelegationService';
+import { ResolutionAiInsight } from './ResolutionAiInsight';
 
 interface ResolutionDetailModalProps {
   resolutionId: string | null;
@@ -119,7 +120,13 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
   const isAssignee = currentUser.id === resolution.mainResponsibleUserId || currentUser.role === 'ADMIN';
   const isCurrentApprover = Boolean(currentStep) && (currentUser.id === currentStep.approverId || currentUser.role === 'ADMIN');
   const signatureWorkflow = resolution.signatureWorkflow;
-  const activeSignature = signatureWorkflow?.steps[signatureWorkflow.currentStepIndex];
+  // در زنجیره موازی چند امضا همزمان باز است؛ مرحله‌ای که این کاربر (یا
+  // جانشینش) می‌تواند امضا کند اولویت دارد.
+  const activeSignature = signatureWorkflow?.steps.find((step) => step.status === 'PENDING' && resolveSigningAuthority(step.signerUserId, currentUser.id).allowed)
+    || signatureWorkflow?.steps[signatureWorkflow.currentStepIndex];
+  const isParallelChain = signatureWorkflow?.mode === 'PARALLEL';
+  const isCustomChain = signatureWorkflow?.source === 'MEETING';
+  const pendingSignerNames = signatureWorkflow?.steps.filter((step) => step.status === 'PENDING').map((step) => step.signerName) || [];
   // Being the assigned signer for this step is necessary but no longer
   // sufficient — SIGN_RESOLUTION must also be granted (via سطح دسترسی),
   // so signing can be enabled for any role through the permission screen
@@ -305,6 +312,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
         {/* Modal Scrollable Body */}
         <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
           <ResolutionProgressTracker resolution={resolution} />
+          <ResolutionAiInsight resolution={resolution} actorId={currentUser.id} />
 
           {/* Formal resolution minutes and sequential signatures */}
           {signatureWorkflow && (
@@ -351,7 +359,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-2 mb-3"><PenTool className="w-4 h-4 text-slate-700" /><span className="font-extrabold text-slate-800">امضاهای دیجیتال ترتیبی</span></div>
+                  <div className="flex items-center gap-2 mb-3"><PenTool className="w-4 h-4 text-slate-700" /><span className="font-extrabold text-slate-800">{isParallelChain ? 'امضاهای دیجیتال همزمان' : 'امضاهای دیجیتال ترتیبی'}</span>{isCustomChain && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">گردش اختصاصی جلسه</span>}</div>
 
                   {/* Infographic: at-a-glance sequential-signature stepper.
                       Purely visual, derived from the same signatureWorkflow
@@ -371,7 +379,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                             <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-extrabold text-xs ${circleClass}`}>
                               {isSigned ? <Check className="w-4 h-4" /> : toPersianDigits(step.order)}
                             </div>
-                            <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">{step.signerRole === 'OFFICE_MANAGER' ? 'مسئول دفتر' : step.signerRole === 'CEO' ? 'مدیرعامل' : 'ادمین'}</span>
+                            <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">{step.signerRole === 'OFFICE_MANAGER' ? 'مسئول دفتر' : step.signerRole === 'CEO' ? 'مدیرعامل' : step.signerRole === 'CUSTOM' ? (step.signerTitle || step.signerName) : 'ادمین'}</span>
                           </div>
                           {idx < signatureWorkflow.steps.length - 1 && (
                             <div className={`flex-1 h-0.5 mx-1 mb-4 ${isSigned ? 'bg-emerald-500' : 'bg-slate-200'}`}></div>
@@ -416,8 +424,8 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                       {isSigningAsDelegate
                         ? `امضا به جانشینی از ${activeSignature?.signerName}. امضای شما به نام خودتان و به‌عنوان جانشین ثبت می‌شود.`
                         : canSign
-                          ? 'نوبت امضای شماست. پس از تأیید، سند به امضاکننده بعدی ارسال می‌شود.'
-                          : `در انتظار امضای ${activeSignature?.signerName || 'امضاکننده بعدی'}`}
+                          ? (isParallelChain ? 'امضای شما لازم است. سایر امضاکنندگان همزمان امضا می‌کنند.' : 'نوبت امضای شماست. پس از تأیید، سند به امضاکننده بعدی ارسال می‌شود.')
+                          : `در انتظار امضای ${isParallelChain && pendingSignerNames.length ? pendingSignerNames.join('، ') : activeSignature?.signerName || 'امضاکننده بعدی'}`}
                     </span>
                     {canSign && (
                       <button type="button" onClick={handleSignResolution} disabled={isSigning} className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-extrabold">
@@ -430,7 +438,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                 {signatureWorkflow.status === 'COMPLETED' && resolution.executionStatus === 'WAITING_NOTIFICATION' && (
                   <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-extrabold flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
-                    هر سه امضای اصلی تکمیل شده؛ مصوبه در انتظار ابلاغ رسمی توسط مسئول دفتر است.
+                    {isCustomChain ? 'همه امضاهای تعیین‌شده' : 'هر سه امضای اصلی'} تکمیل شده؛ مصوبه در انتظار ابلاغ رسمی توسط مسئول دفتر است.
                   </div>
                 )}
                 {/* ابلاغ ثبت شده اما ابلاغیه هنوز امضا نشده: مصوبه وارد اجرا نشده است. */}
@@ -450,7 +458,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                 )}
                 {signatureWorkflow.status === 'COMPLETED' && !['WAITING_NOTIFICATION', 'PENDING_SECRETARY_NOTICE_SIGNATURE'].includes(resolution.executionStatus) && (
                   <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1">
-                    <div className="font-extrabold flex items-center gap-2"><CheckCircle2 className="w-4 h-4" />هر سه امضا تکمیل شده و مصوبه ابلاغ و وارد فرآیند اجرا شده است.</div>
+                    <div className="font-extrabold flex items-center gap-2"><CheckCircle2 className="w-4 h-4" />{isCustomChain ? 'همه امضاها' : 'هر سه امضا'} تکمیل شده و مصوبه ابلاغ و وارد فرآیند اجرا شده است.</div>
                     {resolution.notifiedByName && (
                       <div className="text-[11px] font-bold">
                         ابلاغ توسط {resolution.notifiedByName} در تاریخ {toPersianDigits(resolution.notifiedDateJalali || '—')}

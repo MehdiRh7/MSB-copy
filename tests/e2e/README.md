@@ -17,6 +17,7 @@ node tests/e2e/<suite>.cjs                # in another
 | `meetingSignaturesAndDocuments.cjs` | حذف امضای اعضا/مدعوین، امضای تصویری و تولید اسناد رسمی |
 | `archive.cjs` | بایگانی شخصی/سازمانی، دسترسی پوشه، بایگانی مصوبه و خروج از بایگانی |
 | `userSignatureManagement.cjs` | مدیریت تصویر امضا فقط توسط Admin و اتصال اسناد به منبع مرکزی امضا |
+| `dynamicWorkflow.cjs` | گردش کار پویا (تأیید ترتیبی/همه/یک نفر، امضای موازی، امضاکننده ابلاغیه، تأیید صورت‌جلسه، قالب‌ها) و دسترسی تنظیمات هوش مصنوعی |
 | `proposalConfirmationLoop.cjs` | تأیید نهایی دبیر جلسه و مسیر برگشت جهت اصلاح از طریق مسئول دفتر |
 
 Each script exits non-zero if any assertion fails.

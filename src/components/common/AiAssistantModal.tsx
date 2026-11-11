@@ -13,6 +13,10 @@ import {
   ChatChartResult, ChatEntity, ChatResponse, ChatResultItem, chatService,
 } from '../../services/chatService';
 import { toPersianDigits } from '../../utils/formatters';
+import { AiSourceBadge, VoiceInputButton, useAiFeature } from '../ai/AiKit';
+import { assistantAnswer, buildAssistantContext } from '../../services/ai/aiService';
+import { buildDashboardModel } from '../../modules/dashboard/dashboardData';
+import type { AiResult } from '../../services/ai/aiClient';
 
 interface ChatMessage {
   id: string;
@@ -21,6 +25,8 @@ interface ChatMessage {
   text: string;
   result?: ChatResponse;
   isError?: boolean;
+  /** پاسخ روایی هوش مصنوعی (در صورت فعال‌بودن) — نتایج ساخت‌یافته دست‌نخورده می‌مانند. */
+  ai?: AiResult<string>;
 }
 
 const INITIAL_MESSAGES: ChatMessage[] = [{
@@ -37,6 +43,8 @@ const SUGGESTED_PROMPTS = [
   'موارد منتظر تأیید من را نمایش بده',
   'وضعیت کلی مصوبات را بررسی کن',
   'نمودار وضعیت مصوبات را نمایش بده',
+  'امروز اول چه کاری انجام بدهم؟',
+  'کدام مصوبات در خطر تأخیر هستند و چرا؟',
 ];
 
 const RESULT_PAGE_SIZE = 10;
@@ -153,6 +161,14 @@ export const AiAssistantModal: React.FC = () => {
   const [visibleCounts, setVisibleCounts] = useState<Record<string, number>>({});
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const aiAssistant = useAiFeature('assistant');
+  // پرسش‌هایی که «فرمان سریع» تشخیص داد فرمان نیستند، مستقیم اینجا پرسیده می‌شوند.
+  const sendRef = useRef<((text?: string) => void) | null>(null);
+  useEffect(() => {
+    const onAsk = (event: Event) => { const text = (event as CustomEvent<string>).detail; if (text) window.setTimeout(() => sendRef.current?.(text), 50); };
+    window.addEventListener('msb-ask-assistant', onAsk);
+    return () => window.removeEventListener('msb-ask-assistant', onAsk);
+  }, []);
 
   useEffect(() => {
     if (isAiAssistantOpen) window.setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 80);
@@ -173,12 +189,21 @@ export const AiAssistantModal: React.FC = () => {
     setIsTyping(true);
     try {
       const result = await chatService.execute(query, currentUser.role === 'ADMIN' ? undefined : currentUser.id);
+      // جستجوی ساخت‌یافته (فهرست، آمار، نمودار) همیشه اجرا می‌شود؛ هوش مصنوعی
+      // روی همان داده‌های Scope‌شده کاربر یک پاسخ روایی و تحلیلی می‌سازد.
+      let ai: AiResult<string> | undefined;
+      if (aiAssistant) {
+        const history = messages.filter((m) => !m.isError && m.id !== 'msg-1').slice(-6).map((m) => ({ role: m.sender === 'user' ? 'user' as const : 'assistant' as const, content: m.text }));
+        const ruleText = `${result.text}\n${result.items.slice(0, 12).map((item) => `- ${item.number ? `${item.number} ` : ''}${item.title}${item.statusLabel ? ` (${item.statusLabel})` : ''}`).join('\n')}`;
+        ai = await assistantAnswer(query, history, buildAssistantContext(buildDashboardModel(currentUser)), ruleText, currentUser.id);
+      }
       const botMessage: ChatMessage = {
         id: `bot-${Date.now()}`,
         sender: 'bot',
         timestamp: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }),
-        text: result.text,
+        text: ai?.source === 'AI' ? ai.data : result.text,
         result,
+        ai,
       };
       setMessages((previous) => [...previous, botMessage]);
       setVisibleCounts((previous) => ({ ...previous, [botMessage.id]: RESULT_PAGE_SIZE }));
@@ -194,6 +219,8 @@ export const AiAssistantModal: React.FC = () => {
       setIsTyping(false);
     }
   };
+
+  sendRef.current = handleSendMessage;
 
   const handleCopy = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
@@ -261,6 +288,7 @@ export const AiAssistantModal: React.FC = () => {
                   <div className="flex items-center justify-between gap-3 border-b border-black/5 dark:border-white/5 pb-1.5">
                     <span className={`text-[10px] font-bold ${message.sender === 'user' ? 'text-teal-200' : message.isError ? 'text-rose-600 dark:text-rose-300' : 'text-teal-700 dark:text-teal-400'}`}>{message.sender === 'user' ? 'شما' : 'دستیار هوشمند'}</span>
                     <div className="flex items-center gap-2">
+                      {message.ai && <AiSourceBadge result={message.ai} />}
                       <span className={`text-[9px] ${message.sender === 'user' ? 'text-teal-200' : 'text-slate-400'}`}>{message.timestamp}</span>
                       {message.sender === 'bot' && <button onClick={() => handleCopy(message.text, message.id)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="کپی متن">{copiedId === message.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}</button>}
                     </div>
@@ -278,7 +306,7 @@ export const AiAssistantModal: React.FC = () => {
                     </div>
                   )}
                   {message.result?.charts.map((chart) => <ChatChart key={chart.title} chart={chart} isDarkMode={isDarkMode} />)}
-                  {message.result?.emptySuggestion && <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-2.5 text-[11px]">{message.result.emptySuggestion}</div>}
+                  {message.result?.emptySuggestion && message.ai?.source !== 'AI' && <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 p-2.5 text-[11px]">{message.result.emptySuggestion}</div>}
 
                   {visibleItems.length > 0 && (
                     <div className="mt-2.5 space-y-2">
@@ -351,6 +379,7 @@ export const AiAssistantModal: React.FC = () => {
         <div className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shrink-0">
           <form onSubmit={(event) => { event.preventDefault(); handleSendMessage(); }} className="flex items-center gap-2">
             <input type="text" value={inputText} onChange={(event) => setInputText(event.target.value)} placeholder="مثلاً: مصوبات در حال اجرای واحد فناوری اطلاعات را نمایش بده" className="flex-1 text-xs p-3 px-4 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl focus:ring-2 focus:ring-teal-500 focus:outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400" />
+            <VoiceInputButton className="p-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl" onText={(text, isFinal) => { if (isFinal) handleSendMessage(text); else setInputText(text); }} />
             <button type="submit" disabled={!inputText.trim() || isTyping} className="bg-teal-800 hover:bg-teal-700 disabled:opacity-40 text-white font-bold text-xs p-3 px-4 rounded-2xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5 shrink-0"><span className="hidden sm:inline">ارسال</span><Send className="w-4 h-4 rotate-180" /></button>
           </form>
         </div>
