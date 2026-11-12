@@ -90,6 +90,15 @@ const validate = (body: AiProxyRequest): string | null => {
   return null;
 };
 
+/**
+ * Vercel تابع را پس از maxDuration (۶۰ ثانیه) قطع می‌کند و پاسخ 504 بدون توضیح برمی‌گردد.
+ * کل درخواست (همراه تلاش دوباره و مدل جایگزین) باید زودتر تمام شود تا همیشه پاسخ JSON برگردد.
+ */
+const TOTAL_BUDGET_MS = 50_000;
+const CALL_TIMEOUT_MS = 45_000;
+const FIRST_TRY_MS = 25_000;
+const isTimeout = (error: any) => error?.name === 'AbortError';
+
 const withTimeout = async (url: string, init: RequestInit, ms: number) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
@@ -100,7 +109,7 @@ const withTimeout = async (url: string, init: RequestInit, ms: number) => {
   }
 };
 
-const callOpenAiCompatible = async (url: string, key: string, body: AiProxyRequest, extraHeaders: Record<string, string> = {}) => {
+const callOpenAiCompatible = async (url: string, key: string, body: AiProxyRequest, extraHeaders: Record<string, string> = {}, timeoutMs = CALL_TIMEOUT_MS) => {
   const response = await withTimeout(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}`, ...extraHeaders },
@@ -111,7 +120,7 @@ const callOpenAiCompatible = async (url: string, key: string, body: AiProxyReque
       max_tokens: body.maxTokens ?? 1200,
       ...(body.json ? { response_format: { type: 'json_object' } } : {}),
     }),
-  }, 60_000);
+  }, timeoutMs);
   const data: any = await response.json().catch(() => ({}));
   if (!response.ok) throw Object.assign(new Error(data?.error?.message || `HTTP ${response.status}`), { status: response.status });
   return {
@@ -120,7 +129,7 @@ const callOpenAiCompatible = async (url: string, key: string, body: AiProxyReque
   };
 };
 
-const callGemini = async (env: AiEnv, key: string, body: AiProxyRequest) => {
+const callGemini = async (env: AiEnv, key: string, body: AiProxyRequest, timeoutMs = CALL_TIMEOUT_MS) => {
   const system = body.messages.filter((m) => m.role === 'system').map((m) => m.content).join('\n\n');
   const contents = body.messages
     .filter((m) => m.role !== 'system')
@@ -138,7 +147,7 @@ const callGemini = async (env: AiEnv, key: string, body: AiProxyRequest) => {
         ...(body.json ? { responseMimeType: 'application/json' } : {}),
       },
     }),
-  }, 60_000);
+  }, timeoutMs);
   const data: any = await response.json().catch(() => ({}));
   if (!response.ok) throw Object.assign(new Error(data?.error?.message || `HTTP ${response.status}`), { status: response.status });
   const text = (data?.candidates?.[0]?.content?.parts || []).map((p: any) => p?.text || '').join('');
@@ -154,29 +163,39 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 /** مدل‌های جایگزین Gemini وقتی مدل انتخابی موقتاً شلوغ است. */
 const GEMINI_OVERLOAD_FALLBACKS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
 
-/** یک بار تلاش دوباره با مکث، سپس مدل‌های جایگزین؛ خطاهای دیگر همان‌طور برمی‌گردند. */
-const callGeminiResilient = async (env: AiEnv, key: string, body: AiProxyRequest) => {
+/**
+ * مدل انتخابی؛ اگر شلوغ بود یا دیر جواب داد: (در صورت وقت کافی) یک تلاش دوباره، سپس مدل‌های جایگزین.
+ * همه در بودجه زمانی کل؛ خطاهای دیگر همان‌طور برمی‌گردند.
+ */
+const callGeminiResilient = async (env: AiEnv, key: string, body: AiProxyRequest, deadline: number) => {
+  const left = () => deadline - Date.now();
+  let last: any;
   try {
-    return { ...(await callGemini(env, key, body)), model: body.model };
+    return { ...(await callGemini(env, key, body, Math.min(FIRST_TRY_MS, left()))), model: body.model };
   } catch (error: any) {
-    if (!isOverloaded(error)) throw error;
-    await wait(1200);
+    if (!isOverloaded(error) && !isTimeout(error)) throw error;
+    last = error;
+  }
+  // اگر خطای سریع «شلوغی» بود، یک بار دیگر همان مدل؛ اگر دیر جواب داد، مستقیم سراغ جایگزین.
+  if (!isTimeout(last) && left() > 15_000) {
+    await wait(1000);
     try {
-      return { ...(await callGemini(env, key, body)), model: body.model };
-    } catch (retryError: any) {
-      if (!isOverloaded(retryError)) throw retryError;
-      let last = retryError;
-      for (const alt of GEMINI_OVERLOAD_FALLBACKS.filter((m) => m !== body.model)) {
-        try {
-          return { ...(await callGemini(env, key, { ...body, model: alt })), model: alt };
-        } catch (altError: any) {
-          last = altError;
-          if (!isOverloaded(altError) && !/not found|not supported/i.test(String(altError?.message))) throw altError;
-        }
-      }
-      throw last;
+      return { ...(await callGemini(env, key, body, Math.min(15_000, left() - 8_000))), model: body.model };
+    } catch (error: any) {
+      if (!isOverloaded(error) && !isTimeout(error)) throw error;
+      last = error;
     }
   }
+  for (const alt of GEMINI_OVERLOAD_FALLBACKS.filter((m) => m !== body.model)) {
+    if (left() < 5_000) break;
+    try {
+      return { ...(await callGemini(env, key, { ...body, model: alt }, left() - 1_000)), model: alt };
+    } catch (error: any) {
+      last = error;
+      if (!isOverloaded(error) && !isTimeout(error) && !/not found|not supported/i.test(String(error?.message))) throw error;
+    }
+  }
+  throw last;
 };
 
 export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<AiProxyResponse> => {
@@ -191,7 +210,7 @@ export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<Ai
       result = await callOpenAiCompatible(`${baseUrl(env, 'openrouter')}/v1/chat/completions`, key, body, { 'X-Title': 'Meeting Resolution System' });
     } else if (body.provider === 'gemini') {
       try {
-        result = await callGeminiResilient(env, key, body);
+        result = await callGeminiResilient(env, key, body, started + TOTAL_BUDGET_MS);
         if (result.model !== body.model) {
           if (!result.text.trim()) return { ok: false, error: 'پاسخ خالی از ارائه‌دهنده دریافت شد', status: 502 };
           return { ok: true, text: result.text, provider: body.provider, model: result.model, fallbackFrom: body.model, latencyMs: Date.now() - started, usage: result.usage };
@@ -201,7 +220,7 @@ export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<Ai
         // («... use models/<name> ...»). یک بار با همان مدل تلاش می‌شود.
         const suggested = String(error?.message || '').match(/use\s+models\/([A-Za-z0-9._-]+)/i)?.[1];
         if (!suggested || suggested === body.model || !MODEL_PATTERN.test(suggested)) throw error;
-        result = await callGemini(env, key, { ...body, model: suggested });
+        result = await callGemini(env, key, { ...body, model: suggested }, Math.max(3_000, started + TOTAL_BUDGET_MS - Date.now()));
         if (!result.text.trim()) return { ok: false, error: 'پاسخ خالی از ارائه‌دهنده دریافت شد', status: 502 };
         return { ok: true, text: result.text, provider: body.provider, model: suggested, replacedModel: body.model, latencyMs: Date.now() - started, usage: result.usage };
       }
