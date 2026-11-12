@@ -2,7 +2,7 @@
  * Vercel Function — همان پراکسی هوش مصنوعی سرور (server/aiProxy.ts).
  * کلیدها از Environment Variables پروژه در Vercel خوانده می‌شوند.
  */
-import { handleAiChat, type AiProxyRequest } from '../../server/aiProxy';
+import { handleAiChat, type AiProxyRequest } from '../../server/aiProxy.js';
 
 export default async function handler(req: any, res: any) {
   res.setHeader('Cache-Control', 'no-store');

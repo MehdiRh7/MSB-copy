@@ -1,4 +1,4 @@
-import { aiServerStatus } from '../../server/aiProxy';
+import { aiServerStatus } from '../../server/aiProxy.js';
 
 export default function handler(_req: any, res: any) {
   res.setHeader('Cache-Control', 'no-store');

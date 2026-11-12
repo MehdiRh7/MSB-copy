@@ -13,7 +13,7 @@ import {
   maskKey,
   saveAiSettings,
 } from '../../services/ai/aiSettings';
-import { callAiRaw, getAiServerStatus } from '../../services/ai/aiClient';
+import { callAiRaw, explainAiError, getAiServerStatus } from '../../services/ai/aiClient';
 import { toPersianDigits } from '../../utils/formatters';
 
 type TestState = { state: 'idle' | 'running' | 'ok' | 'fail'; message?: string };
@@ -68,7 +68,7 @@ export const AiSettingsTab: React.FC = () => {
       const result = await callAiRaw({ feature: 'assistant', provider: id, system: 'فقط با یک جمله کوتاه پاسخ بده.', messages: [{ role: 'user', content: 'سلام؛ اتصال برقرار است؟' }], maxTokens: 60 });
       setTests((prev) => ({ ...prev, [id]: { state: 'ok', message: `${result.model} — ${toPersianDigits(result.latencyMs)} میلی‌ثانیه: «${result.text.slice(0, 80)}»` } }));
     } catch (error) {
-      setTests((prev) => ({ ...prev, [id]: { state: 'fail', message: error instanceof Error ? error.message : 'ناموفق' } }));
+      setTests((prev) => ({ ...prev, [id]: { state: 'fail', message: error instanceof Error ? `${explainAiError(error.message)}${explainAiError(error.message) !== error.message ? ` (${error.message})` : ''}` : 'ناموفق' } }));
     }
   };
 

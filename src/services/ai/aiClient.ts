@@ -117,3 +117,15 @@ export const getAiServerStatus = async (): Promise<Record<string, boolean> | nul
     return null;
   }
 };
+
+/** توضیح فارسی خطاهای رایج ارائه‌دهنده‌ها برای «تست اتصال». */
+export const explainAiError = (message: string): string => {
+  const m = message.toLowerCase();
+  if (m.includes('api key not valid') || m.includes('invalid api key') || m.includes('incorrect api key') || m.includes('401')) return 'کلید API نامعتبر است. کلید را دوباره از سایت ارائه‌دهنده کپی کنید (بدون فاصله اضافه) و پس از ذخیره در Vercel، Redeploy کنید.';
+  if (m.includes('location is not supported') || m.includes('failed_precondition')) return 'ارائه‌دهنده این سرویس را برای منطقه سرور ارائه نمی‌دهد. ناحیه اجرای توابع Vercel را بررسی کنید یا از OpenRouter استفاده کنید.';
+  if (m.includes('quota') || m.includes('resource_exhausted') || m.includes('429') || m.includes('rate limit')) return 'سهمیه رایگان این دقیقه/روز تمام شده است. کمی بعد دوباره امتحان کنید؛ تا آن زمان موتور محلی پاسخ می‌دهد.';
+  if (m.includes('not found') && m.includes('model')) return 'نام مدل در دسترس نیست. از فهرست مدل‌ها گزینه دیگری را انتخاب کنید.';
+  if (m.includes('کلید api برای این ارائه‌دهنده تنظیم نشده')) return 'کلید روی سرور پیدا نشد. در Vercel متغیر GEMINI_API_KEY (یا OPENROUTER_API_KEY) را تنظیم و حتماً Redeploy کنید.';
+  if (m.includes('http 500') || m.includes('http 404')) return 'سرویس هوش مصنوعی روی سرور در دسترس نیست. آخرین نسخه را Deploy کنید و دوباره امتحان کنید.';
+  return message;
+};
