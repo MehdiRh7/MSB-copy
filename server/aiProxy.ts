@@ -97,7 +97,6 @@ const validate = (body: AiProxyRequest): string | null => {
 const TOTAL_BUDGET_MS = 50_000;
 const CALL_TIMEOUT_MS = 45_000;
 const FIRST_TRY_MS = 25_000;
-const isTimeout = (error: any) => error?.name === 'AbortError';
 
 const withTimeout = async (url: string, init: RequestInit, ms: number) => {
   const controller = new AbortController();
@@ -159,43 +158,85 @@ const isOverloaded = (error: any) => {
   const m = String(error?.message || '').toLowerCase();
   return error?.status === 503 || m.includes('high demand') || m.includes('overloaded') || m.includes('unavailable') || m.includes('try again later');
 };
+/** سهمیه (۴۲۹ / RESOURCE_EXHAUSTED). در Gemini سهمیه رایگان برای هر مدل جداست. */
+const isQuota = (error: any) => {
+  const m = String(error?.message || '').toLowerCase();
+  return error?.status === 429 || m.includes('quota') || m.includes('resource_exhausted') || m.includes('rate limit');
+};
+const isTimeout = (error: any) => error?.name === 'AbortError';
+const isModelMissing = (error: any) => error?.status === 404 || /not found|not supported/i.test(String(error?.message));
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
-/** مدل‌های جایگزین Gemini وقتی مدل انتخابی موقتاً شلوغ است. */
-const GEMINI_OVERLOAD_FALLBACKS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
 
 /**
- * مدل انتخابی؛ اگر شلوغ بود یا دیر جواب داد: (در صورت وقت کافی) یک تلاش دوباره، سپس مدل‌های جایگزین.
- * همه در بودجه زمانی کل؛ خطاهای دیگر همان‌طور برمی‌گردند.
+ * مدل‌های جایگزین Gemini (هر کدام سهمیه رایگان جداگانه دارند). اگر مدل انتخابی شلوغ بود، دیر جواب داد
+ * یا سهمیه‌اش تمام شد، به ترتیب امتحان می‌شوند. نام‌های نامعتبر بی‌صدا رد می‌شوند.
+ */
+const GEMINI_FALLBACKS = ['gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash-lite', 'gemini-2.0-flash-lite'];
+
+/** «Please retry in 10h37m15.8s» → میلی‌ثانیه. */
+export const parseRetryDelay = (message: string): number | null => {
+  const m = String(message).match(/retry in\s+((?:\d+h)?(?:\d+m)?(?:[\d.]+s)?)/i);
+  if (!m || !m[1]) return null;
+  const h = Number(m[1].match(/(\d+)h/)?.[1] || 0), min = Number(m[1].match(/(\d+)m(?!s)/)?.[1] || 0), sec = Number(m[1].match(/([\d.]+)s/)?.[1] || 0);
+  const ms = ((h * 60 + min) * 60 + sec) * 1000;
+  return ms > 0 ? ms : null;
+};
+
+/** مدل‌هایی که سهمیه‌شان تمام شده تا زمان بازشدن کنار گذاشته می‌شوند (تا درخواست هدر نرود). */
+const quotaCooldown = new Map<string, { until: number; error: any }>();
+const coolingDown = (model: string) => {
+  const entry = quotaCooldown.get(model);
+  if (!entry) return null;
+  if (entry.until <= Date.now()) { quotaCooldown.delete(model); return null; }
+  return entry;
+};
+const rememberQuota = (model: string, error: any) => {
+  const delay = parseRetryDelay(error?.message || '') ?? 60_000;
+  quotaCooldown.set(model, { until: Date.now() + delay, error });
+};
+
+/**
+ * مدل انتخابی؛ اگر شلوغ بود، دیر جواب داد یا سهمیه‌اش تمام شد: (برای شلوغی کوتاه) یک تلاش دوباره،
+ * سپس مدل‌های جایگزین — همه داخل بودجه زمانی کل. خطاهای دیگر (کلید نامعتبر و ...) همان‌طور برمی‌گردند.
  */
 const callGeminiResilient = async (env: AiEnv, key: string, body: AiProxyRequest, deadline: number) => {
   const left = () => deadline - Date.now();
-  let last: any;
-  try {
-    return { ...(await callGemini(env, key, body, Math.min(FIRST_TRY_MS, left()))), model: body.model };
-  } catch (error: any) {
-    if (!isOverloaded(error) && !isTimeout(error)) throw error;
-    last = error;
-  }
-  // اگر خطای سریع «شلوغی» بود، یک بار دیگر همان مدل؛ اگر دیر جواب داد، مستقیم سراغ جایگزین.
-  if (!isTimeout(last) && left() > 15_000) {
-    await wait(1000);
+  const recoverable = (e: any) => isOverloaded(e) || isTimeout(e) || isQuota(e);
+  let last: any = coolingDown(body.model)?.error;
+  if (!last) {
     try {
-      return { ...(await callGemini(env, key, body, Math.min(15_000, left() - 8_000))), model: body.model };
+      return { ...(await callGemini(env, key, body, Math.min(FIRST_TRY_MS, left()))), model: body.model };
     } catch (error: any) {
-      if (!isOverloaded(error) && !isTimeout(error)) throw error;
+      if (!recoverable(error)) throw error;
+      if (isQuota(error)) rememberQuota(body.model, error);
       last = error;
     }
+    // شلوغی سریع → یک بار دیگر همان مدل؛ دیرکرد یا سهمیه → مستقیم سراغ جایگزین.
+    if (isOverloaded(last) && !isTimeout(last) && !isQuota(last) && left() > 15_000) {
+      await wait(1000);
+      try {
+        return { ...(await callGemini(env, key, body, Math.min(15_000, left() - 8_000))), model: body.model };
+      } catch (error: any) {
+        if (!recoverable(error)) throw error;
+        if (isQuota(error)) rememberQuota(body.model, error);
+        last = error;
+      }
+    }
   }
-  for (const alt of GEMINI_OVERLOAD_FALLBACKS.filter((m) => m !== body.model)) {
+  const primaryError = last;
+  for (const alt of GEMINI_FALLBACKS.filter((m) => m !== body.model)) {
     if (left() < 5_000) break;
+    if (coolingDown(alt)) continue;
     try {
-      return { ...(await callGemini(env, key, { ...body, model: alt }, left() - 1_000)), model: alt };
+      return { ...(await callGemini(env, key, { ...body, model: alt }, Math.min(FIRST_TRY_MS, left() - 1_000))), model: alt };
     } catch (error: any) {
-      last = error;
-      if (!isOverloaded(error) && !isTimeout(error) && !/not found|not supported/i.test(String(error?.message))) throw error;
+      if (isQuota(error)) rememberQuota(alt, error);
+      if (isModelMissing(error)) quotaCooldown.set(alt, { until: Date.now() + 6 * 3600_000, error });
+      if (!recoverable(error) && !isModelMissing(error)) throw error;
     }
   }
-  throw last;
+  // پیام خطای مدل اصلی (مثلاً «سهمیه روزانه ...») گویاتر از خطای آخرین جایگزین است.
+  throw primaryError;
 };
 
 export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<AiProxyResponse> => {
