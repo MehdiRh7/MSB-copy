@@ -44,7 +44,8 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
     const text = `${title} ${description}`.trim();
     if (text.length < 12) return [];
     return existing
-      .map((p) => ({ p, score: textSimilarity(text, `${p.title} ${p.description}`) }))
+      // عنوان با عنوان هم مقایسه می‌شود تا شرح طولانی، شباهت عنوان‌ها را کم‌رنگ نکند.
+      .map((p) => ({ p, score: Math.max(textSimilarity(text, `${p.title} ${p.description}`), title.trim().length > 8 ? textSimilarity(title, p.title) : 0) }))
       .filter((item) => item.score >= 0.22)
       .sort((a, b) => b.score - a.score)
       .slice(0, 3);

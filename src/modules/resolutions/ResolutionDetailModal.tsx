@@ -138,7 +138,10 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
   const signingAuthority = activeSignature
     ? resolveSigningAuthority(activeSignature.signerUserId, currentUser.id)
     : { allowed: false, asDelegate: false };
-  const canSign = activeSignature?.status === 'PENDING' && signingAuthority.allowed && hasPermission('SIGN_RESOLUTION');
+  // در زنجیره اختصاصی جلسه، خودِ انتخاب‌شدن به‌عنوان امضاکننده (توسط
+  // سازنده جلسه / مدیر سیستم) همان مجوز امضاست؛ وگرنه کسی که مجوز عمومی
+  // SIGN_RESOLUTION ندارد هرگز دکمه امضا را نمی‌دید و گردش متوقف می‌شد.
+  const canSign = activeSignature?.status === 'PENDING' && signingAuthority.allowed && (hasPermission('SIGN_RESOLUTION') || isCustomChain);
   const isSigningAsDelegate = canSign && signingAuthority.asDelegate;
   const invitees = Array.from(new Map([
     ...(resolution.mainResponsibleName ? [{
