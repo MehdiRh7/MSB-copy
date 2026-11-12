@@ -1,3 +1,4 @@
+import { nextRecordNumber } from '../utils/date';
 import { Proposal, ApiResponse, ApiFilterParams, PagedResult, User, AppNotification } from '../types';
 import { mockProposals, mockUsers, mockNotifications } from '../mock/data';
 import { apiClient } from './api/apiClient';
@@ -170,7 +171,7 @@ class MockProposalService implements IProposalService {
     const source = dto.source || 'MANUAL';
     const newProposal: Proposal = {
       id: `prop-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      proposalNumber: `پیشنهاد-۱۴۰۳-${toPersianDigits(proposals.length + 1)}`,
+      proposalNumber: nextRecordNumber('پ', proposals.map((p) => p.proposalNumber)),
       ...dto,
       source,
       dateJalali: getJalaliDate(),

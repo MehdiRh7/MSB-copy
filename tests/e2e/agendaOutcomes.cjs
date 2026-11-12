@@ -54,7 +54,7 @@ const TRANSCRIPT = 'جلسه با حضور اعضا آغاز شد. درباره 
   await page.waitForTimeout(800);
   await page.locator('text=جلسه تست نتیجه بندها').first().click();
   await page.waitForTimeout(1000);
-  await page.locator('button', { hasText: 'پیش‌نمایش چاپ صورتجلسه' }).click();
+  await page.locator('button', { hasText: 'برگزاری جلسه (ضبط و گفتار)' }).click();
   await page.waitForTimeout(600);
   await page.fill('textarea[placeholder^="متن گفتار جلسه"]', TRANSCRIPT);
   await page.locator('button', { hasText: 'پیشنهاد نتیجه بندها از گفتار' }).click();

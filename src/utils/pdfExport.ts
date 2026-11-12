@@ -34,13 +34,17 @@ const registerSaveHelper = () => {
   };
 };
 
-export const exportHtmlToPdf = (title: string, bodyHtml: string, options: { wordExport?: boolean; autoPrint?: boolean } = {}): boolean => {
+export const exportHtmlToPdf = (title: string, bodyHtml: string, options: { wordExport?: boolean; autoPrint?: boolean; /** نام فایل Word (بدون پسوند)؛ پیش‌فرض: عنوان */ fileName?: string } = {}): boolean => {
   if (options.wordExport) registerSaveHelper();
   const printWindow = window.open('', '_blank', 'width=1000,height=800');
   if (!printWindow) return false;
   const autoPrint = options.autoPrint !== false;
+  // نام فایل دانلودی: فقط حروف لاتین، رقم و خط تیره (بدون «/» و حروف فارسی).
+  const fileBase = (options.fileName || title)
+    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+    .replace(/[^A-Za-z0-9_-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || `document-${new Date().toISOString().slice(0, 10)}`;
   const toolbar = options.wordExport ? `
-    <div class="doc-toolbar">
+    <div class="doc-toolbar" data-file-name="${escapeHtml(fileBase)}">
       <span>${escapeHtml(title)}</span>
       <button type="button" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>
       <button type="button" onclick="downloadWord()">📄 دانلود Word</button>
@@ -55,11 +59,11 @@ export const exportHtmlToPdf = (title: string, bodyHtml: string, options: { word
           + "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->"
           + "<style>@page Section1{size:21cm 29.7cm;margin:1.6cm 1.8cm} div.Section1{page:Section1} body{direction:rtl;font-family:Tahoma,Arial;font-size:11pt} table{border-collapse:collapse} td,th{border:1px solid #d9dee8;padding:5px} .lh td{border:none} .doc-footer{border-top:1px solid #ccc;font-size:9pt;color:#555;margin-top:24px;padding-top:6px} img{max-height:70px}</style>"
           + "</head><body dir='rtl' lang='fa'><div class='Section1'>" + root.innerHTML + "</div></body></html>";
-        if (window.opener && window.opener.__msbSaveFile) { window.opener.__msbSaveFile(document.title + '.doc', ['\ufeff', html], 'application/msword'); return; }
+        if (window.opener && window.opener.__msbSaveFile) { window.opener.__msbSaveFile(${JSON.stringify(fileBase)} + '.doc', ['\ufeff', html], 'application/msword'); return; }
         var blob = new Blob(['﻿', html], { type: 'application/msword' });
         var a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = document.title + '.doc';
+        a.download = ${JSON.stringify(fileBase)} + '.doc';
         document.body.appendChild(a); a.click(); a.remove();
       }
     <\/script>` : '';

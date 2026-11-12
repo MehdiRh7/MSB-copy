@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, Lightbulb } from 'lucide-react';
 import { Resolution } from '../../types';
 import { AiButton, AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
@@ -18,6 +18,9 @@ export const ResolutionAiInsight: React.FC<{ resolution: Resolution; actorId: st
   const base = useMemo(() => computeResolutionRisk(resolution), [resolution]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AiResult<RiskAnalysis> | null>(null);
+  // تحلیل قبلی وقتی وضعیت مصوبه عوض شود (مثلاً تکمیل امضاها) کهنه است و پاک می‌شود.
+  const stateKey = `${resolution.id}|${resolution.executionStatus}|${resolution.signatureWorkflow?.status || ''}|${resolution.progressPercent ?? ''}|${resolution.deadlineJalali || ''}`;
+  useEffect(() => { setResult(null); }, [stateKey]);
   if (!enabled || resolution.approvalStatus !== 'APPROVED' || ['APPROVED_CLOSED', 'ARCHIVED'].includes(resolution.executionStatus)) return null;
   const level = base.score >= 60 ? 'HIGH' : base.score >= 30 ? 'MEDIUM' : 'LOW';
   const meta = LEVEL_META[level];

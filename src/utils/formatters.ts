@@ -46,8 +46,8 @@ export function getPriorityMeta(priority: PriorityLevel): { label: string; bg: s
 /**
  * Meeting Type Persian Label
  */
-export function getMeetingTypeLabel(type: MeetingType): string {
-  switch (type) {
+export function getMeetingTypeLabel(type: MeetingType | string): string {
+  switch (type as string) {
     case 'BOARD_OF_DIRECTORS':
       return 'هیئت مدیره';
     case 'MANAGEMENT_COUNCIL':
@@ -60,6 +60,17 @@ export function getMeetingTypeLabel(type: MeetingType): string {
       return 'کمیته مدیریت بحران';
     case 'EXTRAORDINARY':
       return 'جلسه فوق‌العاده';
+    // انواعی که فرم ایجاد جلسه ارائه می‌کند.
+    case 'BOARD':
+      return 'جلسه هیئت مدیره';
+    case 'EXECUTIVE':
+      return 'جلسه هیئت عامل / اجرایی';
+    case 'COMMISSION':
+      return 'جلسه کمیسیون تخصصی';
+    case 'DEPARTMENTAL':
+      return 'جلسه داخلی واحد';
+    case 'COORDINATION':
+      return 'جلسه هماهنگی بین‌بخشی';
     default:
       return 'جلسه سازمانی';
   }

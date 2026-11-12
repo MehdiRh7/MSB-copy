@@ -194,7 +194,11 @@ export const AiAssistantModal: React.FC = () => {
       let ai: AiResult<string> | undefined;
       if (aiAssistant) {
         const history = messages.filter((m) => !m.isError && m.id !== 'msg-1').slice(-6).map((m) => ({ role: m.sender === 'user' ? 'user' as const : 'assistant' as const, content: m.text }));
-        const ruleText = `${result.text}\n${result.items.slice(0, 12).map((item) => `- ${item.number ? `${item.number} ` : ''}${item.title}${item.statusLabel ? ` (${item.statusLabel})` : ''}`).join('\n')}`;
+        const matchedUnits = [...new Set(result.items.flatMap((item) => item.details.filter((d) => d.label.includes('واحد')).map((d) => d.value)).filter((v) => v && v !== 'تعیین نشده'))].slice(0, 4);
+        const unitNote = result.intent.departmentTerm && result.totalCount > 0
+          ? `\nتوجه: عبارت «${result.intent.departmentTerm}» در پرسش کاربر با واحد ثبت‌شده ${matchedUnits.length ? matchedUnits.map((u) => `«${u}»`).join('، ') : 'متناظر'} تطبیق داده شده و این واحد وجود دارد؛ نتایج زیر مربوط به همین واحد است.`
+          : '';
+        const ruleText = `${result.text}${unitNote}\n${result.items.slice(0, 12).map((item) => `- ${item.number ? `${item.number} ` : ''}${item.title}${item.statusLabel ? ` (${item.statusLabel})` : ''}`).join('\n')}`;
         ai = await assistantAnswer(query, history, buildAssistantContext(buildDashboardModel(currentUser)), ruleText, currentUser.id);
       }
       const botMessage: ChatMessage = {

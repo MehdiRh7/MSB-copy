@@ -23,6 +23,7 @@ export const OPERATIONAL_STORAGE_KEYS = [
   'notificationLetterSequence', // شمارنده شماره نامه ابلاغیه
   'smsMockLog',             // لاگ پیامک‌های شبیه‌سازی‌شده
   'aiUsageLog',             // لاگ مصرف هوش مصنوعی
+  'riskAlertLedger',        // دفترچه هشدارهای ریسک صادرشده
 ] as const;
 
 /**

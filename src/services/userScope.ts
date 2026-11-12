@@ -56,6 +56,10 @@ export const canSeeAllAgendaItems = (meeting: Meeting, user: User): boolean =>
   hasOrgWideMeetingAccess(user.role) ||
   meeting.organizerId === user.id ||
   meeting.secretaryId === user.id ||
+  // تأییدکننده دستورکار و صورت‌جلسه (گردش پویا) باید همه بندها را ببیند تا بتواند تصمیم بگیرد.
+  Boolean(meeting.agendaApproverUserIds?.includes(user.id)) ||
+  Boolean(meeting.workflow?.agendaApproval.approverUserIds.includes(user.id)) ||
+  Boolean(meeting.workflow?.minutesApproval?.approverUserIds.includes(user.id)) ||
   (user.permissions || []).includes('APPROVE_MEETING_CONFIRMATION') ||
   (user.permissions || []).includes('CREATE_RESOLUTION');
 

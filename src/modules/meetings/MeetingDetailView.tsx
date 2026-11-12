@@ -30,7 +30,8 @@ import {
   ArrowDown,
   RotateCcw,
   Mail,
-  UserPlus
+  UserPlus,
+  Mic,
 } from 'lucide-react';
 import { toPersianDigits, getMeetingTypeLabel, getMeetingStatusMeta, getResolutionExecutionMeta, getPriorityMeta } from '../../utils/formatters';
 import { AttachmentList } from '../../components/common/AttachmentList';
@@ -63,7 +64,7 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
 
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [resolutions, setResolutions] = useState<Resolution[]>([]);
-  const [activeTab, setActiveTab] = useState<'AGENDAS' | 'RESOLUTIONS' | 'INVITATIONS' | 'ATTACHMENTS' | 'MINUTES_PRINT'>('AGENDAS');
+  const [activeTab, setActiveTab] = useState<'AGENDAS' | 'RESOLUTIONS' | 'INVITATIONS' | 'ATTACHMENTS' | 'LIVE' | 'MINUTES_PRINT'>('AGENDAS');
   const [loading, setLoading] = useState(true);
   const [agendaReviewNotes, setAgendaReviewNotes] = useState('');
   const [outcomeStatuses, setOutcomeStatuses] = useState<Record<string, NonNullable<AgendaItem['outcomeStatus']>>>({});
@@ -456,6 +457,14 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
           <span>دعوتنامه‌ها و مدعوین ({toPersianDigits((meeting.invitations?.length || 0) + (meeting.guests?.length || 0))})</span>
         </button>
 
+        {isSecretariat && <button
+          onClick={() => setActiveTab('LIVE')}
+          className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${activeTab === 'LIVE' ? 'bg-teal-800 text-white shadow-xs' : 'text-slate-600 hover:bg-slate-100'}`}
+        >
+          <Mic className="w-4 h-4" />
+          <span>برگزاری جلسه (ضبط و گفتار)</span>
+        </button>}
+
         <button
           onClick={() => setActiveTab('MINUTES_PRINT')}
           className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
@@ -742,10 +751,9 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
         </div>
       )}
 
-      {/* Tab 5: Official Minutes Preview & Print */}
-      {activeTab === 'MINUTES_PRINT' && (
+      {/* برگزاری جلسه: ضبط، گفتار به متن، پیشنهاد نتیجه بندها و استخراج مصوبه */}
+      {activeTab === 'LIVE' && isSecretariat && (
         <div className="space-y-3">
-          {isSecretariat && (
             <MeetingRecorder
               meeting={meeting}
               resolutions={resolutions}
@@ -755,9 +763,15 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
                   try { await boardSecretariatService.createMinutes(meeting, text, currentUser); await refreshGovernance(); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ایجاد صورت‌جلسه انجام نشد.', 'error'); }
                 }
                 setMinutesContent(text);
+                showToast('صورت‌جلسه', 'متن صورت‌جلسه در تب «پیش‌نمایش چاپ صورتجلسه» قرار گرفت.', 'success');
               }}
             />
-          )}
+        </div>
+      )}
+
+      {/* Tab 5: Official Minutes Preview & Print */}
+      {activeTab === 'MINUTES_PRINT' && (
+        <div className="space-y-3">
           <div className="no-print bg-white border border-slate-200 rounded-3xl p-5 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-extrabold text-slate-900">صورت‌جلسه تجمیعی هیأت‌مدیره</h3><p className="text-[11px] text-slate-500">پیش‌نویس، نهایی‌سازی سه نسخه و ابلاغ مصوبات (امضای اعضا و مدعوین لازم نیست)</p></div>{boardMinutes && <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold">{boardMinutes.status === 'FINALIZED' ? 'نهایی‌شده' : boardMinutes.status === 'SIGNED' ? 'تأییدشده — آماده نهایی‌سازی' : boardMinutes.status === 'WAITING_SIGNATURES' || boardMinutes.status === 'PARTIALLY_SIGNED' ? 'در انتظار تأیید' : 'پیش‌نویس'}</span>}</div>
             {!boardMinutes && isSecretariat && <div className="flex flex-wrap gap-2"><button onClick={handleCreateMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">ایجاد پیش‌نویس صورت‌جلسه</button>{aiMinutes && <AiButton size="md" onClick={handleAiMinutes} loading={minutesDrafting}>نوشتن صورت‌جلسه با هوش مصنوعی</AiButton>}</div>}

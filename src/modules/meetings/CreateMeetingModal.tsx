@@ -807,7 +807,7 @@ export const CreateMeetingModal: React.FC = () => {
               <MeetingWorkflowEditor
                 users={availableUsers}
                 value={workflow}
-                onChange={(next) => { setWorkflow(next); setWorkflowTouched(true); }}
+                onChange={(next) => { setWorkflow({ ...next, templateName: 'گردش اختصاصی این جلسه' }); setWorkflowTouched(true); }}
                 defaultSignatureDescription={`سه امضای ترتیبی سراسری: ${['RESOLUTION_STEP_1', 'RESOLUTION_STEP_2', 'RESOLUTION_STEP_3'].map((stage) => describeAssignment(getStageAssignment(stage as 'RESOLUTION_STEP_1'), availableUsers)).join(' ← ')}`}
                 defaultNoticeDescription={`طبق تنظیم سراسری (${describeAssignment(getStageAssignment('RESOLUTION_NOTICE'), availableUsers)})`}
               />

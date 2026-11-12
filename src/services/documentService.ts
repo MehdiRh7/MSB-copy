@@ -12,6 +12,7 @@ import { toPersianDigits } from '../utils/formatters';
 import { SAMPLE_SIGNATURE_DATA_URL } from '../utils/signatureImage';
 import { isMeetingRelatedToUser, isResolutionRelatedToUser, hasOrgWideMeetingAccess } from './userScope';
 import { getOrganizationProfile } from './organizationProfile';
+import { getCurrentJalaliDate } from '../utils/date';
 
 /**
  * Official, printable versions of the workflow's letters and documents.
@@ -77,7 +78,7 @@ const DOCUMENT_STYLES = `
  * سربرگ رسمی نامه‌های اداری: نشان و نام سازمان، عنوان سند، و بلوک
  * «شماره / تاریخ / پیوست». از جدول استفاده می‌شود تا در Word هم درست بماند.
  */
-const orgHeader = (title: string, subtitle: string, meta?: { number?: string; date?: string; attachments?: number }) => {
+export const orgHeader = (title: string, subtitle: string, meta?: { number?: string; date?: string; attachments?: number }) => {
   const profile = getOrganizationProfile();
   const logo = profile.logoUrl ? new URL(profile.logoUrl, window.location.origin).href : '';
   return `
@@ -86,7 +87,7 @@ const orgHeader = (title: string, subtitle: string, meta?: { number?: string; da
       <td style="width:22%;vertical-align:middle;text-align:right;border:none">${logo ? `<img src="${escapeHtml(logo)}" alt="نشان سازمان" style="height:64px;object-fit:contain" />` : ''}</td>
       <td style="text-align:center;vertical-align:middle;border:none">
         <div style="font-size:13px;font-weight:bold">${escapeHtml(profile.name || profile.systemTitle)}</div>
-        <div style="font-size:11px;color:#64748b">${escapeHtml(profile.systemTitle)}</div>
+        ${profile.name && profile.name.trim() !== profile.systemTitle.trim() ? `<div style="font-size:11px;color:#64748b">${escapeHtml(profile.systemTitle)}</div>` : ''}
       </td>
       <td style="width:26%;vertical-align:middle;font-size:11px;line-height:1.9;border:none">
         <div>شماره: <b>${fa(meta?.number || '—')}</b></div>
@@ -102,12 +103,20 @@ const orgHeader = (title: string, subtitle: string, meta?: { number?: string; da
 `;
 };
 
-/** پاورقی رسمی (نشانی و راه‌های تماس سازمان) — در چاپ پایین هر صفحه. */
-const orgFooter = () => {
+/**
+ * پاورقی رسمی: نام سازمان و (در صورت ثبت در تنظیمات) نشانی و راه‌های تماس،
+ * به‌همراه تاریخ تهیه سند — حتی وقتی اطلاعات تماس ثبت نشده، پاورقی خالی نمی‌ماند.
+ */
+export const orgFooter = () => {
   const p = getOrganizationProfile();
-  const parts = [p.address && `نشانی: ${p.address}`, p.phone && `تلفن: ${p.phone}`, p.website && p.website, p.email && p.email].filter(Boolean);
-  return parts.length ? `<div class="doc-footer">${escapeHtml(parts.join('  |  '))}</div>` : '';
+  const contact = [p.address && `نشانی: ${p.address}`, p.phone && `تلفن: ${p.phone}`, p.website && p.website, p.email && p.email].filter(Boolean);
+  const head = [p.name || p.systemTitle, `تاریخ تهیه: ${getCurrentJalaliDate()}`];
+  return `<div class="doc-footer">${escapeHtml([...head, ...contact].join('  |  '))}</div>`;
 };
+
+/** استایل و ظاهر مشترک اسناد رسمی (برای گزارش‌هایی که خارج از این سرویس ساخته می‌شوند). */
+export const officialDocumentHtml = (title: string, subtitle: string, bodyHtml: string, meta?: { number?: string; date?: string; attachments?: number }) =>
+  `${DOCUMENT_STYLES}<div class="doc">${orgHeader(title, subtitle, meta)}${bodyHtml}</div>${orgFooter()}`;
 
 const draftBanner = (isFinal: boolean, stateLabel: string) =>
   isFinal ? '' : `<div class="draft">این نسخه پیش‌نویس است: ${escapeHtml(stateLabel)}</div>`;
@@ -439,4 +448,4 @@ export const buildMeetingMinutesDocument = (
  * dialog offers "Save as PDF" under the document's own file name.
  */
 export const openGeneratedDocument = (document: GeneratedDocument): boolean =>
-  exportHtmlToPdf(document.fileName.replace(/\.pdf$/, ''), `${document.html}${orgFooter()}`, { wordExport: true });
+  exportHtmlToPdf(document.title, `${document.html}${orgFooter()}`, { wordExport: true, fileName: document.fileName.replace(/\.pdf$/, '') });

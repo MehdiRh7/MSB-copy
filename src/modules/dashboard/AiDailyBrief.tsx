@@ -9,11 +9,15 @@ import type { DashboardModel } from './dashboardData';
 // درخواست‌های هم‌زمان با یک کلید (StrictMode / رندر مجدد) فقط یک بار ارسال می‌شوند.
 const inFlight = new Map<string, Promise<AiResult<DailyBrief>>>();
 
-const cacheKey = (user: User, model: DashboardModel) => `msb-ai-brief:${user.id}:${model.today}:${model.actionItems.length}:${model.counts.overdue}`;
+const cacheKey = (user: User, model: DashboardModel) => `msb-ai-brief:${user.id}:${model.today}`;
+const signature = (model: DashboardModel) => `${model.actionItems.length}:${model.counts.overdue}`;
+/** با تغییر کارتابل، خلاصه حداکثر هر ۲ ساعت یک بار خودکار به‌روز می‌شود (صرفه‌جویی در سهمیه رایگان). */
+const AUTO_REFRESH_MS = 2 * 60 * 60 * 1000;
+interface CachedBrief { res: AiResult<DailyBrief>; sig: string; at: number }
 
 /**
- * «خلاصه هوشمند امروز» — یک بار در روز (یا با تغییر کارتابل) برای هر کاربر
- * تولید و در مرورگر Cache می‌شود تا سهمیه رایگان ارائه‌دهنده هدر نرود.
+ * «خلاصه هوشمند امروز» — روزی یک بار برای هر کاربر تولید و در مرورگر Cache می‌شود؛
+ * تغییرات کارتابل حداکثر هر ۲ ساعت یک درخواست جدید می‌سازند. دکمه تازه‌سازی همیشه فوری است.
  */
 export const AiDailyBrief: React.FC<{ user: User; model: DashboardModel; onOpenTodo: () => void }> = ({ user, model, onOpenTodo }) => {
   const enabled = useAiFeature('dashboardBrief');
@@ -24,8 +28,9 @@ export const AiDailyBrief: React.FC<{ user: User; model: DashboardModel; onOpenT
     const key = cacheKey(user, model);
     if (!force) {
       try {
-        const cached = sessionStorage.getItem(key) || localStorage.getItem(key);
-        if (cached) { setResult(JSON.parse(cached)); return; }
+        const raw = localStorage.getItem(key);
+        const cached = raw ? JSON.parse(raw) as CachedBrief : null;
+        if (cached?.res && (cached.sig === signature(model) || Date.now() - cached.at < AUTO_REFRESH_MS)) { setResult(cached.res); return; }
       } catch { /* ignore */ }
     }
     setLoading(true);
@@ -33,7 +38,7 @@ export const AiDailyBrief: React.FC<{ user: User; model: DashboardModel; onOpenT
       let pending = inFlight.get(key);
       if (!pending || force) {
         pending = dashboardBrief(user, model, user.id).then((res) => {
-          try { localStorage.setItem(key, JSON.stringify(res)); } catch { /* ignore */ }
+          try { localStorage.setItem(key, JSON.stringify({ res, sig: signature(model), at: Date.now() } satisfies CachedBrief)); } catch { /* ignore */ }
           return res;
         }).finally(() => inFlight.delete(key));
         inFlight.set(key, pending);

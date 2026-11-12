@@ -84,7 +84,9 @@ export const WorkflowDesigner: React.FC<{
     { id: 'notice', title: 'امضای ابلاغیه', icon: Send, color: 'from-fuchsia-500 to-purple-600', empty: 'تنظیم سراسری — یک نفر را بکشید', ordered: false },
   ];
 
-  const Pill: React.FC<{ id: string; stage?: StageId; index?: number; ordered?: boolean }> = ({ id, stage, index, ordered }) => {
+  // تابع ساده (نه کامپوننت داخلی): در غیر این صورت با هر setHover هنگام کشیدن، کارت‌ها از نو ساخته
+  // می‌شوند و رویداد drop روی کارت قبلی گم می‌شود (رها کردن روی مرحله‌ای که فرد دارد کار نمی‌کرد).
+  const renderPill = ({ id, stage, index, ordered }: { id: string; stage?: StageId; index?: number; ordered?: boolean }) => {
     const user = nameOf(id);
     return (
       <div
@@ -117,7 +119,7 @@ export const WorkflowDesigner: React.FC<{
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-          {filtered.map((user) => <Pill key={user.id} id={user.id} />)}
+          {filtered.map((user) => <React.Fragment key={user.id}>{renderPill({ id: user.id })}</React.Fragment>)}
         </div>
         <div
           onDragOver={(e) => { e.preventDefault(); setHover('trash'); }}
@@ -169,7 +171,7 @@ export const WorkflowDesigner: React.FC<{
                     )}
                     {ids.length === 0
                       ? <p className="text-[10px] text-slate-400 text-center pt-6 leading-4">{stage.empty}</p>
-                      : ids.map((id, index) => <Pill key={id} id={id} stage={stage.id} index={index} ordered={stage.ordered} />)}
+                      : ids.map((id, index) => <React.Fragment key={id}>{renderPill({ id: id, stage: stage.id, index: index, ordered: stage.ordered })}</React.Fragment>)}
                   </div>
                 </div>
               </React.Fragment>

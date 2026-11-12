@@ -1,3 +1,4 @@
+import { nextRecordNumber } from '../utils/date';
 import { Meeting, MeetingStatus, ApiResponse, ApiFilterParams, PagedResult, User, MeetingGuest, AgendaItem, MeetingOutcomeLetter, Proposal, DocumentSignature, MeetingWorkflowConfig } from '../types';
 import { mockDepartments, mockMeetings, mockResolutions, mockUsers } from '../mock/data';
 import { apiClient } from './api/apiClient';
@@ -204,7 +205,6 @@ class MockMeetingService implements IMeetingService {
 
   public async createMeeting(dto: CreateMeetingDto): Promise<ApiResponse<Meeting>> {
     const meetings = this.getMeetingsData();
-    const nextNumber = meetings.length + 142;
     // مدیرعامل «تأییدکنندهٔ دستورکار» است، نه لزوماً عضو حاضر در جلسه.
     // بنابراین جدا از فهرست اعضا ذخیره می‌شود تا هم جلسه را ببیند و هم
     // اطلاعات حضور و دعوت‌شدگان دستکاری نشود.
@@ -216,7 +216,7 @@ class MockMeetingService implements IMeetingService {
     const agendaApproverUserIds = workflow.agendaApproval.approverUserIds;
     const newMeeting: Meeting = {
       id: `meet-${Date.now()}`,
-      meetingNumber: `جلسه-۱۴۰۳-${nextNumber}`,
+      meetingNumber: nextRecordNumber('ج', meetings.map((m) => m.meetingNumber)),
       title: dto.title,
       type: dto.type,
       dateJalali: dto.dateJalali,

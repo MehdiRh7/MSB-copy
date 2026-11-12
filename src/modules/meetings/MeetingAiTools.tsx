@@ -131,6 +131,8 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const activeRef = useRef(false);
+  const [askingMic, setAskingMic] = useState(false);
+  const [minutesResult, setMinutesResult] = useState<AiResult<string> | null>(null);
 
   useEffect(() => {
     if (!recording) return;
@@ -145,15 +147,29 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
     setSeconds(0);
     activeRef.current = true;
     // ضبط صدا برای بایگانی (در صورت اجازه میکروفن).
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      showToast('ضبط جلسه', 'این مرورگر یا این اتصال (بدون HTTPS) اجازه ضبط صدا نمی‌دهد. از Chrome یا Edge روی آدرس https استفاده کنید، یا متن را دستی وارد کنید.', 'warning');
+      activeRef.current = false;
+      return;
+    }
+    setAskingMic(true);
+    // اگر کادر اجازه میکروفن پشت پنجره دیگری پنهان بماند، کاربر بی‌خبر نمی‌ماند.
+    const slowPrompt = window.setTimeout(() => showToast('ضبط جلسه', 'منتظر اجازه میکروفن هستیم؛ از نوار آدرس مرورگر (آیکون قفل یا میکروفن) دسترسی را «Allow» کنید.', 'info'), 4000);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      window.clearTimeout(slowPrompt);
+      setAskingMic(false);
       const media = new MediaRecorder(stream);
       chunksRef.current = [];
       media.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
       media.onstop = () => { stream.getTracks().forEach((t) => t.stop()); setAudioUrl(URL.createObjectURL(new Blob(chunksRef.current, { type: media.mimeType || 'audio/webm' }))); };
       media.start(1000);
       mediaRef.current = media;
-    } catch {
+    } catch (error) {
+      window.clearTimeout(slowPrompt);
+      setAskingMic(false);
+      const name = (error as { name?: string })?.name;
+      if (name === 'NotFoundError') { showToast('ضبط جلسه', 'میکروفنی به این دستگاه وصل نیست؛ می‌توانید متن را دستی وارد یا فایل متنی بارگذاری کنید.', 'warning'); activeRef.current = false; return; }
       showToast('ضبط جلسه', 'دسترسی به میکروفن داده نشد؛ می‌توانید متن را دستی وارد یا فایل متنی بارگذاری کنید.', 'warning');
       activeRef.current = false;
       return;
@@ -176,11 +192,16 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
           setInterim(interimText);
         };
         rec.onend = () => { if (activeRef.current) launch(); };
-        rec.onerror = () => undefined;
+        rec.onerror = (event: any) => {
+          if (event?.error === 'not-allowed' || event?.error === 'service-not-allowed') { activeRef.current = false; showToast('ضبط جلسه', 'تبدیل گفتار به متن اجازه داده نشد؛ صدا ضبط می‌شود ولی متن را باید دستی وارد کنید.', 'warning'); }
+          else if (event?.error === 'network') { activeRef.current = false; showToast('ضبط جلسه', 'تبدیل گفتار به متن به اینترنت نیاز دارد و در دسترس نبود؛ صدا همچنان ضبط می‌شود.', 'warning'); }
+        };
         recRef.current = rec;
-        rec.start();
+        try { rec.start(); } catch { /* اگر از قبل در حال اجرا باشد */ }
       };
       launch();
+    } else {
+      showToast('ضبط جلسه', 'صدا ضبط می‌شود؛ تبدیل زنده گفتار به متن فقط در Chrome و Edge پشتیبانی می‌شود.', 'info');
     }
     setRecording(true);
   };
@@ -209,7 +230,7 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
         <div className="flex items-center gap-2">
           {recording && <span className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />در حال ضبط {toPersianDigits(mmss)}</span>}
           {!recording
-            ? <button type="button" onClick={start} className="flex items-center gap-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 px-4 py-2 rounded-xl"><Mic className="w-4 h-4" />شروع ضبط</button>
+            ? <button type="button" onClick={start} disabled={askingMic} className="flex items-center gap-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-70 px-4 py-2 rounded-xl"><Mic className="w-4 h-4" />{askingMic ? 'در انتظار اجازه میکروفن…' : 'شروع ضبط'}</button>
             : <button type="button" onClick={stop} className="flex items-center gap-1.5 text-xs font-bold text-white bg-slate-800 px-4 py-2 rounded-xl"><Square className="w-4 h-4" />پایان ضبط</button>}
           <label className="flex items-center gap-1 text-[11px] font-bold text-violet-700 px-3 py-2 rounded-xl border border-violet-200 bg-white cursor-pointer"><FileUp className="w-3.5 h-3.5" />فایل متن<input type="file" accept=".txt,.md" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadTranscript(f); e.target.value = ''; }} /></label>
         </div>
@@ -217,7 +238,8 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
       {!isVoiceSupported() && <p className="text-[10.5px] text-amber-700 bg-amber-50 rounded-lg p-2">تبدیل زنده گفتار به متن در این مرورگر پشتیبانی نمی‌شود (Chrome یا Edge را استفاده کنید). صدا همچنان ضبط می‌شود و می‌توانید متن را وارد یا بارگذاری کنید.</p>}
       <textarea value={transcript + (interim ? ` ${interim}` : '')} onChange={(e) => setTranscript(e.target.value)} rows={transcript ? 6 : 3} placeholder="متن گفتار جلسه اینجا نوشته می‌شود؛ قابل ویرایش است..." className="w-full text-xs leading-6 p-3 bg-white border border-violet-200 rounded-2xl" />
       <div className="flex flex-wrap items-center gap-2">
-        <AiButton disabled={!transcript.trim() || recording} loading={busy === 'minutes'} onClick={async () => { setBusy('minutes'); try { const res = await minutesFromTranscript(meeting, transcript, currentUser.id); onMinutes(res.data); showToast('صورت‌جلسه', `پیش‌نویس از گفتار جلسه تهیه شد (${res.source === 'AI' ? 'هوش مصنوعی' : 'موتور محلی'}).`, 'success'); } finally { setBusy(null); } }}>تبدیل به صورت‌جلسه</AiButton>
+        <AiButton disabled={!transcript.trim() || recording} loading={busy === 'minutes'} onClick={async () => { setBusy('minutes'); try { const res = await minutesFromTranscript(meeting, transcript, currentUser.id); setMinutesResult(res); onMinutes(res.data); showToast('صورت‌جلسه', `پیش‌نویس از گفتار جلسه تهیه شد (${res.source === 'AI' ? 'هوش مصنوعی' : 'موتور محلی'}).`, 'success'); } finally { setBusy(null); } }}>تبدیل به صورت‌جلسه</AiButton>
+        {minutesResult && <AiSourceBadge result={minutesResult} />}
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'extract'} onClick={async () => { setBusy('extract'); try { setExtracted(await extractResolutions({ text: transcript, agendas: meeting.agendaItems.filter((a) => !a.isRemoved), users: availableUsers, departments: mockDepartments }, currentUser.id)); } finally { setBusy(null); } }}>استخراج مصوبات از گفتار</AiButton>
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'outcomes'} onClick={async () => { setBusy('outcomes'); try { setOutcomes(await suggestAgendaOutcomes(meeting, transcript, currentUser.id)); } finally { setBusy(null); } }}>پیشنهاد نتیجه بندها از گفتار</AiButton>
         {audioUrl && <a href={audioUrl} download={`جلسه-${meeting.meetingNumber}.webm`} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 bg-white"><Download className="w-3.5 h-3.5" />دانلود فایل صوتی</a>}

@@ -76,6 +76,13 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
   const [approverComments, setApproverComments] = useState('');
   const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
 
+  // Esc پنجره را می‌بندد — مگر وقتی یک پنجره/منوی داخلی دیگر باز است و Esc را خودش مصرف کرده.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape' && !event.defaultPrevented) onClose(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
   useEffect(() => {
     if (resolutionId) {
       loadResolutionData();

@@ -124,7 +124,7 @@ const UPLOADED_PNG = Buffer.from(
     check('CR-E Test1 مدعو در دعوت‌نامه نمایش داده می‌شود', text.includes('مهمان آزمایشی'));
     check('CR-E Test1 تصویر امضای دبیر جلسه روی دعوت‌نامه است', imgs >= 1);
     check('CR-E بند۱۴ امضای مدعوین روی دعوت‌نامه درخواست نمی‌شود', text.includes('امضای مدعوین در این سند اخذ نمی‌شود'));
-    check('CR-E بند۸ نام فایل از شماره واقعی جلسه ساخته شده', (await doc.title()).includes('MeetingInvitation-'));
+    check('CR-E بند۸ نام فایل از شماره واقعی جلسه ساخته شده', ((await doc.locator('.doc-toolbar').getAttribute('data-file-name')) || '').startsWith('MeetingInvitation-'));
     await doc.close();
   }
 

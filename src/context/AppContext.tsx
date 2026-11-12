@@ -199,8 +199,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       // هشدار پیشگیرانه ریسک تأخیر (روزی یک بار برای هر مصوبه پرریسک).
       next.unshift(...buildProactiveRiskAlerts(currentUser, next));
-      if (next.length !== stored.length) saveLocalCollection('notifications', next);
-      return next;
+      // هر اعلان فقط یک بار (اگر دو تب هم‌زمان اعلان ساخته باشند).
+      const seen = new Set<string>();
+      const unique = next.filter((n) => (seen.has(n.id) ? false : (seen.add(n.id), true)));
+      if (unique.length !== stored.length) saveLocalCollection('notifications', unique);
+      return unique;
     });
   }, [currentUser.id, refreshTrigger]);
 

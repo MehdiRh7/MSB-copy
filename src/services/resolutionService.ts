@@ -1,4 +1,5 @@
-import { getCurrentJalaliDate, getCurrentTimeString } from '../utils/date';
+import { getCurrentJalaliDate, getCurrentTimeString, nextRecordNumber } from '../utils/date';
+import { toPersianDigits } from '../utils/formatters';
 import {
   Resolution,
   ResolutionApprovalStatus,
@@ -291,13 +292,12 @@ class MockResolutionService implements IResolutionService {
       }
     }
 
-    const nextNum = this.resolutions.length + 98;
     const isApproved = dto.approvalStatus === 'APPROVED';
     const meetingResolutionNumber = this.resolutions.filter((resolution) => resolution.meetingId === dto.meetingId).length + 1;
 
     const newResolution: Resolution = {
       id: `res-${Date.now()}`,
-      resolutionNumber: `مصوبه-۱۴۰۳-${nextNum}`,
+      resolutionNumber: nextRecordNumber('م', this.resolutions.map((r) => r.resolutionNumber)),
       meetingResolutionNumber: String(meetingResolutionNumber),
       letterNumber: dto.letterNumber,
       meetingId: dto.meetingId,
@@ -431,7 +431,7 @@ class MockResolutionService implements IResolutionService {
       timeString: currentStep.signedTimeString,
       details: authority.asDelegate
         ? `امضای مرحله ${currentStep.order} — امضاکننده تعیین‌شده: ${currentStep.signerName} | امضا توسط: ${currentStep.actualSignerName} (به جانشینی)`
-        : `امضای دیجیتال Mock مرحله ${currentStep.order} با شناسه کاربر ${currentStep.signerUserId} ثبت شد.`,
+        : `امضای مرحله ${toPersianDigits(String(currentStep.order))} توسط ${currentStep.signerName} ثبت شد${currentStep.cryptoSignature ? ' (همراه با امضای دیجیتال رمزنگاری‌شده)' : ''}.`,
       badgeColor: 'teal',
     });
 
