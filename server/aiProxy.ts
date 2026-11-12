@@ -38,6 +38,8 @@ export interface AiProxyResponse {
   text?: string;
   provider?: AiProviderId;
   model?: string;
+  /** اگر مدل درخواستی منسوخ بود و با مدل جایگزین پیشنهادی ارائه‌دهنده پاسخ داده شد. */
+  replacedModel?: string;
   latencyMs?: number;
   usage?: { promptTokens?: number; completionTokens?: number };
   error?: string;
@@ -152,7 +154,17 @@ export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<Ai
     if (body.connection === 'OPENROUTER') {
       result = await callOpenAiCompatible(`${baseUrl(env, 'openrouter')}/v1/chat/completions`, key, body, { 'X-Title': 'Meeting Resolution System' });
     } else if (body.provider === 'gemini') {
-      result = await callGemini(env, key, body);
+      try {
+        result = await callGemini(env, key, body);
+      } catch (error: any) {
+        // گوگل مدل‌ها را منسوخ می‌کند و در پیام خطا جایگزین را معرفی می‌کند
+        // («... use models/<name> ...»). یک بار با همان مدل تلاش می‌شود.
+        const suggested = String(error?.message || '').match(/use\s+models\/([A-Za-z0-9._-]+)/i)?.[1];
+        if (!suggested || suggested === body.model || !MODEL_PATTERN.test(suggested)) throw error;
+        result = await callGemini(env, key, { ...body, model: suggested });
+        if (!result.text.trim()) return { ok: false, error: 'پاسخ خالی از ارائه‌دهنده دریافت شد', status: 502 };
+        return { ok: true, text: result.text, provider: body.provider, model: suggested, replacedModel: body.model, latencyMs: Date.now() - started, usage: result.usage };
+      }
     } else if (body.provider === 'deepseek') {
       result = await callOpenAiCompatible(`${baseUrl(env, 'deepseek')}/chat/completions`, key, body);
     } else {
@@ -163,6 +175,41 @@ export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<Ai
   } catch (error: any) {
     const aborted = error?.name === 'AbortError';
     return { ok: false, error: aborted ? 'زمان پاسخ‌گویی ارائه‌دهنده به پایان رسید' : (error?.message || 'خطای ناشناخته'), status: aborted ? 504 : (error?.status || 502), latencyMs: Date.now() - started };
+  }
+};
+
+export interface AiModelInfo { id: string; label: string; free: boolean }
+
+/**
+ * فهرست زنده مدل‌های در دسترس همین کلید/حساب — تا با منسوخ شدن مدل‌ها،
+ * نام مدل‌ها در کد ثابت نماند.
+ */
+export const handleAiModels = async (provider: AiProviderId, connection: AiConnectionMode, env: AiEnv, apiKey?: string): Promise<{ ok: boolean; models?: AiModelInfo[]; error?: string; status?: number }> => {
+  if (!['gemini', 'deepseek', 'grok'].includes(provider) || !['DIRECT', 'OPENROUTER'].includes(connection)) return { ok: false, error: 'درخواست نامعتبر است', status: 400 };
+  try {
+    if (connection === 'OPENROUTER') {
+      const response = await withTimeout(`${baseUrl(env, 'openrouter')}/v1/models`, { headers: { Accept: 'application/json' } }, 20_000);
+      const data: any = await response.json().catch(() => ({}));
+      if (!response.ok) return { ok: false, error: data?.error?.message || `HTTP ${response.status}`, status: response.status };
+      const vendor = provider === 'gemini' ? 'google/' : provider === 'deepseek' ? 'deepseek/' : 'x-ai/';
+      const models = (data?.data || [])
+        .filter((m: any) => String(m?.id || '').startsWith(vendor))
+        .map((m: any) => ({ id: String(m.id), label: String(m.name || m.id), free: String(m.id).endsWith(':free') || (Number(m?.pricing?.prompt) === 0 && Number(m?.pricing?.completion) === 0) }))
+        .sort((a: AiModelInfo, b: AiModelInfo) => Number(b.free) - Number(a.free));
+      return { ok: true, models };
+    }
+    if (provider !== 'gemini') return { ok: true, models: [] };
+    const key = serverKey(env, 'gemini', 'DIRECT') || apiKey?.trim();
+    if (!key) return { ok: false, error: 'کلید API برای این ارائه‌دهنده تنظیم نشده است', status: 401 };
+    const response = await withTimeout(`${baseUrl(env, 'gemini')}/v1beta/models?pageSize=200`, { headers: { 'x-goog-api-key': key } }, 20_000);
+    const data: any = await response.json().catch(() => ({}));
+    if (!response.ok) return { ok: false, error: data?.error?.message || `HTTP ${response.status}`, status: response.status };
+    const models = (data?.models || [])
+      .filter((m: any) => (m?.supportedGenerationMethods || []).includes('generateContent') && /gemini/i.test(String(m?.name || '')) && !/embedding|image|tts|audio|live/i.test(String(m?.name || '')))
+      .map((m: any) => ({ id: String(m.name).replace(/^models\//, ''), label: String(m.displayName || m.name), free: true }));
+    return { ok: true, models };
+  } catch (error: any) {
+    return { ok: false, error: error?.name === 'AbortError' ? 'زمان پاسخ‌گویی به پایان رسید' : (error?.message || 'خطای ناشناخته'), status: 502 };
   }
 };
 
@@ -177,6 +224,11 @@ export const createAiMiddleware = (env: AiEnv) => async (req: any, res: any, nex
     res.end(JSON.stringify(payload));
   };
   if (req.method === 'GET' && url.startsWith('/api/ai/status')) return send(200, { ok: true, serverKeys: aiServerStatus(env) });
+  if (req.method === 'GET' && url.startsWith('/api/ai/models')) {
+    const params = new URL(url, 'http://local').searchParams;
+    const result = await handleAiModels(params.get('provider') as AiProviderId, (params.get('connection') || 'DIRECT') as AiConnectionMode, env);
+    return send(result.ok ? 200 : (result.status || 500), result);
+  }
   if (req.method !== 'POST' || !url.startsWith('/api/ai/chat')) return send(404, { ok: false, error: 'not found' });
   let raw = '';
   let size = 0;

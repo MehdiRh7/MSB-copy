@@ -4,7 +4,7 @@
  * فعال باشد، پاسخ از تحلیل قاعده‌محور خود سامانه می‌آید و صریحاً با برچسب
  * «موتور محلی» نمایش داده می‌شود — هیچ پاسخی به‌دروغ به AI نسبت داده نمی‌شود.
  */
-import { AiFeatureId, AiProviderId, getAiSettings, isAiFeatureEnabled, logAiUsage } from './aiSettings';
+import { adoptReplacementModel, AiFeatureId, AiProviderId, getAiSettings, isAiFeatureEnabled, logAiUsage } from './aiSettings';
 
 export interface AiMessage { role: 'system' | 'user' | 'assistant'; content: string }
 
@@ -65,7 +65,8 @@ export const callAiRaw = async (options: { feature: AiFeatureId; system: string;
   });
   const data = await response.json().catch(() => ({ ok: false, error: `HTTP ${response.status}` }));
   if (!response.ok || !data.ok) throw new AiUnavailableError(data.error || `HTTP ${response.status}`);
-  return { text: String(data.text), provider, model: config.model, latencyMs: Number(data.latencyMs || 0) };
+  if (data.replacedModel && data.model) adoptReplacementModel(provider, String(data.model));
+  return { text: String(data.text), provider, model: String(data.model || config.model), latencyMs: Number(data.latencyMs || 0), replacedModel: data.replacedModel ? String(data.replacedModel) : undefined };
 };
 
 // وضعیت کلیدهای سمت سرور یک بار در هر بارگذاری خوانده می‌شود.
@@ -128,4 +129,14 @@ export const explainAiError = (message: string): string => {
   if (m.includes('کلید api برای این ارائه‌دهنده تنظیم نشده')) return 'کلید روی سرور پیدا نشد. در Vercel متغیر GEMINI_API_KEY (یا OPENROUTER_API_KEY) را تنظیم و حتماً Redeploy کنید.';
   if (m.includes('http 500') || m.includes('http 404')) return 'سرویس هوش مصنوعی روی سرور در دسترس نیست. آخرین نسخه را Deploy کنید و دوباره امتحان کنید.';
   return message;
+};
+
+export interface LiveModel { id: string; label: string; free: boolean }
+
+/** فهرست زنده مدل‌های در دسترس همین حساب از سرور. */
+export const fetchLiveModels = async (provider: AiProviderId, connection: 'DIRECT' | 'OPENROUTER'): Promise<LiveModel[]> => {
+  const response = await fetch(`/api/ai/models?provider=${provider}&connection=${connection}`);
+  const data = await response.json().catch(() => ({ ok: false, error: `HTTP ${response.status}` }));
+  if (!response.ok || !data.ok) throw new AiUnavailableError(data.error || `HTTP ${response.status}`);
+  return data.models || [];
 };

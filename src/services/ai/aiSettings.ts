@@ -48,9 +48,8 @@ export const AI_PROVIDERS: AiProviderPreset[] = [
     color: '#1a73e8',
     keyHint: 'کلید رایگان از aistudio.google.com — سطح رایگان با محدودیت تعداد درخواست',
     models: [
-      { connection: 'DIRECT', model: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', free: true, note: 'سطح رایگان Google AI Studio' },
-      { connection: 'DIRECT', model: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash-Lite', free: true, note: 'سریع‌ترین، سهمیه رایگان بیشتر' },
-      { connection: 'DIRECT', model: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash', free: true },
+      { connection: 'DIRECT', model: 'gemini-3.8-flash', label: 'Gemini 3.8 Flash', free: true, note: 'مدل پیشنهادی گوگل برای حساب‌های جدید (سطح رایگان)' },
+      { connection: 'DIRECT', model: 'gemini-flash-latest', label: 'Gemini Flash (آخرین نسخه)', free: true, note: 'همیشه به جدیدترین نسخه Flash اشاره می‌کند' },
       { connection: 'OPENROUTER', model: 'google/gemini-2.0-flash-exp:free', label: 'Gemini 2.0 Flash (OpenRouter)', free: true },
     ],
   },
@@ -126,7 +125,7 @@ export const DEFAULT_AI_SETTINGS: AiSettings = {
   enabled: true,
   activeProvider: 'gemini',
   providers: {
-    gemini: { connection: 'DIRECT', model: 'gemini-2.5-flash' },
+    gemini: { connection: 'DIRECT', model: 'gemini-3.8-flash' },
     deepseek: { connection: 'OPENROUTER', model: 'deepseek/deepseek-chat-v3-0324:free' },
     grok: { connection: 'OPENROUTER', model: 'x-ai/grok-4-fast:free' },
   },
@@ -136,8 +135,14 @@ export const DEFAULT_AI_SETTINGS: AiSettings = {
   privacyMode: true,
 };
 
+/** مدل‌هایی که گوگل برای حساب‌های جدید منسوخ کرده؛ به پیش‌فرض جدید منتقل می‌شوند. */
+const RETIRED_GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+
 export const getAiSettings = (): AiSettings => {
   const saved = loadLocalValue<Partial<AiSettings>>(KEY, {});
+  if (saved.providers?.gemini?.connection === 'DIRECT' && RETIRED_GEMINI_MODELS.includes(saved.providers.gemini.model)) {
+    saved.providers.gemini = { ...saved.providers.gemini, model: DEFAULT_AI_SETTINGS.providers.gemini.model };
+  }
   return {
     ...DEFAULT_AI_SETTINGS,
     ...saved,
@@ -159,6 +164,18 @@ export const saveAiSettings = (settings: AiSettings, actor: User): AiSettings =>
   saveLocalValue(KEY, next);
   window.dispatchEvent(new CustomEvent('msb-ai-settings-changed'));
   return next;
+};
+
+/**
+ * وقتی ارائه‌دهنده مدل را منسوخ اعلام و جایگزین معرفی کرده و پاسخ با مدل
+ * جایگزین موفق بوده، همان مدل در تنظیمات ثبت می‌شود تا درخواست‌های بعدی
+ * مستقیم با آن انجام شوند (تغییر دیگری در تنظیمات داده نمی‌شود).
+ */
+export const adoptReplacementModel = (provider: AiProviderId, model: string) => {
+  const current = getAiSettings();
+  if (current.providers[provider].model === model) return;
+  saveLocalValue(KEY, { ...current, providers: { ...current.providers, [provider]: { ...current.providers[provider], model } } });
+  window.dispatchEvent(new CustomEvent('msb-ai-settings-changed'));
 };
 
 export const isAiFeatureEnabled = (feature: AiFeatureId): boolean => {

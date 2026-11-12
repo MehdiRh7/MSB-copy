@@ -13,7 +13,7 @@ import {
   maskKey,
   saveAiSettings,
 } from '../../services/ai/aiSettings';
-import { callAiRaw, explainAiError, getAiServerStatus } from '../../services/ai/aiClient';
+import { callAiRaw, explainAiError, fetchLiveModels, getAiServerStatus, LiveModel } from '../../services/ai/aiClient';
 import { toPersianDigits } from '../../utils/formatters';
 
 type TestState = { state: 'idle' | 'running' | 'ok' | 'fail'; message?: string };
@@ -29,6 +29,23 @@ export const AiSettingsTab: React.FC = () => {
   const [keyDrafts, setKeyDrafts] = useState<Record<AiProviderId, string>>({ gemini: '', deepseek: '', grok: '' });
   const [tests, setTests] = useState<Record<AiProviderId, TestState>>({ gemini: { state: 'idle' }, deepseek: { state: 'idle' }, grok: { state: 'idle' } });
   const usage = useMemo(() => getAiUsageLog(), [tests, settings]);
+  // فهرست زنده مدل‌های در دسترس همین حساب (به‌جای نام‌های ثابت در کد).
+  const [liveModels, setLiveModels] = useState<Partial<Record<AiProviderId, { list: LiveModel[]; error?: string; loading?: boolean }>>>({});
+  const loadModels = async (id: AiProviderId) => {
+    const connection = settings.providers[id].connection;
+    setLiveModels((prev) => ({ ...prev, [id]: { list: prev[id]?.list || [], loading: true } }));
+    try {
+      const list = await fetchLiveModels(id, connection);
+      setLiveModels((prev) => ({ ...prev, [id]: { list } }));
+      if (list.length && !list.some((m) => m.id === settings.providers[id].model)) {
+        const preferred = list.find((m) => m.free && /flash/i.test(m.id)) || list.find((m) => m.free) || list[0];
+        updateProvider(id, { model: preferred.id });
+        showToast('مدل‌ها', `مدل فعلی در حساب شما در دسترس نبود؛ «${preferred.label}» انتخاب شد. برای اعمال، ذخیره کنید.`, 'info');
+      }
+    } catch (error) {
+      setLiveModels((prev) => ({ ...prev, [id]: { list: [], error: error instanceof Error ? explainAiError(error.message) : 'دریافت فهرست انجام نشد' } }));
+    }
+  };
 
   useEffect(() => { getAiServerStatus().then(setServerKeys); }, []);
 
@@ -66,7 +83,8 @@ export const AiSettingsTab: React.FC = () => {
     // تست با تنظیمات ذخیره‌شده انجام می‌شود؛ ابتدا تغییرات را ذخیره کنید.
     try {
       const result = await callAiRaw({ feature: 'assistant', provider: id, system: 'فقط با یک جمله کوتاه پاسخ بده.', messages: [{ role: 'user', content: 'سلام؛ اتصال برقرار است؟' }], maxTokens: 60 });
-      setTests((prev) => ({ ...prev, [id]: { state: 'ok', message: `${result.model} — ${toPersianDigits(result.latencyMs)} میلی‌ثانیه: «${result.text.slice(0, 80)}»` } }));
+      if (result.replacedModel) updateProvider(id, { model: result.model });
+      setTests((prev) => ({ ...prev, [id]: { state: 'ok', message: `${result.replacedModel ? `مدل «${result.replacedModel}» منسوخ شده بود و به «${result.model}» (پیشنهاد ارائه‌دهنده) تغییر کرد و ذخیره شد. ` : ''}${result.model} — ${toPersianDigits(result.latencyMs)} میلی‌ثانیه: «${result.text.slice(0, 80)}»` } }));
     } catch (error) {
       setTests((prev) => ({ ...prev, [id]: { state: 'fail', message: error instanceof Error ? `${explainAiError(error.message)}${explainAiError(error.message) !== error.message ? ` (${error.message})` : ''}` : 'ناموفق' } }));
     }
@@ -111,8 +129,11 @@ export const AiSettingsTab: React.FC = () => {
         {AI_PROVIDERS.map((provider) => {
           const config = settings.providers[provider.id];
           const active = settings.activeProvider === provider.id;
-          const models = provider.models.filter((m) => m.connection === config.connection);
-          const preset = provider.models.find((m) => m.model === config.model);
+          const live = liveModels[provider.id];
+          const models = live?.list.length
+            ? live.list.map((m) => ({ connection: config.connection, model: m.id, label: m.label, free: m.free, note: undefined as string | undefined }))
+            : provider.models.filter((m) => m.connection === config.connection);
+          const preset = models.find((m) => m.model === config.model);
           const test = tests[provider.id];
           return (
             <article key={provider.id} className={`bg-white rounded-3xl border-2 p-4 space-y-3 transition ${active ? 'border-indigo-500 shadow-md shadow-indigo-100' : 'border-slate-200'}`}>
@@ -146,6 +167,10 @@ export const AiSettingsTab: React.FC = () => {
                 <input value={config.model} onChange={(e) => updateProvider(provider.id, { model: e.target.value.trim() })} dir="ltr" className="mt-1.5 w-full text-[10px] p-1.5 bg-white border border-slate-200 rounded-lg font-mono text-left" aria-label="نام دقیق مدل" />
                 {preset?.note && <span className="block text-[10px] text-slate-500 mt-1">{preset.note}</span>}
                 {preset && <span className={`inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full ${preset.free ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{preset.free ? 'مدل رایگان' : 'غیررایگان'}</span>}
+                <button type="button" onClick={() => loadModels(provider.id)} disabled={live?.loading} className="mt-1.5 w-full text-[10px] font-bold py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-60">
+                  {live?.loading ? 'در حال دریافت…' : live?.list.length ? `🔄 ${toPersianDigits(live.list.length)} مدل در دسترس حساب شما — بارگذاری دوباره` : '🔄 دریافت مدل‌های در دسترس حساب'}
+                </button>
+                {live?.error && <span className="block text-[10px] text-rose-600 mt-1">{live.error}</span>}
               </label>
 
               <div className="space-y-1">
