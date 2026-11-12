@@ -513,7 +513,7 @@ export const assistantAnswer = (question: string, history: { role: 'user' | 'ass
   feature: 'assistant',
   actorId,
   maxTokens: 900,
-  system: `وظیفه: پاسخ به پرسش کاربر درباره داده‌های سامانه جلسات و مصوبات. فقط از «داده‌های سامانه» زیر استفاده کن؛ اگر پاسخ در داده نیست بگو. پاسخ کوتاه (حداکثر ۶ جمله یا فهرست کوتاه)، دقیق و کاربردی بده و در صورت امکان اقدام بعدی را پیشنهاد کن. بدون Markdown سنگین.\n\nداده‌های سامانه (Scope همین کاربر):\n${context}\n\nنتیجه جستجوی ساخت‌یافته سامانه برای این پرسش:\n${ruleBasedAnswer}`,
+  system: `وظیفه: پاسخ به پرسش کاربر درباره داده‌های سامانه جلسات و مصوبات. فقط از «داده‌های سامانه» زیر استفاده کن؛ اگر پاسخ در داده نیست بگو. اگر نام واحد، شخص یا موضوعی که کاربر گفته در داده‌ها وجود ندارد، صریحاً بگو وجود ندارد و هرگز مورد نامرتبطی را به‌عنوان نتیجه معرفی نکن. نتیجه جستجوی ساخت‌یافته زیر مرجع اصلی است؛ تعداد و فهرست آن را تغییر نده. پاسخ کوتاه (حداکثر ۶ جمله یا فهرست کوتاه)، دقیق و کاربردی بده و در صورت امکان اقدام بعدی را پیشنهاد کن. بدون Markdown سنگین.\n\nداده‌های سامانه (Scope همین کاربر):\n${context}\n\nنتیجه جستجوی ساخت‌یافته سامانه برای این پرسش:\n${ruleBasedAnswer}`,
   messages: [...history.slice(-6), { role: 'user', content: question }],
   parse: (t) => t.replace(/\*\*/g, '').trim(),
   fallback: () => ruleBasedAnswer,
@@ -552,7 +552,7 @@ export const interpretCommand = (query: string, commands: CommandOption[], actor
   actorId,
   json: true,
   maxTokens: 200,
-  system: 'وظیفه: تشخیص فرمان کاربر در سامانه جلسات و مصوبات. از فهرست فرمان‌های مجاز، بهترین گزینه را انتخاب کن. خروجی فقط JSON: commandId (دقیقاً یکی از شناسه‌ها یا null اگر درخواست یک پرسش اطلاعاتی است و فرمان نیست) و reply (یک جمله کوتاه فارسی که توضیح می‌دهد چه کاری انجام می‌شود).',
+  system: 'وظیفه: تشخیص فرمان کاربر در سامانه جلسات و مصوبات. از فهرست فرمان‌های مجاز، بهترین گزینه را انتخاب کن. خروجی فقط JSON: commandId (دقیقاً یکی از شناسه‌ها؛ اگر جمله پرسش یا جستجوی اطلاعاتی است یا فیلتری مثل نام واحد، شخص، وضعیت یا تاریخ دارد، حتماً null بگذار تا دستیار با داده واقعی پاسخ دهد) و reply (یک جمله کوتاه فارسی که توضیح می‌دهد چه کاری انجام می‌شود).',
   messages: [{ role: 'user', content: `فرمان‌های مجاز:\n${commands.map((c) => `${c.id}: ${c.title}`).join('\n')}\n\nجمله کاربر: ${query}` }],
   parse: (text) => {
     const d = extractJson<Partial<CommandIntent>>(text);
@@ -561,7 +561,9 @@ export const interpretCommand = (query: string, commands: CommandOption[], actor
   },
   fallback: () => {
     const best = commands.map((c) => ({ c, score: scoreCommand(query, c) })).sort((a, b) => b.score - a.score)[0];
-    return best && best.score >= 0.5
+    // فقط تطبیق کامل اجرا می‌شود؛ جمله‌ای که فیلتر اضافه دارد (مثل نام واحد)
+    // به دستیار سپرده می‌شود تا با داده واقعی پاسخ دهد، نه فهرست فیلترنشده.
+    return best && best.score >= 1
       ? { commandId: best.c.id, reply: `اجرای «${best.c.title}»` }
       : { commandId: null, reply: 'این پرسش را از دستیار هوشمند می‌پرسم.' };
   },

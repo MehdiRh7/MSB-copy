@@ -12,6 +12,8 @@ import {
   toPersianDigits,
 } from '../utils/formatters';
 import { approvalService } from './approvalService';
+import { mockDepartments, mockUsers } from '../mock/data';
+import { loadLocalCollection } from './localStore';
 import { meetingService } from './meetingService';
 import { resolutionService } from './resolutionService';
 import { taskService } from './taskService';
@@ -26,6 +28,12 @@ export interface ChatIntent {
   statuses: string[];
   approvalStatuses: string[];
   departmentTerm?: string;
+  /** نام واحدی که کاربر گفته ولی در داده‌های سامانه وجود ندارد. */
+  unknownDepartment?: string;
+  /** عبارتی که نام واحد نیست ولی در عنوان پرونده‌ها آمده (مثل «مرکز داده»). */
+  textTerm?: string;
+  /** عبارتی که در هیچ داده‌ای از سامانه پیدا نشد. */
+  unknownTerm?: string;
   number?: string;
   timeRange?: ChatTimeRange;
   requiresVerification?: boolean;
@@ -126,6 +134,104 @@ const detectDepartment = (query: string): string | undefined => {
   }))?.label;
 };
 
+// ——— تشخیص واحد سازمانی بر اساس داده واقعی سامانه ———
+// قبلاً فقط چند نام ثابت شناخته می‌شد و هر نام ناشناخته (مثلاً «اداره کل
+// حسابرسی») بی‌صدا نادیده گرفته می‌شد و همه مصوبات نمایش داده می‌شد.
+const UNIT_MARKERS = ['اداره کل', 'اداره', 'معاونت', 'مدیریت', 'واحد', 'دفتر', 'حوزه', 'دپارتمان', 'مرکز', 'بخش', 'دایره'];
+const UNIT_GENERIC_TOKENS = new Set(['اداره', 'کل', 'معاونت', 'مدیریت', 'واحد', 'دفتر', 'حوزه', 'دپارتمان', 'مرکز', 'بخش', 'دایره', 'امور', 'و', 'سازمان', 'سازمانی']);
+const UNIT_STOP_TOKENS = new Set(['که', 'را', 'رو', 'در', 'با', 'از', 'به', 'برای', 'مصوبه', 'مصوبات', 'جلسه', 'جلسات', 'وظیفه', 'وظایف', 'چند', 'تعداد', 'نمایش', 'بده', 'لیست', 'فهرست', 'هستند', 'است', 'چیست', 'کدام', 'کدوم', 'نشان', 'نشون', 'من', 'این', 'ماه', 'هفته', 'امروز']);
+const STATUS_PHRASES = ['در حال اجرا', 'در حال انجام', 'خاتمه یافته', 'عقب افتاده', 'انجام شده', 'انجام نشده', 'شروع نشده', 'تصویب شده', 'در انتظار'];
+
+/** همه نام‌های واحد که واقعاً در داده‌های سامانه وجود دارند. */
+const knownUnitNames = (): string[] => {
+  const names = new Set<string>();
+  mockDepartments.forEach((department) => names.add(department.name));
+  loadLocalCollection('users', mockUsers).forEach((user) => user.departmentName && names.add(user.departmentName));
+  loadLocalCollection<Resolution[]>('resolutions', []).forEach((resolution) => {
+    if (resolution.responsibleDepartmentName) names.add(resolution.responsibleDepartmentName);
+    if (resolution.proposerDepartment) names.add(resolution.proposerDepartment);
+  });
+  loadLocalCollection<Meeting[]>('meetings', []).forEach((meeting) => meeting.departmentName && names.add(meeting.departmentName));
+  return Array.from(names).filter(Boolean);
+};
+
+/** عبارت واحد سازمانی گفته‌شده در پرسش، مثل «اداره کل حسابرسی». */
+const extractUnitPhrase = (query: string): string | undefined => {
+  let cleaned = ` ${normalizeChatText(query)} `;
+  STATUS_PHRASES.forEach((phrase) => { cleaned = cleaned.replace(` ${phrase} `, ' | '); });
+  const marker = UNIT_MARKERS.find((item) => cleaned.includes(` ${item} `));
+  if (!marker) return undefined;
+  const rest = cleaned.slice(cleaned.indexOf(` ${marker} `) + marker.length + 2).trim().split(' ');
+  const taken: string[] = [];
+  for (const token of rest) {
+    if (!token || token === '|' || UNIT_STOP_TOKENS.has(token) || /^\d+$/.test(toEnglishDigits(token))) break;
+    taken.push(token);
+    if (taken.length >= 5) break;
+  }
+  return taken.length ? `${marker} ${taken.join(' ')}` : undefined;
+};
+
+/** تطبیق عبارت واحد با واحدهای واقعی؛ کلمات عمومی (اداره، کل، ...) در تطبیق شرکت نمی‌کنند. */
+const resolveUnitPhrase = (phrase: string): { term?: string; unknown?: string; text?: string } => {
+  const core = normalizeChatText(phrase).split(' ').filter((token) => !UNIT_GENERIC_TOKENS.has(token) && token.length > 1);
+  if (core.length === 0) return {};
+  const match = knownUnitNames().find((name) => {
+    const unitTokens = normalizeChatText(name).split(' ');
+    return core.every((token) => unitTokens.some((unitToken) => unitToken.startsWith(token) || token.startsWith(unitToken) && unitToken.length >= 3));
+  });
+  if (match) return { term: core.join(' ') };
+  // اگر همین عبارت در عنوان جلسه/مصوبه‌ای آمده، موضوع است نه نام واحد.
+  const normalizedPhrase = normalizeChatText(phrase);
+  const inTitles = [
+    ...loadLocalCollection<Resolution[]>('resolutions', []).map((r) => r.topicTitle),
+    ...loadLocalCollection<Meeting[]>('meetings', []).map((m) => m.title),
+  ].some((title) => normalizeChatText(title || '').includes(normalizedPhrase));
+  return inTitles ? { text: phrase } : { unknown: phrase };
+};
+
+const matchesText = (term: string | undefined, ...values: Array<string | undefined>) => {
+  if (!term) return true;
+  const text = normalizeChatText(values.filter(Boolean).join(' '));
+  return normalizeChatText(term).split(' ').filter(Boolean).every((token) => text.includes(token));
+};
+
+// ——— هیچ کلمه‌ای از پرسش بی‌صدا نادیده گرفته نمی‌شود ———
+// کلماتی که فرمان/وضعیت/زمان نیستند، با داده واقعی (واحدها، عنوان‌ها، افراد)
+// و به‌صورت بخشی (مثلاً «منابع» ← «مدیریت منابع انسانی») تطبیق داده می‌شوند.
+const INTENT_WORDS = new Set(`مصوبه مصوبات مصوبه‌ها جلسه جلسات وظیفه وظایف تکلیف تکالیف تایید تأیید تاییدها صحه گذاری کارتابل
+نمایش بده بدهید نشان نشانم نشونم ببین ببینم لیست فهرست همه همه‌ی کل تعداد چند چندتا نمودار چارت گراف رسم آمار وضعیت کلی گزارش خلاصه بررسی کن کنم جزئیات شماره بر اساس
+در حال اجرا انجام اقدام دست جریان خاتمه یافته مختومه شده شده‌اند تکمیل بسته عقب افتاده تاخیر تأخیر دیرکرد منتظر انتظار برگشت داده برگشتی رد شروع نشده نشده‌اند جدید لغو مصوب تصویب عدم نیازمند تکمیلی بدون دارای دارند ندارند نیاز دارن
+امروز این آن هفته ماه آینده بعد جاری پیش رو اخیر آخرین گذشته برگزار برگزاری برنامه ریزی سال امسال
+من ما شما را رو به با که برای از در و یا مربوط هستند است هست کدام کدوم کدامند چی چه چیه های ها ی دارم داریم میخوام می خواهم لطفا لطفاً سلام اول کار کاری بدهم باید هر تمام کلیه موارد مورد خطر ریسک چرا چطور چگونه آیا اند را`.split(/\s+/).map(normalizeChatText));
+const QUESTION_MARKERS = [' چرا ', ' چطور ', ' چگونه ', ' آیا ', ' چه ', ' کدام ', ' کدوم ', ' چی '];
+
+const residualTerms = (query: string): string[] => {
+  let cleaned = ` ${normalizeChatText(query)} `;
+  STATUS_PHRASES.forEach((phrase) => { cleaned = cleaned.split(` ${phrase} `).join(' '); });
+  return cleaned.split(' ').filter((token) => token.length >= 2 && !INTENT_WORDS.has(token) && !UNIT_GENERIC_TOKENS.has(token) && !/^معوق/.test(token) && !STOP_WORDS.has(token) && !/^\d+$/.test(toEnglishDigits(token)));
+};
+
+/** متن قابل جستجوی هر پرونده (عنوان، شرح، واحد، افراد) برای تطبیق کلمات باقی‌مانده. */
+const searchableCorpus = (): string[] => [
+  ...loadLocalCollection<Resolution[]>('resolutions', []).map((r) => [r.topicTitle, r.requestDescription, r.executionDescription, r.mainResponsibleName, r.proposerName, r.meetingTitle].join(' ')),
+  ...loadLocalCollection<Meeting[]>('meetings', []).map((m) => [m.title, m.organizerName, m.secretaryName, m.location].join(' ')),
+].map(normalizeChatText);
+
+const tokenPrefixMatch = (token: string, text: string) => ` ${text} `.includes(` ${token}`) || text.includes(token);
+
+const resolveResidual = (query: string): { departmentTerm?: string; textTerm?: string; unknownTerm?: string } => {
+  const padded = ` ${normalizeChatText(query)} `;
+  if (QUESTION_MARKERS.some((marker) => padded.includes(marker))) return {}; // پرسش تحلیلی؛ دستیار پاسخ می‌دهد
+  const residual = residualTerms(query);
+  if (residual.length === 0) return {};
+  const phrase = residual.join(' ');
+  const units = knownUnitNames().map(normalizeChatText);
+  if (units.some((unit) => residual.every((token) => unit.split(' ').some((word) => word.startsWith(token))))) return { departmentTerm: phrase };
+  const corpus = searchableCorpus();
+  if (corpus.some((text) => residual.every((token) => tokenPrefixMatch(token, text)))) return { textTerm: phrase };
+  return { unknownTerm: phrase };
+};
+
 const detectNumber = (query: string): string | undefined => {
   const matches = toEnglishDigits(query).match(/\d+/g);
   return matches?.at(-1);
@@ -148,7 +254,7 @@ const detectExecutionStatuses = (query: string): string[] => {
   const statuses: string[] = [];
   if (hasAny(query, ['در حال اجرا', 'در حال انجام', 'در دست اقدام', 'دارن اجرا', 'در جریان'])) statuses.push('IN_PROGRESS');
   if (hasAny(query, ['خاتمه یافته', 'مختومه', 'انجام شده', 'تکمیل شده', 'بسته شده'])) statuses.push('APPROVED_CLOSED');
-  if (hasAny(query, ['عقب افتاده', 'تاخیر', 'دیرکرد'])) statuses.push('OVERDUE');
+  if (hasAny(query, ['عقب افتاده', 'تاخیر', 'تأخیر', 'دیرکرد', 'معوق'])) statuses.push('OVERDUE');
   if (hasAny(query, ['منتظر تایید', 'در انتظار تایید', 'منتظر صحه', 'در انتظار صحه', 'صحه گذاری من'])) statuses.push('PENDING_APPROVAL');
   if (hasAny(query, ['برگشت داده', 'برگشتی از صحه', 'رد شده در صحه'])) statuses.push('REJECTED_RETURNED');
   if (hasAny(query, ['شروع نشده', 'مصوبات جدید', 'مصوبه جدید'])) statuses.push('NOT_STARTED');
@@ -244,7 +350,14 @@ export const parseChatIntent = (rawQuery: string): ChatIntent => {
     action,
     statuses,
     approvalStatuses,
-    departmentTerm: detectDepartment(query),
+    ...(() => {
+      const alias = detectDepartment(query);
+      if (alias) return { departmentTerm: alias };
+      const phrase = extractUnitPhrase(query);
+      if (!phrase) return resolveResidual(query);
+      const resolved = resolveUnitPhrase(phrase);
+      return { departmentTerm: resolved.term, unknownDepartment: resolved.unknown, textTerm: resolved.text };
+    })(),
     number,
     timeRange: detectTimeRange(query),
     requiresVerification,
@@ -280,8 +393,11 @@ const isInTimeRange = (dateValue: string | undefined, range?: ChatTimeRange): bo
 
 const matchesDepartment = (term: string | undefined, ...values: Array<string | undefined>) => {
   if (!term) return true;
-  const normalizedTerm = normalizeChatText(term);
-  return values.some((value) => normalizeChatText(value || '').includes(normalizedTerm));
+  const tokens = normalizeChatText(term).split(' ').filter(Boolean);
+  return values.some((value) => {
+    const words = normalizeChatText(value || '').split(' ');
+    return tokens.every((token) => words.some((word) => word.startsWith(token)));
+  });
 };
 
 const findMentionedPerson = (query: string, candidates: Array<string | undefined>): string | undefined => {
@@ -416,10 +532,36 @@ class ChatService {
     const intent = parseChatIntent(rawQuery);
     const normalizedQuery = normalizeChatText(rawQuery);
 
+    // واحدی که در سامانه وجود ندارد: به‌جای نمایش نتایج نامرتبط، صادقانه
+    // اعلام می‌شود و واحدهای واقعی پیشنهاد می‌شوند.
+    if (intent.unknownTerm) {
+      return {
+        intent,
+        text: `در سامانه موردی مرتبط با «${intent.unknownTerm}» پیدا نشد (نه در نام واحدها، نه در عنوان پرونده‌ها و نه در نام افراد).`,
+        totalCount: 0,
+        items: [],
+        summary: [],
+        charts: [],
+        emptySuggestion: `واحدهای ثبت‌شده: ${knownUnitNames().slice(0, 10).join('، ')}`,
+      };
+    }
+    if (intent.unknownDepartment) {
+      const units = knownUnitNames();
+      return {
+        intent,
+        text: `واحدی با عنوان «${intent.unknownDepartment}» در سامانه ثبت نشده است؛ بنابراین موردی برای نمایش وجود ندارد.`,
+        totalCount: 0,
+        items: [],
+        summary: [],
+        charts: [],
+        emptySuggestion: `واحدهای ثبت‌شده در سامانه: ${units.slice(0, 10).join('، ')}`,
+      };
+    }
+
     try {
       const [resolutions, meetings, tasks, approvals] = await Promise.all([
         loadAllPages<Resolution>((pageIndex, pageSize) => resolutionService.getResolutions({ pageIndex, pageSize, relatedUserId: currentUserId })),
-        loadAllPages<Meeting>((pageIndex, pageSize) => meetingService.getMeetings({ pageIndex, pageSize })),
+        loadAllPages<Meeting>((pageIndex, pageSize) => meetingService.getMeetings({ pageIndex, pageSize, participantUserId: currentUserId })),
         loadAllPages<Task>((pageIndex, pageSize) => taskService.getMyTasks(intent.mineOnly ? currentUserId : undefined, { pageIndex, pageSize })),
         loadAllPages<ApprovalCartableItem>((pageIndex, pageSize) => approvalService.getMyApprovals(intent.mineOnly ? currentUserId : undefined, { pageIndex, pageSize })),
       ]);
@@ -452,6 +594,7 @@ class ChatService {
             && meetingMatches
             && mineMatches
             && matchesDepartment(intent.departmentTerm, resolution.responsibleDepartmentName, resolution.proposerDepartment)
+            && matchesText(intent.textTerm, resolution.topicTitle, resolution.requestDescription, resolution.executionDescription, resolution.mainResponsibleName, resolution.proposerName, resolution.meetingTitle)
             && isInTimeRange(resolution.assignedDateJalali || resolution.deadlineJalali, intent.timeRange);
         });
         items = filtered.map(resolutionToItem);
@@ -479,6 +622,7 @@ class ChatService {
               && personMatches
               && resolutionMatches
               && matchesDepartment(intent.departmentTerm, meeting.departmentName)
+              && matchesText(intent.textTerm, meeting.title, meeting.organizerName, meeting.secretaryName, meeting.location)
               && isInTimeRange(meeting.dateJalali, intent.timeRange);
           })
           .sort((a, b) => normalizeDate(b.dateJalali).localeCompare(normalizeDate(a.dateJalali)));
@@ -494,6 +638,7 @@ class ChatService {
             && statusMatches
             && personMatches
             && matchesDepartment(intent.departmentTerm, task.departmentName)
+            && matchesText(intent.textTerm, task.resolutionTitle, task.assignedToName)
             && isInTimeRange(task.deadlineJalali, intent.timeRange);
         });
         items = filtered.map(taskToItem);
@@ -505,6 +650,7 @@ class ChatService {
           return numberMatches
             && statusMatches
             && matchesDepartment(intent.departmentTerm, approval.responsibleDepartment)
+            && matchesText(intent.textTerm, approval.resolutionTitle)
             && isInTimeRange(approval.submittedForApprovalDateJalali, intent.timeRange);
         });
         items = filtered.map((approval) => {
