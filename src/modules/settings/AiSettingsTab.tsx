@@ -84,7 +84,7 @@ export const AiSettingsTab: React.FC = () => {
     try {
       const result = await callAiRaw({ feature: 'assistant', provider: id, system: 'فقط با یک جمله کوتاه پاسخ بده.', messages: [{ role: 'user', content: 'سلام؛ اتصال برقرار است؟' }], maxTokens: 60 });
       if (result.replacedModel) updateProvider(id, { model: result.model });
-      setTests((prev) => ({ ...prev, [id]: { state: 'ok', message: `${result.replacedModel ? `مدل «${result.replacedModel}» منسوخ شده بود و به «${result.model}» (پیشنهاد ارائه‌دهنده) تغییر کرد و ذخیره شد. ` : ''}${result.model} — ${toPersianDigits(result.latencyMs)} میلی‌ثانیه: «${result.text.slice(0, 80)}»` } }));
+      setTests((prev) => ({ ...prev, [id]: { state: 'ok', message: `${result.replacedModel ? `مدل «${result.replacedModel}» منسوخ شده بود و به «${result.model}» (پیشنهاد ارائه‌دهنده) تغییر کرد و ذخیره شد. ` : ''}${result.fallbackFrom ? `کلید معتبر است. مدل «${result.fallbackFrom}» فعلاً شلوغ بود و این پاسخ از مدل جایگزین آمد (تنظیمات شما تغییر نکرد). ` : ''}${result.model} — ${toPersianDigits(result.latencyMs)} میلی‌ثانیه: «${result.text.slice(0, 80)}»` } }));
     } catch (error) {
       setTests((prev) => ({ ...prev, [id]: { state: 'fail', message: error instanceof Error ? `${explainAiError(error.message)}${explainAiError(error.message) !== error.message ? ` (${error.message})` : ''}` : 'ناموفق' } }));
     }

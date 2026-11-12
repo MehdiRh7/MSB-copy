@@ -40,6 +40,8 @@ export interface AiProxyResponse {
   model?: string;
   /** اگر مدل درخواستی منسوخ بود و با مدل جایگزین پیشنهادی ارائه‌دهنده پاسخ داده شد. */
   replacedModel?: string;
+  /** مدل انتخابی شلوغ بود و این پاسخ از مدل جایگزین آمد (تنظیمات تغییر نمی‌کند). */
+  fallbackFrom?: string;
   latencyMs?: number;
   usage?: { promptTokens?: number; completionTokens?: number };
   error?: string;
@@ -143,6 +145,40 @@ const callGemini = async (env: AiEnv, key: string, body: AiProxyRequest) => {
   return { text, usage: { promptTokens: data?.usageMetadata?.promptTokenCount, completionTokens: data?.usageMetadata?.candidatesTokenCount } };
 };
 
+/** خطای موقت «شلوغی» ارائه‌دهنده (۵۰۳ / overloaded / high demand). */
+const isOverloaded = (error: any) => {
+  const m = String(error?.message || '').toLowerCase();
+  return error?.status === 503 || m.includes('high demand') || m.includes('overloaded') || m.includes('unavailable') || m.includes('try again later');
+};
+const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** مدل‌های جایگزین Gemini وقتی مدل انتخابی موقتاً شلوغ است. */
+const GEMINI_OVERLOAD_FALLBACKS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+
+/** یک بار تلاش دوباره با مکث، سپس مدل‌های جایگزین؛ خطاهای دیگر همان‌طور برمی‌گردند. */
+const callGeminiResilient = async (env: AiEnv, key: string, body: AiProxyRequest) => {
+  try {
+    return { ...(await callGemini(env, key, body)), model: body.model };
+  } catch (error: any) {
+    if (!isOverloaded(error)) throw error;
+    await wait(1200);
+    try {
+      return { ...(await callGemini(env, key, body)), model: body.model };
+    } catch (retryError: any) {
+      if (!isOverloaded(retryError)) throw retryError;
+      let last = retryError;
+      for (const alt of GEMINI_OVERLOAD_FALLBACKS.filter((m) => m !== body.model)) {
+        try {
+          return { ...(await callGemini(env, key, { ...body, model: alt })), model: alt };
+        } catch (altError: any) {
+          last = altError;
+          if (!isOverloaded(altError) && !/not found|not supported/i.test(String(altError?.message))) throw altError;
+        }
+      }
+      throw last;
+    }
+  }
+};
+
 export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<AiProxyResponse> => {
   const invalid = validate(body);
   if (invalid) return { ok: false, error: invalid, status: 400 };
@@ -150,12 +186,16 @@ export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<Ai
   if (!key) return { ok: false, error: 'کلید API برای این ارائه‌دهنده تنظیم نشده است', status: 401 };
   const started = Date.now();
   try {
-    let result: { text: string; usage?: AiProxyResponse['usage'] };
+    let result: { text: string; usage?: AiProxyResponse['usage']; model?: string };
     if (body.connection === 'OPENROUTER') {
       result = await callOpenAiCompatible(`${baseUrl(env, 'openrouter')}/v1/chat/completions`, key, body, { 'X-Title': 'Meeting Resolution System' });
     } else if (body.provider === 'gemini') {
       try {
-        result = await callGemini(env, key, body);
+        result = await callGeminiResilient(env, key, body);
+        if (result.model !== body.model) {
+          if (!result.text.trim()) return { ok: false, error: 'پاسخ خالی از ارائه‌دهنده دریافت شد', status: 502 };
+          return { ok: true, text: result.text, provider: body.provider, model: result.model, fallbackFrom: body.model, latencyMs: Date.now() - started, usage: result.usage };
+        }
       } catch (error: any) {
         // گوگل مدل‌ها را منسوخ می‌کند و در پیام خطا جایگزین را معرفی می‌کند
         // («... use models/<name> ...»). یک بار با همان مدل تلاش می‌شود.

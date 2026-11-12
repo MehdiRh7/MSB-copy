@@ -66,7 +66,7 @@ export const callAiRaw = async (options: { feature: AiFeatureId; system: string;
   const data = await response.json().catch(() => ({ ok: false, error: `HTTP ${response.status}` }));
   if (!response.ok || !data.ok) throw new AiUnavailableError(data.error || `HTTP ${response.status}`);
   if (data.replacedModel && data.model) adoptReplacementModel(provider, String(data.model));
-  return { text: String(data.text), provider, model: String(data.model || config.model), latencyMs: Number(data.latencyMs || 0), replacedModel: data.replacedModel ? String(data.replacedModel) : undefined };
+  return { text: String(data.text), provider, model: String(data.model || config.model), latencyMs: Number(data.latencyMs || 0), replacedModel: data.replacedModel ? String(data.replacedModel) : undefined, fallbackFrom: data.fallbackFrom ? String(data.fallbackFrom) : undefined };
 };
 
 // وضعیت کلیدهای سمت سرور یک بار در هر بارگذاری خوانده می‌شود.
@@ -124,6 +124,7 @@ export const explainAiError = (message: string): string => {
   const m = message.toLowerCase();
   if (m.includes('api key not valid') || m.includes('invalid api key') || m.includes('incorrect api key') || m.includes('401')) return 'کلید API نامعتبر است. کلید را دوباره از سایت ارائه‌دهنده کپی کنید (بدون فاصله اضافه) و پس از ذخیره در Vercel، Redeploy کنید.';
   if (m.includes('location is not supported') || m.includes('failed_precondition')) return 'ارائه‌دهنده این سرویس را برای منطقه سرور ارائه نمی‌دهد. ناحیه اجرای توابع Vercel را بررسی کنید یا از OpenRouter استفاده کنید.';
+  if (m.includes('high demand') || m.includes('overloaded') || m.includes('503') || m.includes('unavailable')) return 'کلید شما معتبر است؛ فقط سرورهای Google برای این مدل فعلاً شلوغ‌اند (موقتی). سامانه خودکار دوباره تلاش می‌کند و به مدل دیگر Gemini می‌رود؛ اگر باز هم این پیام آمد، چند دقیقه بعد امتحان کنید یا از فهرست مدل‌ها مدل دیگری (مثلاً نسخه lite) انتخاب کنید. تا آن زمان موتور محلی پاسخ می‌دهد.';
   if (m.includes('quota') || m.includes('resource_exhausted') || m.includes('429') || m.includes('rate limit')) return 'سهمیه رایگان این دقیقه/روز تمام شده است. کمی بعد دوباره امتحان کنید؛ تا آن زمان موتور محلی پاسخ می‌دهد.';
   if (m.includes('not found') && m.includes('model')) return 'نام مدل در دسترس نیست. از فهرست مدل‌ها گزینه دیگری را انتخاب کنید.';
   if (m.includes('کلید api برای این ارائه‌دهنده تنظیم نشده')) return 'کلید روی سرور پیدا نشد. در Vercel متغیر GEMINI_API_KEY (یا OPENROUTER_API_KEY) را تنظیم و حتماً Redeploy کنید.';
