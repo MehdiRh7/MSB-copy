@@ -5,6 +5,7 @@ import { Meeting, Resolution, AgendaItem, BoardMinutes, ResolutionNotice, Meetin
 import { AgendaApprovalPanel, ApprovalProgress, MeetingWorkflowSummary } from './MeetingWorkflowPanel';
 import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
 import { draftMinutes } from '../../services/ai/aiService';
+import { MeetingRecorder, MinutesExtraction } from './MeetingAiTools';
 import type { AiResult } from '../../services/ai/aiClient';
 import { getAgendaApprovalPolicy, resolveApprovalAuthority } from '../../services/workflowPolicyService';
 import {
@@ -742,6 +743,19 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
       {/* Tab 5: Official Minutes Preview & Print */}
       {activeTab === 'MINUTES_PRINT' && (
         <div className="space-y-3">
+          {isSecretariat && (
+            <MeetingRecorder
+              meeting={meeting}
+              resolutions={resolutions}
+              canCreateResolution={canCreateResolution}
+              onMinutes={async (text) => {
+                if (!boardMinutes) {
+                  try { await boardSecretariatService.createMinutes(meeting, text, currentUser); await refreshGovernance(); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ایجاد صورت‌جلسه انجام نشد.', 'error'); }
+                }
+                setMinutesContent(text);
+              }}
+            />
+          )}
           <div className="no-print bg-white border border-slate-200 rounded-3xl p-5 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-extrabold text-slate-900">صورت‌جلسه تجمیعی هیأت‌مدیره</h3><p className="text-[11px] text-slate-500">پیش‌نویس، نهایی‌سازی سه نسخه و ابلاغ مصوبات (امضای اعضا و مدعوین لازم نیست)</p></div>{boardMinutes && <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold">{boardMinutes.status === 'FINALIZED' ? 'نهایی‌شده' : boardMinutes.status === 'SIGNED' ? 'تأییدشده — آماده نهایی‌سازی' : boardMinutes.status === 'WAITING_SIGNATURES' || boardMinutes.status === 'PARTIALLY_SIGNED' ? 'در انتظار تأیید' : 'پیش‌نویس'}</span>}</div>
             {!boardMinutes && isSecretariat && <div className="flex flex-wrap gap-2"><button onClick={handleCreateMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">ایجاد پیش‌نویس صورت‌جلسه</button>{aiMinutes && <AiButton size="md" onClick={handleAiMinutes} loading={minutesDrafting}>نوشتن صورت‌جلسه با هوش مصنوعی</AiButton>}</div>}
@@ -749,6 +763,7 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
             {boardMinutes && <>
               <textarea rows={minutesContent.split('\n').length > 6 ? 12 : 5} value={minutesContent} onChange={(event) => setMinutesContent(event.target.value)} disabled={boardMinutes.status !== 'DRAFT' || !isSecretariat} className="w-full text-xs leading-7 p-4 bg-slate-50 border border-slate-200 rounded-2xl disabled:opacity-80" />
               {boardMinutes.status === 'DRAFT' && isSecretariat && <AiTextAssist value={minutesContent} onChange={setMinutesContent} purpose="minutes" actorId={currentUser.id} />}
+              {canCreateResolution && <MinutesExtraction meeting={meeting} text={minutesContent} resolutions={resolutions} canCreateResolution={canCreateResolution} />}
               {/* Attendee signatures are no longer collected. Any that already
                   exist on an older minutes record stay visible, read-only. */}
               {(boardMinutes.signatures?.length || 0) > 0 && <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs"><summary className="cursor-pointer font-bold text-slate-700">امضاهای بایگانی‌شده اعضا (مربوط به فرآیند قبلی)</summary><div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-3">{boardMinutes.signatures!.map((signature) => <div key={signature.memberUserId} className="p-3 rounded-2xl border bg-white border-slate-200"><strong className="text-slate-800">{signature.memberName}</strong><span className="block text-[10px] text-slate-500">{signature.memberTitle}</span><span className="block text-[10px] font-bold mt-2">{signature.status === 'SIGNED' ? `امضا شده — ${toPersianDigits(new Date(signature.signedAt!).toLocaleString('fa-IR'))}` : 'ثبت نشده'}</span></div>)}</div></details>}

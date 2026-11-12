@@ -119,7 +119,7 @@ const UPLOADED_PNG = Buffer.from(
   if (documentPages.length) {
     const doc = documentPages[0];
     const text = await doc.locator('body').innerText();
-    const imgs = await doc.locator('img').count();
+    const imgs = await doc.locator('img[alt^="امضای"]').count();
     check('CR-E Test1 دعوت‌نامه اطلاعات واقعی جلسه را دارد', text.includes('جلسه تست امضا و اسناد') && text.includes('سالن جلسات مرکزی'));
     check('CR-E Test1 مدعو در دعوت‌نامه نمایش داده می‌شود', text.includes('مهمان آزمایشی'));
     check('CR-E Test1 تصویر امضای دبیر جلسه روی دعوت‌نامه است', imgs >= 1);
@@ -219,7 +219,7 @@ const UPLOADED_PNG = Buffer.from(
     const notifiedDate = (await readLS(page, 'resolutions')).find((r) => r.id === 'res-sig-qa').notifiedDateJalali;
     check('CR-E Test2 تاریخ ابلاغ خودکار روی نامه است',
       latin.includes(notifiedDate.replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))), notifiedDate);
-    check('CR-E Test2 تصویر امضای دبیر جلسه روی نامه است', (await doc.locator('img').count()) >= 1);
+    check('CR-E Test2 تصویر امضای دبیر جلسه روی نامه است', (await doc.locator('img[alt^="امضای"]').count()) >= 1);
     await doc.close();
   }
 
@@ -231,7 +231,7 @@ const UPLOADED_PNG = Buffer.from(
     const doc = documentPages[0];
     const text = await doc.locator('body').innerText();
     check('CR-E Test3 هر سه امضاکننده روی سند مصوبه هستند', text.includes('مسئول دفتر') && text.includes('مدیرعامل') && text.includes('مدیر کل سیستم'));
-    check('CR-E Test3 تصویر هر سه امضا روی سند درج شده است', (await doc.locator('img').count()) === 3);
+    check('CR-E Test3 تصویر هر سه امضا روی سند درج شده است', (await doc.locator('img[alt^="امضای"]').count()) === 3);
     await doc.close();
   }
   await page.locator('button:has-text("بستن پنجره")').first().click().catch(() => {});

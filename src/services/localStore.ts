@@ -26,9 +26,16 @@ export const loadLocalCollection = <T,>(key: LocalCollectionKey, fallback: T): T
   }
 };
 
+/** رویداد تغییر داده در همین تب (رویداد storage فقط به تب‌های دیگر می‌رسد). */
+// با تأخیر صفر ارسال می‌شود تا هرگز وسط رندر/Updater ری‌اکت اجرا نشود.
+const emitChange = (key: string) => {
+  try { window.setTimeout(() => window.dispatchEvent(new CustomEvent('msb-data-changed', { detail: { key } })), 0); } catch { /* ignore */ }
+};
+
 export const saveLocalCollection = <T,>(key: LocalCollectionKey, value: T): void => {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(value));
+  emitChange(key);
 };
 
 export const loadLocalValue = <T,>(key: string, fallback: T): T => {
@@ -44,4 +51,5 @@ export const loadLocalValue = <T,>(key: string, fallback: T): T => {
 export const saveLocalValue = <T,>(key: string, value: T): void => {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(value));
+  emitChange(key);
 };

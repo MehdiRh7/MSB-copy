@@ -155,6 +155,7 @@ const AppContent: React.FC = () => {
         defaultMeetingId={resolutionModalState.defaultMeetingId}
         defaultAgendaItemId={resolutionModalState.defaultAgendaItemId}
         defaultTopicTitle={resolutionModalState.defaultTopicTitle}
+        prefill={resolutionModalState.prefill}
       />
     </div>
   );

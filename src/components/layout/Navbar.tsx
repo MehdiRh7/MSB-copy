@@ -22,6 +22,7 @@ import {
   ,Clock3
 } from 'lucide-react';
 import { useApp, AppRoute } from '../../context/AppContext';
+import { requestDesktopNotifications } from '../../services/proactiveAlertService';
 import { toPersianDigits } from '../../utils/formatters';
 import { meetingService, resolutionService, taskService } from '../../services';
 import { Meeting, Resolution, Task } from '../../types';
@@ -388,6 +389,15 @@ export const Navbar: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-1">
+                    {typeof Notification !== 'undefined' && Notification.permission === 'default' && (
+                      <button
+                        onClick={async () => { const result = await requestDesktopNotifications(); showToast('اعلان دسکتاپ', result === 'granted' ? 'اعلان‌های فوری حتی وقتی سامانه در پس‌زمینه است نمایش داده می‌شوند.' : 'اجازه اعلان دسکتاپ داده نشد.', result === 'granted' ? 'success' : 'info'); }}
+                        className="text-[10px] text-indigo-700 font-bold px-2 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer"
+                        title="دریافت اعلان فوری روی دسکتاپ"
+                      >
+                        🔔 اعلان دسکتاپ
+                      </button>
+                    )}
                     {unreadNotificationsCount > 0 && (
                       <button
                         onClick={markAllNotificationsAsRead}

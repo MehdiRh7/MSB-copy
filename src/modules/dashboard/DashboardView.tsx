@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Activity,
+  LayoutGrid,
   AlertTriangle,
   ArrowLeft,
   Building2,
@@ -23,6 +24,7 @@ import { useApp } from '../../context/AppContext';
 import { getMeetingStatusMeta, toPersianDigits } from '../../utils/formatters';
 import { buildDashboardModel, daysFromToday, DashboardActionItem } from './dashboardData';
 import { AiDailyBrief } from './AiDailyBrief';
+import { DashboardCustomizer, useDashboardLayout } from './dashboardLayout';
 
 const greeting = () => {
   const hour = new Date().getHours();
@@ -59,6 +61,8 @@ export const DashboardView: React.FC = () => {
   const { navigateTo, currentUser, refreshTrigger, hasPermission, openCreateMeetingModal } = useApp();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const model = useMemo(() => buildDashboardModel(currentUser), [currentUser, refreshTrigger]);
+  const dash = useDashboardLayout(currentUser.id);
+  const [customizerOpen, setCustomizerOpen] = useState(false);
   const canCreateMeeting = hasPermission('CREATE_MEETING');
   const [resTab, setResTab] = useState<ResTab | null>(null);
 
@@ -118,23 +122,30 @@ export const DashboardView: React.FC = () => {
   const completedCount = model.statusBreakdown.find((item) => item.key === 'closed')?.value || 0;
   const completionRate = totalStatusItems ? Math.round((completedCount / totalStatusItems) * 100) : 0;
 
+  const workOrder = Math.min(dash.orderOf('todo'), dash.orderOf('meetings'), dash.orderOf('resolutions'), dash.orderOf('role'));
+  const ord = (id: Parameters<typeof dash.orderOf>[0]) => ({ order: dash.orderOf(id) });
+
   return (
-    <div className="space-y-4 pb-10">
+    <div className="flex flex-col gap-4 pb-10">
+      {customizerOpen && <DashboardCustomizer api={dash} onClose={() => setCustomizerOpen(false)} />}
       {/* ——— سلام و اقدام اصلی ——— */}
-      <section className="db-hello">
+      <section className="db-hello" style={{ order: 0 }}>
         <div className="min-w-0">
           <h1 className="text-lg sm:text-xl font-black text-slate-900">{greeting()}، {currentUser.fullName}</h1>
           <p className="mt-0.5 text-[12px] text-slate-500">{longToday()} · {currentUser.title}</p>
         </div>
-        {primaryAction}
+        <div className="flex items-center gap-2">
+          <button onClick={() => setCustomizerOpen(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:border-indigo-300 hover:text-indigo-700" title="شخصی‌سازی داشبورد"><LayoutGrid className="h-4 w-4" />شخصی‌سازی</button>
+          {primaryAction}
+        </div>
       </section>
 
-      <AiDailyBrief user={currentUser} model={model} onOpenTodo={() => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
+      {dash.isVisible('brief') && <div style={ord('brief')}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>}
 
       {/* این نمودار فقط از مصوبات قابل مشاهده همین کاربر ساخته می‌شود؛ هیچ
           شمارنده نمونه یا داده خارج از Scope نقش در آن وارد نمی‌شود. */}
-      {model.statusBreakdown.length > 0 && (
-        <section className="db-insight-card">
+      {dash.isVisible('pulse') && model.statusBreakdown.length > 0 && (
+        <section className="db-insight-card" style={ord('pulse')}>
           <header className="db-insight-head">
             <div>
               <span className="db-insight-eyebrow">نمای مدیریتی لحظه‌ای</span>
@@ -187,7 +198,7 @@ export const DashboardView: React.FC = () => {
 
       {/* اگر هنوز هیچ مصوبه‌ای برای نمودار وجود ندارد، شاخص‌های عملیاتی
           قابل‌کلیک حذف نمی‌شوند و به‌تنهایی نمایش داده می‌شوند. */}
-      {model.statusBreakdown.length === 0 && tiles.length > 0 && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {dash.isVisible('pulse') && model.statusBreakdown.length === 0 && tiles.length > 0 && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" style={ord('pulse')}>
         {tiles.map(({ label, value, icon: Icon, onClick, tone }) => (
           <button key={label} onClick={onClick} className={`db-tile db-tile-${tone}`}>
             <span className="db-tile-icon"><Icon className="h-5 w-5" /></span>
@@ -196,9 +207,9 @@ export const DashboardView: React.FC = () => {
         ))}
       </div>}
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3" style={{ order: workOrder }}>
         {/* ——— کارهای من ——— */}
-        <section id="dash-todo" className={`db-card ${showSidebar ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
+        {dash.isVisible('todo') && <section id="dash-todo" className={`db-card ${showSidebar ? 'lg:col-span-2' : 'lg:col-span-3'}`} style={ord('todo')}>
           <header className="db-card-head"><h2>کارهای من</h2><span className="db-count">{toPersianDigits(model.actionItems.length)}</span></header>
           {model.actionItems.length === 0 ? (
             <div className="db-empty"><CheckCircle2 className="h-8 w-8 text-emerald-500" /><p>کاری منتظر شما نیست.</p></div>
@@ -219,10 +230,10 @@ export const DashboardView: React.FC = () => {
               ))}
             </ul>
           )}
-        </section>
+        </section>}
 
         {/* ——— جلسات پیش‌رو ——— */}
-        {model.upcomingMeetings.length > 0 && <section className="db-card">
+        {dash.isVisible('meetings') && model.upcomingMeetings.length > 0 && <section className="db-card" style={ord('meetings')}>
           <header className="db-card-head"><h2>جلسات پیش‌رو</h2><button onClick={() => navigateTo('calendar')} className="db-link">تقویم</button></header>
           <ul className="space-y-2">
               {model.upcomingMeetings.slice(0, 4).map((m) => {
@@ -246,8 +257,8 @@ export const DashboardView: React.FC = () => {
         </section>}
 
         {/* ——— مصوبات ——— */}
-        {(model.overdue.length > 0 || model.inExecution.length > 0) && (
-          <section className="db-card lg:col-span-2">
+        {dash.isVisible('resolutions') && (model.overdue.length > 0 || model.inExecution.length > 0) && (
+          <section className="db-card lg:col-span-2" style={ord('resolutions')}>
             <header className="db-card-head">
               <h2>مصوبات در جریان</h2>
               <div className="db-seg">
@@ -285,7 +296,7 @@ export const DashboardView: React.FC = () => {
         )}
 
         {/* ——— ستون مخصوص نقش ——— */}
-        {showRoleCard && <section className="db-card">
+        {dash.isVisible('role') && showRoleCard && <section className="db-card" style={ord('role')}>
           {isManager && model.units.length > 0 ? (
             <>
               <header className="db-card-head"><h2><Building2 className="ml-1 inline h-4 w-4 text-blue-600" />وضعیت واحدها</h2></header>
@@ -339,8 +350,8 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* ——— آخرین اتفاقات ——— */}
-      {(model.persona === 'ADMIN' || isOffice || model.persona === 'ASSIGNEE') && model.activity.length > 0 && (
-        <section className="db-card">
+      {dash.isVisible('activity') && (model.persona === 'ADMIN' || isOffice || model.persona === 'ASSIGNEE') && model.activity.length > 0 && (
+        <section className="db-card" style={ord('activity')}>
           <header className="db-card-head"><h2>آخرین اتفاقات</h2></header>
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {model.activity.slice(0, 6).map((l) => (

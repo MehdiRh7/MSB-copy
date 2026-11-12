@@ -235,7 +235,7 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
     const notices = (await boardMod.boardSecretariatService.getNotices(undefined, 'res-notify-a')).data;
     const meeting = (await meetMod.meetingService.getMeetingById('meet-autofill')).data;
     const doc = docMod.buildResolutionNotificationDocument(res, notices[0], meeting, actor);
-    return { isDraft: doc.html.includes('پیش‌نویس'), hasSignatureImage: doc.html.includes('<img') };
+    return { isDraft: doc.html.includes('پیش‌نویس'), hasSignatureImage: doc.html.includes('alt="امضای') };
   });
   check('۶.۱ PDF پیش از امضا به‌وضوح «پیش‌نویس / در انتظار امضا» است', pdfBefore.isDraft === true);
   check('۶.۱ PDF پیش از امضا تصویر امضای دبیر جلسه را نشان نمی‌دهد', pdfBefore.hasSignatureImage === false);
@@ -294,7 +294,7 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
     const notices = (await boardMod.boardSecretariatService.getNotices(undefined, 'res-notify-a')).data;
     const meeting = (await meetMod.meetingService.getMeetingById('meet-autofill')).data;
     const doc = docMod.buildResolutionNotificationDocument(res, notices[0], meeting, actor);
-    return { isDraft: doc.html.includes('پیش‌نویس'), hasSignatureImage: doc.html.includes('<img') };
+    return { isDraft: doc.html.includes('پیش‌نویس'), hasSignatureImage: doc.html.includes('alt="امضای') };
   });
   check('۶.۱ PDF نهایی پس از امضا دیگر پیش‌نویس نیست', pdfAfter.isDraft === false);
   check('۶.۱ PDF نهایی امضای واقعی دبیر جلسه را نمایش می‌دهد', pdfAfter.hasSignatureImage === true);

@@ -17,6 +17,7 @@ import { describeAssignment, getStageAssignment } from '../../services/signature
 import { getMinutesDiff, validateAgendaTimeSlot, formatAgendaTimeRange, timeToMinutes } from '../../utils/agendaTime';
 import { AiButton, AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
 import { planAgenda, AgendaPlan } from '../../services/ai/aiService';
+import { suggestMeetingSlots, SlotSuggestion } from '../../services/ai/aiInsights';
 import type { AiResult } from '../../services/ai/aiClient';
 import { getCurrentJalaliDate } from '../../utils/date';
 
@@ -50,6 +51,19 @@ export const CreateMeetingModal: React.FC = () => {
   const aiPlanner = useAiFeature('meetingPlanner');
   const [planning, setPlanning] = useState(false);
   const [planResult, setPlanResult] = useState<AiResult<AgendaPlan> | null>(null);
+  // ——— پیشنهاد زمان جلسه ———
+  const aiScheduler = useAiFeature('meetingScheduler');
+  const [slots, setSlots] = useState<SlotSuggestion[] | null>(null);
+  const [slotsBusy, setSlotsBusy] = useState(false);
+  const toPersianDigitsLocal = (value: string) => value.replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+  const handleSuggestSlots = async () => {
+    setSlotsBusy(true);
+    try {
+      const all = (await meetingService.getMeetings({ pageSize: 1000 })).data.items;
+      const duration = Math.max(30, getMinutesDiff(startTime, endTime));
+      setSlots(suggestMeetingSlots({ participantIds: [...selectedMemberIds, organizerId, secretaryId], durationMinutes: duration, meetings: all, users: availableUsers }));
+    } finally { setSlotsBusy(false); }
+  };
   // پیوست‌های خودِ جلسه (متعلق به توضیحات کلی) — جدا از پیوست بندهای
   // دستور جلسه که روی همان AgendaItem می‌نشینند.
   const [meetingAttachments, setMeetingAttachments] = useState<Attachment[]>([]);
@@ -352,7 +366,7 @@ export const CreateMeetingModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-xs p-4 animate-in fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full max-h-[92vh] flex flex-col overflow-hidden">
+      <div className={`bg-white rounded-3xl shadow-2xl border border-slate-200 ${activeStep === 3 ? 'max-w-6xl' : 'max-w-3xl'} w-full max-h-[92vh] flex flex-col overflow-hidden transition-all`}>
         {/* Modal Header */}
         <div className="app-modal-header text-white p-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
@@ -508,6 +522,26 @@ export const CreateMeetingModal: React.FC = () => {
             </div>
 
             <SearchableUserMultiSelect users={availableUsers} selectedIds={selectedMemberIds} onChange={setSelectedMemberIds} label="اعضا و مدعوین" maxHeightClassName="max-h-48" />
+
+            {aiScheduler && (selectedMemberIds.length > 0 || organizerId || secretaryId) && (
+              <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[11px] font-extrabold text-indigo-950">✨ پیشنهاد زمان: زمان‌هایی که این افراد جلسه دیگری ندارند (۱۴ روز آینده)</span>
+                  <AiButton variant="soft" loading={slotsBusy} onClick={handleSuggestSlots}>پیدا کردن زمان مناسب</AiButton>
+                </div>
+                {slots && slots.length === 0 && <p className="text-[11px] text-slate-500">زمان آزاد مشترکی پیدا نشد.</p>}
+                {slots && slots.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                    {slots.map((slot) => (
+                      <button key={`${slot.dateJalali}-${slot.startTime}`} type="button" onClick={() => { setDateJalali(toPersianDigitsLocal(slot.dateJalali)); setStartTime(toPersianDigitsLocal(slot.startTime)); setEndTime(toPersianDigitsLocal(slot.endTime)); showToast('زمان جلسه', `${slot.weekday} ${toPersianDigitsLocal(slot.dateJalali)} ساعت ${slot.startTime} تا ${slot.endTime} انتخاب شد.`, 'success'); }} className="text-right p-2.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50">
+                        <span className="block text-[11.5px] font-extrabold text-slate-800">{slot.weekday} {toPersianDigitsLocal(slot.dateJalali)} — {toPersianDigitsLocal(slot.startTime)} تا {toPersianDigitsLocal(slot.endTime)}</span>
+                        <span className={`block text-[10px] font-bold mt-0.5 ${slot.freeCount === slot.total ? 'text-emerald-700' : 'text-amber-700'}`}>{slot.freeCount === slot.total ? `همه ${toPersianDigitsLocal(String(slot.total))} نفر آزادند` : `${toPersianDigitsLocal(String(slot.freeCount))} از ${toPersianDigitsLocal(String(slot.total))} نفر آزاد — مشغول: ${slot.busyNames.join('، ')}`}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           )}
 

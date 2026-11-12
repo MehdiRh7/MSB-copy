@@ -28,6 +28,9 @@ import { Meeting } from '../../types';
 import { addDaysToJalaliDate, getCurrentJalaliDate } from '../../utils/date';
 import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
 import { suggestResolution, ResolutionSuggestion } from '../../services/ai/aiService';
+import { checkResolutionConflicts, ConflictFinding, KIND_LABEL } from '../../services/ai/aiInsights';
+import type { ResolutionPrefill } from '../../context/AppContext';
+import { AlertTriangle } from 'lucide-react';
 import type { AiResult } from '../../services/ai/aiClient';
 
 interface CreateResolutionModalProps {
@@ -36,6 +39,7 @@ interface CreateResolutionModalProps {
   defaultMeetingId?: string;
   defaultAgendaItemId?: string;
   defaultTopicTitle?: string;
+  prefill?: ResolutionPrefill;
 }
 
 export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
@@ -44,6 +48,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
   defaultMeetingId,
   defaultAgendaItemId,
   defaultTopicTitle,
+  prefill,
 }) => {
   const { availableUsers, showToast, triggerRefresh, hasPermission, currentUser } = useApp();
   const [meetingOptions, setMeetingOptions] = useState<Meeting[]>(mockMeetings);
@@ -77,6 +82,19 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
   const [verifierId, setVerifierId] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // ——— بررسی تناقض و تکرار ———
+  const aiConflict = useAiFeature('conflictCheck');
+  const [conflicts, setConflicts] = useState<AiResult<ConflictFinding[]> | null>(null);
+  const [checkingConflicts, setCheckingConflicts] = useState(false);
+  const runConflictCheck = async (): Promise<ConflictFinding[]> => {
+    setCheckingConflicts(true);
+    try {
+      const existing = (await resolutionService.getResolutions({ pageSize: 1000 })).data.items;
+      const res = await checkResolutionConflicts({ topic: topicTitle, text: executionDescription || requestDescription }, existing, currentUser.id);
+      setConflicts(res);
+      return res.data;
+    } finally { setCheckingConflicts(false); }
+  };
   // ——— دستیار هوشمند ثبت مصوبه ———
   const aiResolution = useAiFeature('resolutionDraft');
   const [suggesting, setSuggesting] = useState(false);
@@ -119,8 +137,18 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
       setFollowUpType('MONTHLY');
       const today = getCurrentJalaliDate();
       setAssignedDateJalali(today);
-      setDeadlineJalali(addDaysToJalaliDate(today, 14));
+      setDeadlineJalali(addDaysToJalaliDate(today, prefill?.deadlineDays || 14));
       setFollowUpStartDateJalali(today);
+      setConflicts(null);
+      if (prefill) {
+        if (prefill.executionDescription) { setExecutionDescription(prefill.executionDescription); setRequestDescription(prefill.executionDescription); }
+        if (prefill.mainResponsibleUserId) {
+          setMainResponsibleUserId(prefill.mainResponsibleUserId);
+          const user = availableUsers.find((u) => u.id === prefill.mainResponsibleUserId);
+          if (user) setResponsibleDepartmentId(user.departmentId);
+        }
+        if (prefill.priority) setPriority(prefill.priority);
+      }
     }
   }, [isOpen, defaultMeetingId, defaultAgendaItemId, defaultTopicTitle]);
 
@@ -208,6 +236,13 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
     const meeting = meetingOptions.find((m) => m.id === selectedMeetingId);
     if (!meeting) return;
     const responsibleUser = availableUsers.find((u) => u.id === mainResponsibleUserId);
+
+    // پیش از ثبت: اگر بررسی انجام نشده، یک بار اجرا می‌شود و در صورت تکرار
+    // یا تناقض، تصمیم با کاربر است (ثبت مسدود نمی‌شود).
+    if (aiConflict && approvalStatus === 'APPROVED' && conflicts === null) {
+      const findings = (await runConflictCheck()).filter((f) => f.kind !== 'RELATED');
+      if (findings.length > 0 && !window.confirm(`${findings.length.toLocaleString('fa-IR')} مورد احتمال تکرار یا تناقض با مصوبات قبلی پیدا شد:\n\n${findings.map((f) => `• ${KIND_LABEL[f.kind]}: ${f.resolution.resolutionNumber} — ${f.resolution.topicTitle}`).join('\n')}\n\nبا این حال ثبت شود؟`)) return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -435,6 +470,21 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                     className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none font-medium"
                   />
                   <AiTextAssist value={executionDescription} onChange={setExecutionDescription} purpose="resolution" actorId={currentUser.id} />
+                  {aiConflict && (
+                    <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" />بررسی تکرار و تناقض با مصوبات قبلی</span>
+                        <div className="flex items-center gap-2"><AiSourceBadge result={conflicts} /><AiButton variant="soft" loading={checkingConflicts} onClick={() => { void runConflictCheck(); }} disabled={!topicTitle.trim() && !executionDescription.trim()}>بررسی کن</AiButton></div>
+                      </div>
+                      {conflicts && conflicts.data.length === 0 && <p className="text-[11px] text-emerald-700">✓ مصوبه تکراری یا متناقضی پیدا نشد.</p>}
+                      {conflicts?.data.map((f) => (
+                        <div key={f.resolution.id} className={`text-[11px] rounded-lg border p-2 ${f.kind === 'CONFLICT' ? 'bg-rose-50 border-rose-200 text-rose-900' : f.kind === 'DUPLICATE' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-white border-slate-200 text-slate-700'}`}>
+                          <b>{KIND_LABEL[f.kind]}:</b> {f.resolution.resolutionNumber} — {f.resolution.topicTitle}
+                          <div className="text-[10.5px] opacity-80 mt-0.5">{f.reason}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Responsible User Select */}

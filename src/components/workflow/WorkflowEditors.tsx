@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, CheckCircle2, GitBranch, Layers, PenTool, Search, S
 import { ApprovalMode, ApprovalPolicy, MeetingWorkflowConfig, SignatureChainMode, SignatureChainPolicy, User } from '../../types';
 import { APPROVAL_MODE_HINTS, APPROVAL_MODE_LABELS, SIGNATURE_MODE_LABELS } from '../../services/workflowPolicyService';
 import { toPersianDigits } from '../../utils/formatters';
+import { WorkflowDesigner } from './WorkflowDesigner';
 
 /** انتخاب‌گر چندنفره با حفظ ترتیب (ترتیب انتخاب = ترتیب گردش). */
 const OrderedUserPicker: React.FC<{
@@ -166,8 +167,16 @@ export const MeetingWorkflowEditor: React.FC<{
   onChange: (value: MeetingWorkflowConfig) => void;
   defaultSignatureDescription: string;
   defaultNoticeDescription: string;
-}> = ({ users, value, onChange, defaultSignatureDescription, defaultNoticeDescription }) => (
+}> = ({ users, value, onChange, defaultSignatureDescription, defaultNoticeDescription }) => {
+  const [view, setView] = useState<'visual' | 'form'>('visual');
+  return (
   <div className="space-y-3">
+    <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 w-fit" role="tablist" aria-label="نمای ویرایش گردش کار">
+      {([['visual', '🧩 طراح گرافیکی'], ['form', '📝 فرم']] as const).map(([id, label]) => (
+        <button key={id} type="button" role="tab" aria-selected={view === id} onClick={() => setView(id)} className={`text-[11px] font-bold px-3 py-1.5 rounded-lg ${view === id ? 'bg-white text-indigo-700 shadow-xs' : 'text-slate-500'}`}>{label}</button>
+      ))}
+    </div>
+    {view === 'visual' ? <WorkflowDesigner users={users} value={value} onChange={onChange} /> : (<>
     <ApprovalPolicyEditor
       title="تأیید دستورکار"
       description="پیش از ارسال خودکار دعوتنامه‌ها، چه کسانی دستورکار را تأیید کنند."
@@ -200,5 +209,7 @@ export const MeetingWorkflowEditor: React.FC<{
         {users.filter((user) => user.isActive !== false).map((user) => <option key={user.id} value={user.id}>{user.fullName} — {user.title}</option>)}
       </select>
     </div>
+    </>)}
   </div>
-);
+  );
+};

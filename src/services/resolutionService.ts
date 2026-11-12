@@ -27,6 +27,7 @@ import { issueNotificationLetterNumber } from './notificationLetterNumbering';
 import { resolveSignatureImageUrl } from '../utils/signatureImage';
 import { resolveStageSigner } from './signatureWorkflowSettingsService';
 import { resolveSigningAuthority } from './signatureDelegationService';
+import { canonicalNoticeContent, canonicalResolutionContent, signContent } from './digitalSignatureService';
 
 export interface CreateResolutionDto {
   meetingId: string;
@@ -414,6 +415,8 @@ class MockResolutionService implements IResolutionService {
     // سند باید امضای شخص جانشین را نشان دهد، نه شخص اصلی.
     const signerRecord = users.find((user) => user.id === signerUserId);
     currentStep.signatureImageUrl = resolveSignatureImageUrl(signerRecord?.signatureUrl);
+    // امضای رمزنگاری‌شده واقعی با کلید همان کسی که امضا کرد.
+    try { currentStep.cryptoSignature = await signContent(signerUserId, canonicalResolutionContent(resolution)); } catch { /* مرورگر بدون Web Crypto */ }
 
     this.activityLogs.unshift({
       id: `log-${Date.now()}`,
@@ -832,6 +835,7 @@ class MockResolutionService implements IResolutionService {
       signedAsDelegate,
       ...(signedAsDelegate ? { delegateForUserId: assignedSignerId, delegateForName: assignedName } : {}),
     };
+    try { notice.secretarySignature.cryptoSignature = await signContent(actualSignerId, canonicalNoticeContent(notice)); } catch { /* مرورگر بدون Web Crypto */ }
     saveLocalCollection('resolutionNotices', notices);
 
     resolution.executionStatus = 'NOTIFIED';

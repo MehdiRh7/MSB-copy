@@ -45,6 +45,7 @@ import { buildAttachmentFromFile } from '../../utils/attachmentFile';
 import { SignNotificationLetterAction } from './SignNotificationLetterAction';
 import { resolveSigningAuthority } from '../../services/signatureDelegationService';
 import { ResolutionAiInsight } from './ResolutionAiInsight';
+import { SignatureVerifier } from './SignatureVerifier';
 
 interface ResolutionDetailModalProps {
   resolutionId: string | null;
@@ -418,6 +419,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                   </div>
                 </div>
 
+                <SignatureVerifier resolution={resolution} />
                 {signatureWorkflow.status !== 'COMPLETED' && (
                   <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-amber-50 border border-amber-200">
                     <span className="text-amber-900 font-bold">

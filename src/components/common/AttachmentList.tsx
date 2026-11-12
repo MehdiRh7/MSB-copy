@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { AttachmentInsightButton, AttachmentInsightPanel } from '../ai/AttachmentInsight';
+import type { AiResult } from '../../services/ai/aiClient';
+import type { DocumentSummary } from '../../services/ai/aiInsights';
 import { Attachment } from '../../types';
 import { formatFileSize, toPersianDigits } from '../../utils/formatters';
 import { FileText, Download, Trash2, Paperclip, FileWarning } from 'lucide-react';
@@ -25,6 +28,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
   onAddFiles,
 }) => {
   const { showToast, currentUser } = useApp();
+  const [insight, setInsight] = useState<{ attachment: Attachment; result: AiResult<DocumentSummary> | { error: string } } | null>(null);
 
   // دانلود واقعی: فایل از روی محتوای ذخیره‌شده ساخته و تحویل مرورگر می‌شود.
   // پیام موفقیت فقط وقتی نمایش داده می‌شود که دانلود واقعاً شروع شده باشد.
@@ -129,6 +133,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
               </div>
 
               <div className="flex items-center gap-1 shrink-0">
+                <AttachmentInsightButton attachment={att} onResult={(attachment, result) => setInsight({ attachment, result })} />
                 <button
                   onClick={() => handleDownload(att)}
                   className={`p-1.5 rounded-lg transition-colors ${
@@ -152,6 +157,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
               </div>
             </div>
           ))}
+          {insight && attachments.some((a) => a.id === insight.attachment.id) && <AttachmentInsightPanel attachment={insight.attachment} result={insight.result} onClose={() => setInsight(null)} />}
         </div>
       )}
     </div>

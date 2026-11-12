@@ -224,6 +224,16 @@ export interface Proposal {
   sourceLetterNumber?: string;
   sourceLetterDateJalali?: string;
   sourceLetterSubject?: string;
+  /** گردش پویای پیشنهاد: تصمیم‌های دور جاری بررسی مدیرعامل/تأییدکنندگان. */
+  ceoDecisions?: ApprovalDecision[];
+  /** گردش پویای پیشنهاد: تصمیم‌های دور جاری تأیید نهایی (دبیر جلسه). */
+  secretaryDecisions?: ApprovalDecision[];
+}
+
+/** تنظیم گردش پیشنهادها؛ نبود هر بخش = رفتار تاریخی همان مرحله. */
+export interface ProposalWorkflowSettings {
+  ceoReview?: ApprovalPolicy;
+  secretaryConfirmation?: ApprovalPolicy;
 }
 
 export type ProposalSource = 'MANUAL' | 'EXCEL_IMPORT';
@@ -541,6 +551,16 @@ export type DocumentSignatureContext =
  * is a SNAPSHOT of the signer's signature image at signing time, so replacing
  * a signature later never rewrites documents already signed with the old one.
  */
+/** امضای رمزنگاری‌شده (ECDSA) روی چکیده محتوای سند — قابل اعتبارسنجی. */
+export interface CryptoSignatureRecord {
+  algorithm: string;
+  contentHash: string;
+  signature: string;
+  publicKeyJwk: JsonWebKey;
+  keyFingerprint: string;
+  signedAt: string;
+}
+
 export interface DocumentSignature {
   /** امضاکننده تعیین‌شده این سند (Assigned Signer). */
   signerUserId: string;
@@ -551,6 +571,7 @@ export interface DocumentSignature {
   signedDateJalali: string;
   signedTimeString: string;
   signatureImageUrl: string;
+  cryptoSignature?: CryptoSignatureRecord;
   // ——— Audit Trail امضای جانشینی (اختیاری؛ امضای مستقیم آنها را پر نمی‌کند) ———
   actualSignerUserId?: string;
   actualSignerName?: string;
@@ -701,6 +722,8 @@ export interface ResolutionSignature {
   // Snapshot of the signer's signature image at the moment they signed, so an
   // official document keeps showing the signature it was actually signed with.
   signatureImageUrl?: string;
+  /** امضای رمزنگاری‌شده واقعی روی محتوای مصوبه در لحظه امضا. */
+  cryptoSignature?: CryptoSignatureRecord;
   // ——— Audit Trail امضای جانشینی (همه اختیاری؛ امضای مستقیم آنها را پر
   // نمی‌کند و رفتار قبلی دست‌نخورده می‌ماند) ———
   /** کسی که واقعاً امضا کرد. در امضای مستقیم برابر signerUserId است. */
@@ -914,7 +937,7 @@ export interface AppNotification {
   dateJalali: string;
   timeString: string;
   isRead: boolean;
-  type: 'ASSIGNMENT' | 'DEADLINE' | 'FOLLOW_UP' | 'APPROVAL_REQUEST' | 'APPROVED' | 'REJECTED' | 'MEETING' | 'PERMISSION_ASSIGNED';
+  type: 'ASSIGNMENT' | 'DEADLINE' | 'FOLLOW_UP' | 'APPROVAL_REQUEST' | 'APPROVED' | 'REJECTED' | 'MEETING' | 'PERMISSION_ASSIGNED' | 'RISK_ALERT';
   targetRoute?: string;
   targetResolutionId?: string;
 }

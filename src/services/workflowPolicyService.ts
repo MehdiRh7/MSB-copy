@@ -11,6 +11,7 @@
  *   مدیرعامل (یک نفر کافی)، بدون تأیید صورت‌جلسه، و امضاهای سراسری.
  */
 import {
+  ProposalWorkflowSettings,
   ApprovalDecision,
   ApprovalMode,
   ApprovalPolicy,
@@ -256,4 +257,39 @@ export const meetingWorkflowParticipantIds = (meeting: Meeting): string[] => {
     ...(wf.resolutionSignature?.signerUserIds || []),
     ...(wf.noticeSignerUserId ? [wf.noticeSignerUserId] : []),
   ]));
+};
+
+// ——————————————————— گردش پویای پیشنهادها ———————————————————
+
+const PROPOSAL_WF_KEY = 'proposalWorkflowSettings';
+
+export const getProposalWorkflowSettings = (): ProposalWorkflowSettings => {
+  const saved = loadLocalValue<ProposalWorkflowSettings>(PROPOSAL_WF_KEY, {});
+  return {
+    ceoReview: saved.ceoReview?.approverUserIds.length ? saved.ceoReview : undefined,
+    secretaryConfirmation: saved.secretaryConfirmation?.approverUserIds.length ? saved.secretaryConfirmation : undefined,
+  };
+};
+
+export const saveProposalWorkflowSettings = (settings: ProposalWorkflowSettings, actor: User): ProposalWorkflowSettings => {
+  if (!canManageWorkflowTemplates(actor)) throw new Error('شما مجاز به تغییر گردش پیشنهادها نیستید.');
+  const clean: ProposalWorkflowSettings = {
+    ceoReview: settings.ceoReview?.approverUserIds.length ? settings.ceoReview : undefined,
+    secretaryConfirmation: settings.secretaryConfirmation?.approverUserIds.length ? settings.secretaryConfirmation : undefined,
+  };
+  saveLocalValue(PROPOSAL_WF_KEY, clean);
+  return clean;
+};
+
+/** آیا کاربر در مرحله «بررسی مدیرعامل» پیشنهادها نقش دارد؟ */
+export const isProposalCeoReviewer = (user: User): boolean => {
+  const policy = getProposalWorkflowSettings().ceoReview;
+  return user.role === 'ADMIN' || user.role === 'CEO' || Boolean(policy?.approverUserIds.includes(user.id));
+};
+
+/** آیا کاربر در مرحله «تأیید نهایی تایید جلسه» نقش دارد؟ */
+export const isProposalSecretaryApprover = (user: User): boolean => {
+  const policy = getProposalWorkflowSettings().secretaryConfirmation;
+  if (policy) return user.role === 'ADMIN' || policy.approverUserIds.includes(user.id);
+  return user.role === 'ADMIN' || (user.permissions || []).includes('APPROVE_MEETING_CONFIRMATION');
 };

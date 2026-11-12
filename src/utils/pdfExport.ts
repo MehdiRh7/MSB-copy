@@ -10,24 +10,81 @@ const escapeHtml = (value: unknown) => String(value ?? '—')
   .replaceAll('"', '&quot;')
   .replaceAll("'", '&#039;');
 
-export const exportHtmlToPdf = (title: string, bodyHtml: string): boolean => {
+/**
+ * سند در یک پنجره چاپ باز می‌شود (مسیر «ذخیره به‌صورت PDF» مرورگر). با
+ * `wordExport` یک نوار ابزار (غیرقابل چاپ) هم اضافه می‌شود که همان سند را
+ * با سربرگ، به‌صورت فایل Word راست‌به‌چپ دانلود می‌کند.
+ */
+/** ذخیره فایل از پنجره اصلی (مرورگر نام فایل را برای Blobهای پنجره پاپ‌آپ نادیده می‌گیرد). */
+const registerSaveHelper = () => {
+  (window as unknown as { __msbSaveFile?: (name: string, parts: BlobPart[], type: string) => void }).__msbSaveFile = (name, parts, type) => {
+    const url = URL.createObjectURL(new Blob(parts, { type }));
+    // نام فایل با حروف لاتین: برخی مرورگرها نام غیرلاتین را برای دانلود نادیده می‌گیرند.
+    const ext = name.includes('.') ? name.slice(name.lastIndexOf('.')) : '';
+    const base = name.slice(0, name.length - ext.length)
+      .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+      .replace(/[^A-Za-z0-9_-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${base || `document-${new Date().toISOString().slice(0, 10)}`}${ext}`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+};
+
+export const exportHtmlToPdf = (title: string, bodyHtml: string, options: { wordExport?: boolean; autoPrint?: boolean } = {}): boolean => {
+  if (options.wordExport) registerSaveHelper();
   const printWindow = window.open('', '_blank', 'width=1000,height=800');
   if (!printWindow) return false;
+  const autoPrint = options.autoPrint !== false;
+  const toolbar = options.wordExport ? `
+    <div class="doc-toolbar">
+      <span>${escapeHtml(title)}</span>
+      <button type="button" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>
+      <button type="button" onclick="downloadWord()">📄 دانلود Word</button>
+    </div>` : '';
+  const wordScript = options.wordExport ? `
+    <script>
+      function downloadWord() {
+        var root = document.getElementById('doc-root').cloneNode(true);
+        root.querySelectorAll('img').forEach(function (img) { img.setAttribute('src', img.src); });
+        var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>"
+          + "<head><meta charset='utf-8'><title>" + document.title + "</title>"
+          + "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->"
+          + "<style>@page Section1{size:21cm 29.7cm;margin:1.6cm 1.8cm} div.Section1{page:Section1} body{direction:rtl;font-family:Tahoma,Arial;font-size:11pt} table{border-collapse:collapse} td,th{border:1px solid #d9dee8;padding:5px} .lh td{border:none} .doc-footer{border-top:1px solid #ccc;font-size:9pt;color:#555;margin-top:24px;padding-top:6px} img{max-height:70px}</style>"
+          + "</head><body dir='rtl' lang='fa'><div class='Section1'>" + root.innerHTML + "</div></body></html>";
+        if (window.opener && window.opener.__msbSaveFile) { window.opener.__msbSaveFile(document.title + '.doc', ['\ufeff', html], 'application/msword'); return; }
+        var blob = new Blob(['﻿', html], { type: 'application/msword' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = document.title + '.doc';
+        document.body.appendChild(a); a.click(); a.remove();
+      }
+    <\/script>` : '';
 
   printWindow.document.write(`<!doctype html>
     <html lang="fa" dir="rtl">
       <head>
         <meta charset="utf-8" />
+        <base href="${escapeHtml(window.location.origin)}/" />
         <title>${escapeHtml(title)}</title>
         <style>
           @page { size: A4; margin: 14mm; }
           * { box-sizing: border-box; }
           body { font-family: Tahoma, Arial, sans-serif; color: #172033; margin: 0; direction: rtl; }
+          .doc-toolbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #0b2a5b; color: #fff; font-size: 12px; }
+          .doc-toolbar span { flex: 1; font-weight: bold; }
+          .doc-toolbar button { font-family: inherit; font-size: 12px; font-weight: bold; border: 0; border-radius: 8px; padding: 7px 12px; cursor: pointer; background: #fff; color: #0b2a5b; }
+          @media print { .doc-toolbar { display: none; } }
         </style>
       </head>
       <body>
-        ${bodyHtml}
-        <script>window.addEventListener('load', () => { window.print(); });<\/script>
+        ${toolbar}
+        <div id="doc-root">${bodyHtml}</div>
+        ${wordScript}
+        ${autoPrint ? "<script>window.addEventListener('load', () => { window.print(); });<\/script>" : ''}
       </body>
     </html>`);
   printWindow.document.close();

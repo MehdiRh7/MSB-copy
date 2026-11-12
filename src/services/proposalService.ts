@@ -4,6 +4,19 @@ import { apiClient } from './api/apiClient';
 import { loadLocalValue, saveLocalValue, loadLocalCollection, saveLocalCollection } from './localStore';
 import { toPersianDigits } from '../utils/formatters';
 import { smsService } from './smsService';
+import { buildDecision, evaluateApproval, getProposalWorkflowSettings, namesOf, resolveApprovalAuthority } from './workflowPolicyService';
+
+/**
+ * گردش پویای پیشنهاد: اگر برای «بررسی مدیرعامل» سیاست تعریف شده باشد،
+ * فقط تأییدکنندگان همان سیاست (یا مدیر سیستم) اقدام می‌کنند؛ وگرنه رفتار
+ * تاریخی (نقش مدیرعامل).
+ */
+const ceoAuthority = (proposal: Proposal, actor: User) => {
+  const policy = getProposalWorkflowSettings().ceoReview;
+  if (!policy) return { policy, allowed: ['CEO', 'ADMIN'].includes(actor.role), approverUserId: actor.id, reason: 'فقط مدیرعامل مجاز به بررسی پیشنهاد است' };
+  const authority = resolveApprovalAuthority(policy, proposal.ceoDecisions || [], actor);
+  return { policy, allowed: authority.allowed, approverUserId: authority.approverUserId, reason: authority.reason || 'شما جزو تأییدکنندگان این پیشنهاد نیستید' };
+};
 
 const STORAGE_KEY = 'proposals';
 
@@ -109,7 +122,10 @@ class MockProposalService implements IProposalService {
   // without a new notification system.
   private notifyMeetingSecretaries(proposal: Proposal) {
     const users = loadLocalCollection('users', mockUsers);
-    const recipients = users.filter((user) => user.role !== 'ADMIN' && (user.permissions || []).includes('APPROVE_MEETING_CONFIRMATION'));
+    const policy = getProposalWorkflowSettings().secretaryConfirmation;
+    const recipients = policy
+      ? users.filter((user) => policy.approverUserIds.includes(user.id))
+      : users.filter((user) => user.role !== 'ADMIN' && (user.permissions || []).includes('APPROVE_MEETING_CONFIRMATION'));
     if (recipients.length === 0) return;
     const notifications = loadLocalCollection('notifications', mockNotifications);
     const newOnes: AppNotification[] = recipients.map((user) => ({
@@ -189,12 +205,23 @@ class MockProposalService implements IProposalService {
   }
 
   public async reviewProposal(id: string, decision: 'APPROVED' | 'REJECTED', notes: string | undefined, actor: User): Promise<ApiResponse<Proposal>> {
-    if (!['CEO', 'ADMIN'].includes(actor.role)) throw new Error('فقط مدیرعامل مجاز به بررسی پیشنهاد است');
     const proposals = this.getData();
     const proposal = proposals.find((p) => p.id === id);
     if (!proposal) throw new Error('مصوبه پیشنهادی یافت نشد');
     if (!['PENDING_CEO_REVIEW', 'RESUBMITTED'].includes(proposal.status)) throw new Error('فقط پیشنهادهای در انتظار مدیرعامل قابل بررسی هستند');
+    const authority = ceoAuthority(proposal, actor);
+    if (!authority.allowed) throw new Error(authority.reason);
     const previousStatus = proposal.status;
+    if (authority.policy && decision === 'APPROVED') {
+      proposal.ceoDecisions = [...(proposal.ceoDecisions || []), buildDecision(actor, 'APPROVED', notes, authority.approverUserId)];
+      const evaluation = evaluateApproval(authority.policy, proposal.ceoDecisions);
+      if (!evaluation.isSatisfied) {
+        // تأیید ثبت شد اما سایر تأییدکنندگان باقی‌اند؛ وضعیت تغییر نمی‌کند.
+        this.addHistory(proposal, actor, `تأیید پیشنهاد (${evaluation.approvedCount} از ${evaluation.requiredCount})`, previousStatus, `${notes ? `${notes} | ` : ''}در انتظار: ${namesOf(evaluation.currentTurnId ? [evaluation.currentTurnId] : evaluation.pendingIds).join('، ')}`);
+        this.saveData(proposals);
+        return apiClient.simulateNetwork(proposal, 120);
+      }
+    }
     proposal.status = decision;
     proposal.managementDecisionNotes = notes;
     this.addHistory(proposal, actor, decision === 'APPROVED' ? 'تأیید جهت طرح در هیأت‌مدیره' : 'رد پیشنهاد', previousStatus, notes);
@@ -215,17 +242,19 @@ class MockProposalService implements IProposalService {
     if (proposal.status !== 'NO_BOARD_REQUIRED') throw new Error('فقط موارد «عدم نیاز به طرح در هیأت‌مدیره» قابل بازیابی هستند');
     const previousStatus = proposal.status;
     proposal.status = 'PENDING_CEO_REVIEW';
+    proposal.ceoDecisions = [];
     this.addHistory(proposal, actor, 'بازیابی پیشنهاد و ارسال مجدد برای بررسی مدیرعامل', previousStatus);
     this.saveData(proposals);
     return apiClient.simulateNetwork(proposal, 120);
   }
 
   public async returnForRevision(id: string, reason: string, actor: User): Promise<ApiResponse<Proposal>> {
-    if (!['CEO', 'ADMIN'].includes(actor.role)) throw new Error('فقط مدیرعامل مجاز به برگشت پیشنهاد است');
     if (!reason.trim()) throw new Error('ثبت دلیل برگشت پیشنهاد الزامی است');
     const proposals = this.getData();
     const proposal = proposals.find((item) => item.id === id);
     if (!proposal) throw new Error('پیشنهاد یافت نشد');
+    const authority = ceoAuthority(proposal, actor);
+    if (!authority.allowed) throw new Error(authority.policy ? authority.reason : 'فقط مدیرعامل مجاز به برگشت پیشنهاد است');
     if (!['PENDING_CEO_REVIEW', 'RESUBMITTED'].includes(proposal.status)) throw new Error('این پیشنهاد در کارتابل بررسی مدیرعامل نیست');
     const previousStatus = proposal.status;
     proposal.status = 'RETURNED_FOR_REVISION';
@@ -250,17 +279,19 @@ class MockProposalService implements IProposalService {
     if (updates.sourceLetterDateJalali) proposal.sourceLetterDateJalali = updates.sourceLetterDateJalali;
     if (updates.sourceLetterSubject !== undefined) proposal.sourceLetterSubject = updates.sourceLetterSubject;
     proposal.status = 'RESUBMITTED';
+    proposal.ceoDecisions = [];
     this.addHistory(proposal, actor, 'اصلاح و ارسال مجدد پیشنهاد', 'RETURNED_FOR_REVISION');
     this.saveData(proposals);
     return apiClient.simulateNetwork(proposal, 120);
   }
 
   public async decideWithoutBoard(id: string, decision: 'NO_BOARD_REQUIRED' | 'CEO_ORDER_ISSUED', notes: string, actor: User, order?: Proposal['ceoOrder']): Promise<ApiResponse<Proposal>> {
-    if (!['CEO', 'ADMIN'].includes(actor.role)) throw new Error('فقط مدیرعامل مجاز به ثبت این تصمیم است');
     if (!notes.trim()) throw new Error('ثبت توضیحات تصمیم مدیرعامل الزامی است');
     const proposals = this.getData();
     const proposal = proposals.find((item) => item.id === id);
     if (!proposal) throw new Error('پیشنهاد یافت نشد');
+    const authority = ceoAuthority(proposal, actor);
+    if (!authority.allowed) throw new Error(authority.policy ? authority.reason : 'فقط مدیرعامل مجاز به ثبت این تصمیم است');
     if (!['PENDING_CEO_REVIEW', 'RESUBMITTED'].includes(proposal.status)) throw new Error('این پیشنهاد در کارتابل بررسی مدیرعامل نیست');
     if (decision === 'CEO_ORDER_ISSUED' && (!order?.text.trim() || !order.assigneeUserId || !order.deadlineJalali)) throw new Error('متن دستور، مسئول اقدام و مهلت انجام الزامی است');
     const previousStatus = proposal.status;
@@ -296,6 +327,7 @@ class MockProposalService implements IProposalService {
     // No longer goes straight to the usable CONFIRMED_FOR_MEETING state —
     // it now waits for دبیر جلسه's own final approval below.
     proposal.status = 'PENDING_SECRETARY_CONFIRMATION';
+    proposal.secretaryDecisions = [];
     proposal.confirmedPresenterId = proposal.presenterUserId;
     proposal.confirmedPresenterName = proposal.presenterName;
     proposal.confirmedDateJalali = getJalaliDate();
@@ -311,14 +343,30 @@ class MockProposalService implements IProposalService {
     // APPROVE_MEETING_CONFIRMATION later can act here too — ADMIN keeps its
     // usual implicit-superuser access, matching every other permission
     // check across the app.
-    const canFinalize = actor.role === 'ADMIN' || (actor.permissions || []).includes('APPROVE_MEETING_CONFIRMATION');
-    if (!canFinalize) throw new Error('شما مجاز به تأیید نهایی تایید جلسه نیستید.');
     if (decision === 'RETURNED_FOR_REVISION' && !notes?.trim()) throw new Error('ثبت دلیل برگشت الزامی است');
     const proposals = this.getData();
     const proposal = proposals.find((item) => item.id === id);
     if (!proposal) throw new Error('پیشنهاد یافت نشد');
     if (proposal.status !== 'PENDING_SECRETARY_CONFIRMATION') throw new Error('این پیشنهاد در کارتابل تأیید نهایی دبیر جلسه نیست');
+    const policy = getProposalWorkflowSettings().secretaryConfirmation;
     const previousStatus = proposal.status;
+    if (policy) {
+      // گردش پویا: تأییدکنندگان تعیین‌شده (همه / یک نفر / ترتیبی).
+      const authority = resolveApprovalAuthority(policy, proposal.secretaryDecisions || [], actor);
+      if (!authority.allowed) throw new Error(authority.reason || 'شما مجاز به تأیید نهایی تایید جلسه نیستید.');
+      if (decision === 'APPROVED') {
+        proposal.secretaryDecisions = [...(proposal.secretaryDecisions || []), buildDecision(actor, 'APPROVED', notes, authority.approverUserId)];
+        const evaluation = evaluateApproval(policy, proposal.secretaryDecisions);
+        if (!evaluation.isSatisfied) {
+          this.addHistory(proposal, actor, `تأیید نهایی (${evaluation.approvedCount} از ${evaluation.requiredCount})`, previousStatus, `در انتظار: ${namesOf(evaluation.currentTurnId ? [evaluation.currentTurnId] : evaluation.pendingIds).join('، ')}`);
+          this.saveData(proposals);
+          return apiClient.simulateNetwork(proposal, 120);
+        }
+      }
+    } else {
+      const canFinalize = actor.role === 'ADMIN' || (actor.permissions || []).includes('APPROVE_MEETING_CONFIRMATION');
+      if (!canFinalize) throw new Error('شما مجاز به تأیید نهایی تایید جلسه نیستید.');
+    }
     // APPROVED must land on CONFIRMED_FOR_MEETING — the state that makes the
     // item pickable as a ready agenda item. Writing back a bare 'APPROVED'
     // put it straight back into the office manager's «تبدیل به تایید جلسه»

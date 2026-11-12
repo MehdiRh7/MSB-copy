@@ -6,6 +6,7 @@ import { loadLocalCollection, loadLocalValue, saveLocalCollection, saveLocalValu
 import { getPermissionLabel } from '../utils/permissionLabels';
 import { AUTO_REFRESH_INTERVAL_MS } from '../config/constants';
 import { getCurrentJalaliDate } from '../utils/date';
+import { buildProactiveRiskAlerts, showDesktopNotification } from '../services/proactiveAlertService';
 
 export type AppRoute =
   | 'dashboard'
@@ -34,11 +35,20 @@ interface ToastInfo {
   message: string;
 }
 
+export interface ResolutionPrefill {
+  executionDescription?: string;
+  mainResponsibleUserId?: string;
+  priority?: import('../types').PriorityLevel;
+  deadlineDays?: number;
+}
+
 export interface CreateResolutionModalState {
   isOpen: boolean;
   defaultMeetingId?: string;
   defaultAgendaItemId?: string;
   defaultTopicTitle?: string;
+  /** پیش‌پر شدن از استخراج هوشمند مصوبه (قابل ویرایش). */
+  prefill?: ResolutionPrefill;
 }
 
 interface AppContextType {
@@ -80,7 +90,7 @@ interface AppContextType {
   logout: () => void;
   hasPermission: (permission: string) => boolean;
   resolutionModalState: CreateResolutionModalState;
-  openCreateResolutionModal: (opts?: { meetingId?: string; agendaItemId?: string; topicTitle?: string }) => void;
+  openCreateResolutionModal: (opts?: { meetingId?: string; agendaItemId?: string; topicTitle?: string; prefill?: ResolutionPrefill }) => void;
   closeCreateResolutionModal: () => void;
   refreshTrigger: number;
   triggerRefresh: () => void;
@@ -160,11 +170,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const todayValue = toComparableDate(today);
     const allTasks = loadLocalCollection('tasks', mockTasks);
     const overdueResolutionIds = new Set<string>();
-    allTasks.forEach((task) => { const deadline = toComparableDate(task.deadlineJalali); if (deadline > 0 && !['CLOSED', 'COMPLETED', 'PENDING_APPROVAL'].includes(task.status) && deadline < todayValue) { task.status = 'OVERDUE'; overdueResolutionIds.add(task.resolutionId); } });
+    // فقط وقتی واقعاً وضعیتی تغییر کند ذخیره می‌شود؛ ذخیره تکراری بدون تغییر،
+    // با همگام‌سازی لحظه‌ای بین تب‌ها حلقه بی‌پایان می‌ساخت.
+    allTasks.forEach((task) => { const deadline = toComparableDate(task.deadlineJalali); if (deadline > 0 && !['CLOSED', 'COMPLETED', 'PENDING_APPROVAL', 'OVERDUE'].includes(task.status) && deadline < todayValue) { task.status = 'OVERDUE'; overdueResolutionIds.add(task.resolutionId); } });
     if (overdueResolutionIds.size > 0) {
       saveLocalCollection('tasks', allTasks);
       const resolutions = loadLocalCollection('resolutions', mockResolutions);
-      resolutions.forEach((resolution) => { if (overdueResolutionIds.has(resolution.id) && !['APPROVED_CLOSED', 'ARCHIVED'].includes(resolution.executionStatus)) resolution.executionStatus = 'OVERDUE'; });
+      resolutions.forEach((resolution) => { if (overdueResolutionIds.has(resolution.id) && !['APPROVED_CLOSED', 'ARCHIVED', 'OVERDUE'].includes(resolution.executionStatus)) resolution.executionStatus = 'OVERDUE'; });
       saveLocalCollection('resolutions', resolutions);
     }
     // isOverdue = now > deadline && !isCompleted — restricted to the current
@@ -177,16 +189,61 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // written a notification directly to this same collection since this
       // component mounted, and rebuilding from stale state here would
       // silently drop that write when this effect saves back.
-      const next = [...loadLocalCollection('notifications', mockNotifications)];
+      const stored = loadLocalCollection('notifications', mockNotifications);
+      const next = [...stored];
       tasks.forEach((task) => {
         const deadline = toComparableDate(task.deadlineJalali); const overdue = deadline > 0 && deadline < todayValue; const near = !overdue && Math.floor(deadline / 100) === Math.floor(todayValue / 100) && deadline - todayValue <= 7;
         if (!overdue && !near) return;
         const id = `deadline-${task.id}-${overdue ? 'overdue' : 'near'}`;
         if (!next.some((item) => item.id === id)) next.unshift({ id, recipientUserId: currentUser.id, title: overdue ? 'تأخیر در اجرای مصوبه' : 'نزدیک‌شدن مهلت مصوبه', message: `${task.resolutionNumber} — ${task.resolutionTitle} — مهلت ${task.deadlineJalali}`, dateJalali: today, timeString: new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' }), isRead: false, type: overdue ? 'DEADLINE' : 'FOLLOW_UP', targetRoute: 'tasks', targetResolutionId: task.resolutionId });
       });
-      saveLocalCollection('notifications', next); return next;
+      // هشدار پیشگیرانه ریسک تأخیر (روزی یک بار برای هر مصوبه پرریسک).
+      next.unshift(...buildProactiveRiskAlerts(currentUser, next));
+      if (next.length !== stored.length) saveLocalCollection('notifications', next);
+      return next;
     });
   }, [currentUser.id, refreshTrigger]);
+
+  // ——— اعلان لحظه‌ای ———
+  // هر تغییر در داده‌ها (همین تب یا تب دیگر) بلافاصله اعلان‌ها را به‌روز
+  // می‌کند؛ تغییرات تب‌های دیگر فهرست‌ها را هم بی‌درنگ تازه می‌کنند.
+  const knownNotificationIds = React.useRef<Set<string> | null>(null);
+  useEffect(() => {
+    const announce = (list: AppNotification[]) => {
+      const mine = list.filter((n) => n.recipientUserId === currentUser.id && !n.isRead);
+      if (knownNotificationIds.current) {
+        const fresh = mine.filter((n) => !knownNotificationIds.current!.has(n.id));
+        fresh.slice(0, 3).forEach((n) => {
+          showToast(`🔔 ${n.title}`, n.message, n.type === 'RISK_ALERT' || n.type === 'DEADLINE' ? 'warning' : 'info');
+          showDesktopNotification(n.title, n.message);
+        });
+      }
+      knownNotificationIds.current = new Set(list.filter((n) => n.recipientUserId === currentUser.id).map((n) => n.id));
+    };
+    knownNotificationIds.current = null;
+    announce(loadLocalCollection('notifications', mockNotifications));
+    let refreshTimer: number | undefined;
+    const reloadNotifications = () => {
+      const list = loadLocalCollection('notifications', mockNotifications);
+      setAllNotifications(list);
+      announce(list);
+    };
+    const onLocalChange = (event: Event) => {
+      const key = (event as CustomEvent<{ key: string }>).detail?.key;
+      if (key === 'notifications') reloadNotifications();
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (!event.key?.startsWith('postbank-mosavabat-v1:')) return;
+      const key = event.key.slice('postbank-mosavabat-v1:'.length);
+      if (key === 'notifications') { reloadNotifications(); return; }
+      if (['currentUserId', 'isAuthenticated'].includes(key)) return;
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(() => setRefreshTrigger((prev) => prev + 1), 600);
+    };
+    window.addEventListener('msb-data-changed', onLocalChange);
+    window.addEventListener('storage', onStorage);
+    return () => { window.removeEventListener('msb-data-changed', onLocalChange); window.removeEventListener('storage', onStorage); window.clearTimeout(refreshTimer); };
+  }, [currentUser.id]);
 
   const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
@@ -380,12 +437,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     meetingId?: string;
     agendaItemId?: string;
     topicTitle?: string;
+    prefill?: ResolutionPrefill;
   }) => {
     setResolutionModalState({
       isOpen: true,
       defaultMeetingId: opts?.meetingId,
       defaultAgendaItemId: opts?.agendaItemId,
       defaultTopicTitle: opts?.topicTitle,
+      prefill: opts?.prefill,
     });
   };
 

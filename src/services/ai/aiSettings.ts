@@ -17,7 +17,14 @@ export type AiFeatureId =
   | 'resolutionDraft'// پیش‌نویس و پیشنهاد مسئول/مهلت مصوبه
   | 'riskInsight'    // پیش‌بینی ریسک تأخیر و تحلیل مصوبه
   | 'dashboardBrief' // خلاصه هوشمند روزانه داشبورد
-  | 'reportNarrative'; // گزارش مدیریتی روایی
+  | 'reportNarrative' // گزارش مدیریتی روایی
+  | 'proactiveAlerts' // هشدار پیشگیرانه ریسک تأخیر
+  | 'semanticSearch'  // جستجوی مفهومی
+  | 'conflictCheck'   // بررسی تناقض و تکرار مصوبه
+  | 'extraction'      // استخراج مصوبه از متن
+  | 'documentReader'  // خلاصه پیوست‌ها
+  | 'meetingRecorder' // صورت‌جلسه از صدای جلسه
+  | 'meetingScheduler'; // پیشنهاد زمان جلسه
 
 export interface AiProviderPreset {
   id: AiProviderId;
@@ -83,6 +90,13 @@ export const AI_FEATURES: { id: AiFeatureId; title: string; description: string 
   { id: 'riskInsight', title: 'تحلیل ریسک و خلاصه مصوبه', description: 'پیش‌بینی احتمال تأخیر و اقدام پیشنهادی' },
   { id: 'dashboardBrief', title: 'خلاصه هوشمند روزانه', description: 'گزارش کوتاه وضعیت و اولویت‌های امروز هر کاربر در داشبورد' },
   { id: 'reportNarrative', title: 'گزارش مدیریتی روایی', description: 'تحلیل متنی آمار و روندها برای مدیران ارشد' },
+  { id: 'proactiveAlerts', title: 'هشدار پیشگیرانه', description: 'هشدار خودکار برای مصوباتی که ریسک تأخیرشان بالا رفته است' },
+  { id: 'semanticSearch', title: 'جستجوی مفهومی', description: 'یافتن مصوبات بر اساس مفهوم، نه فقط کلمه' },
+  { id: 'conflictCheck', title: 'بررسی تناقض و تکرار', description: 'هشدار پیش از ثبت، اگر مصوبه با مصوبات قبلی تکراری یا متناقض باشد' },
+  { id: 'extraction', title: 'استخراج مصوبه از متن', description: 'پیشنهاد مصوبه‌ها، مسئول و مهلت از متن صورت‌جلسه یا گفتار جلسه' },
+  { id: 'documentReader', title: 'خواندن پیوست‌ها', description: 'خلاصه و نکات کلیدی فایل‌های PDF، Word و متنی' },
+  { id: 'meetingRecorder', title: 'ضبط و تبدیل گفتار جلسه', description: 'تبدیل گفتار جلسه به متن و تهیه صورت‌جلسه و مصوبات' },
+  { id: 'meetingScheduler', title: 'پیشنهاد زمان جلسه', description: 'یافتن زمان آزاد مشترک اعضا بر اساس جلسات ثبت‌شده' },
 ];
 
 export interface AiProviderConfig {

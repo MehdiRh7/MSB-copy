@@ -11,6 +11,7 @@ import { exportHtmlToPdf } from '../utils/pdfExport';
 import { toPersianDigits } from '../utils/formatters';
 import { SAMPLE_SIGNATURE_DATA_URL } from '../utils/signatureImage';
 import { isMeetingRelatedToUser, isResolutionRelatedToUser, hasOrgWideMeetingAccess } from './userScope';
+import { getOrganizationProfile } from './organizationProfile';
 
 /**
  * Official, printable versions of the workflow's letters and documents.
@@ -67,15 +68,46 @@ const DOCUMENT_STYLES = `
     .doc .sign .sample-note { color: #b45309; font-size: 9px; margin-top: 2px; }
     .doc .draft { border: 2px dashed #b45309; color: #b45309; border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; font-weight: bold; font-size: 11px; }
     .doc .note { color: #64748b; font-size: 10px; }
+    .doc-footer { margin-top: 28px; border-top: 1px solid #d9dee8; padding-top: 6px; font-size: 10px; color: #64748b; text-align: center; }
+    @media print { .doc-footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; } }
   </style>
 `;
 
-const orgHeader = (title: string, subtitle: string) => `
+/**
+ * سربرگ رسمی نامه‌های اداری: نشان و نام سازمان، عنوان سند، و بلوک
+ * «شماره / تاریخ / پیوست». از جدول استفاده می‌شود تا در Word هم درست بماند.
+ */
+const orgHeader = (title: string, subtitle: string, meta?: { number?: string; date?: string; attachments?: number }) => {
+  const profile = getOrganizationProfile();
+  const logo = profile.logoUrl ? new URL(profile.logoUrl, window.location.origin).href : '';
+  return `
+  <table class="lh" style="width:100%;border-collapse:collapse;margin-bottom:6px">
+    <tr>
+      <td style="width:22%;vertical-align:middle;text-align:right;border:none">${logo ? `<img src="${escapeHtml(logo)}" alt="نشان سازمان" style="height:64px;object-fit:contain" />` : ''}</td>
+      <td style="text-align:center;vertical-align:middle;border:none">
+        <div style="font-size:13px;font-weight:bold">${escapeHtml(profile.name || profile.systemTitle)}</div>
+        <div style="font-size:11px;color:#64748b">${escapeHtml(profile.systemTitle)}</div>
+      </td>
+      <td style="width:26%;vertical-align:middle;font-size:11px;line-height:1.9;border:none">
+        <div>شماره: <b>${fa(meta?.number || '—')}</b></div>
+        <div>تاریخ: <b>${fa(meta?.date || '—')}</b></div>
+        <div>پیوست: <b>${meta?.attachments ? `${fa(meta.attachments)} برگ` : 'ندارد'}</b></div>
+      </td>
+    </tr>
+  </table>
   <div class="org">
     <h1>${escapeHtml(title)}</h1>
     <div class="sub">${escapeHtml(subtitle)}</div>
   </div>
 `;
+};
+
+/** پاورقی رسمی (نشانی و راه‌های تماس سازمان) — در چاپ پایین هر صفحه. */
+const orgFooter = () => {
+  const p = getOrganizationProfile();
+  const parts = [p.address && `نشانی: ${p.address}`, p.phone && `تلفن: ${p.phone}`, p.website && p.website, p.email && p.email].filter(Boolean);
+  return parts.length ? `<div class="doc-footer">${escapeHtml(parts.join('  |  '))}</div>` : '';
+};
 
 const draftBanner = (isFinal: boolean, stateLabel: string) =>
   isFinal ? '' : `<div class="draft">این نسخه پیش‌نویس است: ${escapeHtml(stateLabel)}</div>`;
@@ -157,7 +189,7 @@ export const buildMeetingInvitationDocument = (meeting: Meeting, actor: User): G
   const html = `
     ${DOCUMENT_STYLES}
     <div class="doc">
-      ${orgHeader('دعوت‌نامه رسمی جلسه', `${meeting.meetingNumber} — ${meeting.title}`)}
+      ${orgHeader('دعوت‌نامه رسمی جلسه', `${meeting.meetingNumber} — ${meeting.title}`, { number: meeting.meetingNumber, date: meeting.dateJalali, attachments: meeting.attachments.length })}
       ${draftBanner(isFinal, 'دعوت‌نامه هنوز توسط دبیر جلسه امضا و ارسال نشده است')}
       <div class="meta">
         <span><b>شماره جلسه:</b> ${fa(meeting.meetingNumber)}</span>
@@ -228,7 +260,7 @@ export const buildResolutionNotificationDocument = (
   const html = `
     ${DOCUMENT_STYLES}
     <div class="doc">
-      ${orgHeader('نامه ابلاغ مصوبه', `${resolution.resolutionNumber} — ${resolution.topicTitle}`)}
+      ${orgHeader('نامه ابلاغ مصوبه', `${resolution.resolutionNumber} — ${resolution.topicTitle}`, { number: notice?.notificationLetterNumber || notice?.noticeNumber, date: notice?.dateJalali, attachments: resolution.attachments.length })}
       ${draftBanner(isFinal, notice?.notificationLetterNumber
         ? 'این ابلاغیه هنوز توسط دبیر جلسه امضا نشده است — پیش‌نویس'
         : 'این مصوبه هنوز ابلاغ رسمی نشده است')}
@@ -279,7 +311,7 @@ export const buildResolutionDocument = (resolution: Resolution, meeting: Meeting
   const html = `
     ${DOCUMENT_STYLES}
     <div class="doc">
-      ${orgHeader('سند رسمی مصوبه', `${resolution.resolutionNumber} — ${resolution.topicTitle}`)}
+      ${orgHeader('سند رسمی مصوبه', `${resolution.resolutionNumber} — ${resolution.topicTitle}`, { number: resolution.resolutionNumber, date: resolution.assignedDateJalali || meeting?.dateJalali, attachments: resolution.attachments.length })}
       ${draftBanner(isFinal, 'زنجیره سه امضای اصلی مصوبه هنوز تکمیل نشده است')}
       <div class="meta">
         <span><b>شماره مصوبه:</b> ${fa(resolution.resolutionNumber)}</span>
@@ -334,7 +366,7 @@ export const buildMeetingMinutesDocument = (
   const html = `
     ${DOCUMENT_STYLES}
     <div class="doc">
-      ${orgHeader('صورت‌جلسه تجمیعی', `${meeting.meetingNumber} — ${meeting.title}`)}
+      ${orgHeader('صورت‌جلسه تجمیعی', `${meeting.meetingNumber} — ${meeting.title}`, { number: meeting.meetingNumber, date: meeting.dateJalali, attachments: meeting.attachments.length })}
       ${draftBanner(isFinal, minutes ? 'صورت‌جلسه هنوز نهایی نشده است' : 'پیش‌نویس صورت‌جلسه هنوز ایجاد نشده است')}
       <div class="meta">
         <span><b>شماره جلسه:</b> ${fa(meeting.meetingNumber)}</span>
@@ -407,4 +439,4 @@ export const buildMeetingMinutesDocument = (
  * dialog offers "Save as PDF" under the document's own file name.
  */
 export const openGeneratedDocument = (document: GeneratedDocument): boolean =>
-  exportHtmlToPdf(document.fileName.replace(/\.pdf$/, ''), document.html);
+  exportHtmlToPdf(document.fileName.replace(/\.pdf$/, ''), `${document.html}${orgFooter()}`, { wordExport: true });

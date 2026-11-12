@@ -10,6 +10,8 @@ import { toPersianDigits } from '../../utils/formatters';
 import { BulkSelectionBar } from '../../components/common/BulkSelectionBar';
 import { CreateProposalModal } from './CreateProposalModal';
 import { ProposalAiInsight } from './ProposalAiInsight';
+import { ApprovalProgress } from '../meetings/MeetingWorkflowPanel';
+import { getProposalWorkflowSettings, isProposalCeoReviewer, isProposalSecretaryApprover } from '../../services/workflowPolicyService';
 import { ExcelImportModal } from './ExcelImportModal';
 import { PersianDatePicker } from '../../components/common/PersianDatePicker';
 import { downloadProposalExcelTemplate, parseProposalExcelFile, ProposalImportParseResult } from '../../services/proposalExcelImportService';
@@ -55,14 +57,16 @@ export const ProposalsView: React.FC = () => {
   const { currentUser, availableUsers, showToast, refreshTrigger, triggerRefresh, hasPermission } = useApp();
 
   const isOfficeManager = currentUser.role === 'ADMIN' || currentUser.role === 'SECRETARY';
-  const isCeo = currentUser.role === 'ADMIN' || currentUser.role === 'CEO';
+  // گردش پویای پیشنهادها: «بررسی مدیرعامل» می‌تواند به افراد دیگری هم سپرده شود.
+  const proposalWorkflow = getProposalWorkflowSettings();
+  const isCeo = isProposalCeoReviewer(currentUser);
   const isRegularUser = !isOfficeManager && !isCeo;
   const canImportFromExcel = hasPermission('IMPORT_PROPOSALS_FROM_EXCEL');
   // Final approval of Meeting Confirmation — a دبیر جلسه permission,
   // deliberately independent of isOfficeManager/isCeo above.
   // این مرحله یک تصمیم اداری است و ربطی به امضا ندارد، پس «جانشین امضا»
   // عمداً روی آن اثری نمی‌گذارد.
-  const isMeetingSecretaryApprover = hasPermission('APPROVE_MEETING_CONFIRMATION');
+  const isMeetingSecretaryApprover = isProposalSecretaryApprover(currentUser);
 
   // تب پیش‌فرض: اگر کاربر دبیر جلسه باشد، «دبیر جلسه» — حتی وقتی همزمان
   // مسئول دفتر هم هست. ترتیب نمایش تب‌ها نیز در visibleTabs همین است.
@@ -127,11 +131,13 @@ export const ProposalsView: React.FC = () => {
   };
 
   const handleReview = async (proposal: Proposal, decision: 'APPROVED' | 'REJECTED') => {
-    await proposalService.reviewProposal(proposal.id, decision, decisionNotes[proposal.id], currentUser);
+    let updated: Proposal;
+    try { updated = (await proposalService.reviewProposal(proposal.id, decision, decisionNotes[proposal.id], currentUser)).data; }
+    catch (error) { showToast('خطا', error instanceof Error ? error.message : 'عملیات انجام نشد.', 'error'); return; }
     showToast(
       decision === 'APPROVED' ? 'تایید مصوبه پیشنهادی' : 'رد مصوبه پیشنهادی',
       decision === 'APPROVED'
-        ? `«${proposal.title}» تایید شد و وارد کارتابل مسئول دفتر شد.`
+        ? updated.status === 'APPROVED' ? `«${proposal.title}» تایید شد و وارد کارتابل مسئول دفتر شد.` : `تأیید شما برای «${proposal.title}» ثبت شد؛ در انتظار سایر تأییدکنندگان.`
         : `«${proposal.title}» رد شد و اطلاع‌رسانی پیامکی شبیه‌سازی شد.`,
       decision === 'APPROVED' ? 'success' : 'warning'
     );
@@ -650,6 +656,7 @@ export const ProposalsView: React.FC = () => {
                 )}
               </div>
               <div className="rounded-lg border border-teal-100 bg-teal-50 px-2.5 py-2 text-[11px] text-teal-900"><span className="font-bold">اقدام بعدی: </span>{getNextAction(p.status)}</div>
+              {proposalWorkflow.ceoReview && <ApprovalProgress policy={proposalWorkflow.ceoReview} decisions={p.ceoDecisions} />}
               <ProposalAiInsight proposal={p} allProposals={proposals} actorId={currentUser.id} onUseNote={(text) => setDecisionNotes((prev) => ({ ...prev, [p.id]: text }))} />
               <input
                 type="text"
@@ -753,6 +760,7 @@ export const ProposalsView: React.FC = () => {
               <div className="text-[10px] font-bold text-teal-700">{p.proposalNumber}</div>
               <p className="text-xs text-slate-600">{p.description}</p>
               <p className="text-[11px] text-slate-600"><strong>اقدام بعدی:</strong> {getNextAction(p.status)}</p>
+              {proposalWorkflow.secretaryConfirmation && <ApprovalProgress policy={proposalWorkflow.secretaryConfirmation} decisions={p.secretaryDecisions} />}
               <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-slate-500">
                 <span>پیشنهاددهنده: {p.proposerName} — {p.proposerDepartmentName}</span>
                 <span>ارائه‌دهنده: {p.confirmedPresenterName || p.presenterName || '—'}</span>

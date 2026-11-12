@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { CheckCircle2, Copy, GitBranch, Plus, Save, Star, Trash2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { WorkflowTemplate } from '../../types';
-import { MeetingWorkflowEditor } from '../../components/workflow/WorkflowEditors';
+import { ApprovalPolicyEditor, MeetingWorkflowEditor } from '../../components/workflow/WorkflowEditors';
+import { ProposalWorkflowSettings } from '../../types';
 import {
   canManageWorkflowTemplates,
   deleteWorkflowTemplate,
   describePolicy,
+  getProposalWorkflowSettings,
   getWorkflowTemplates,
   MEETING_TYPE_OPTIONS,
+  saveProposalWorkflowSettings,
   saveWorkflowTemplate,
 } from '../../services/workflowPolicyService';
 import { describeAssignment, getStageAssignment } from '../../services/signatureWorkflowSettingsService';
@@ -33,6 +36,7 @@ export const WorkflowTemplatesTab: React.FC = () => {
   const [selectedId, setSelectedId] = useState<string>(templates[0]?.id);
   const [draft, setDraft] = useState<WorkflowTemplate | null>(() => templates[0] ? JSON.parse(JSON.stringify(templates[0])) : null);
   const canManage = canManageWorkflowTemplates(currentUser);
+  const [proposalWf, setProposalWf] = useState<ProposalWorkflowSettings>(getProposalWorkflowSettings);
 
   const select = (template: WorkflowTemplate) => {
     setSelectedId(template.id);
@@ -77,6 +81,20 @@ export const WorkflowTemplatesTab: React.FC = () => {
   const takenTypes = new Map(templates.filter((t) => t.id !== draft?.id).flatMap((t) => t.meetingTypes.map((type) => [type, t.name] as const)));
 
   return (
+    <div className="space-y-4">
+    <section className="bg-white rounded-3xl border border-slate-200 p-4 space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5"><GitBranch className="w-4 h-4 text-violet-600" />گردش مصوبات پیشنهادی</h3>
+          <p className="text-[10.5px] text-slate-500 mt-0.5">بدون تنظیم، رفتار فعلی حفظ می‌شود: بررسی توسط مدیرعامل و تأیید نهایی توسط دارنده مجوز «دبیر جلسه».</p>
+        </div>
+        <button onClick={() => { try { setProposalWf(saveProposalWorkflowSettings(proposalWf, currentUser)); showToast('گردش پیشنهادها', 'تنظیمات گردش پیشنهادها ذخیره شد.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ذخیره انجام نشد.', 'error'); } }} className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl bg-violet-700 text-white"><Save className="w-3.5 h-3.5" />ذخیره گردش پیشنهادها</button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <ApprovalPolicyEditor title="بررسی و تصمیم (به‌جای مدیرعامل)" description="مثلاً تأیید هم‌زمان مدیرعامل و معاون، یا تأیید ترتیبی." users={availableUsers} optional optionalLabel="سفارشی" value={proposalWf.ceoReview} onChange={(policy) => setProposalWf({ ...proposalWf, ceoReview: policy })} />
+        <ApprovalPolicyEditor title="تأیید نهایی برای ورود به جلسه" description="به‌جای دارندگان مجوز «دبیر جلسه»." users={availableUsers} optional optionalLabel="سفارشی" value={proposalWf.secretaryConfirmation} onChange={(policy) => setProposalWf({ ...proposalWf, secretaryConfirmation: policy })} />
+      </div>
+    </section>
     <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
       <aside className="bg-white rounded-3xl border border-slate-200 p-3 space-y-2 h-fit">
         <div className="flex items-center justify-between px-1">
@@ -97,7 +115,7 @@ export const WorkflowTemplatesTab: React.FC = () => {
       </aside>
 
       {draft && (
-        <section className="bg-white rounded-3xl border border-slate-200 p-4 space-y-4">
+        <section className="bg-white rounded-3xl border border-slate-200 p-4 space-y-4 min-w-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <label className="block">
               <span className="block text-[11px] font-bold text-slate-700 mb-1">نام قالب</span>
@@ -148,6 +166,7 @@ export const WorkflowTemplatesTab: React.FC = () => {
           </div>
         </section>
       )}
+    </div>
     </div>
   );
 };

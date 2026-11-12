@@ -42,6 +42,9 @@ export const PRESERVED_STORAGE_KEYS = [
   'signatureWorkflowSettings', // امضاکننده هر مرحله گردش امضا (تنظیم سامانه)
   'signatureDelegations',      // جانشین امضای کاربران (تنظیم شخصی کاربر)
   'workflowTemplates',         // قالب‌های گردش کار پویا (تنظیم سامانه)
+  'proposalWorkflowSettings',  // گردش پویای پیشنهادها (تنظیم سامانه)
+  'dashboardLayouts',          // چیدمان شخصی داشبورد هر کاربر
+  'userSigningKeys',           // کلیدهای امضای دیجیتال رمزنگاری‌شده کاربران
   'aiSettings',                // تنظیمات ارائه‌دهنده هوش مصنوعی (فقط مدیر سیستم)
 ] as const;
 

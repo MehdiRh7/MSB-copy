@@ -1,7 +1,7 @@
 import type { AppRoute } from '../../context/AppContext';
 import { mockApprovals, mockActivityLogs, mockMeetings, mockResolutions, mockTasks } from '../../mock/data';
 import { loadLocalCollection, loadLocalValue } from '../../services/localStore';
-import { getAgendaApprovalPolicy, resolveApprovalAuthority } from '../../services/workflowPolicyService';
+import { getAgendaApprovalPolicy, getProposalWorkflowSettings, resolveApprovalAuthority } from '../../services/workflowPolicyService';
 import { hasOrgWideMeetingAccess, hasOrgWideResolutionAccess, isMeetingRelatedToUser, isResolutionRelatedToUser } from '../../services/userScope';
 import type { ActivityLog, ApprovalCartableItem, BoardMinutes, Meeting, Proposal, Resolution, ResolutionNotice, Task, User } from '../../types';
 import { jalaliToGregorian, parseJalali, todayJalali } from '../../utils/jalaliDate';
@@ -141,11 +141,14 @@ export const buildDashboardModel = (user: User): DashboardModel => {
   approvals.filter((a) => a.status === 'PENDING' && a.assignedApproverId === user.id).forEach((a) => items.push({ id: `appr-${a.id}`, kind: 'صحه‌گذاری', title: a.resolutionTitle, subtitle: `${a.resolutionNumber} · مجری: ${a.responsibleName}`, date: a.submittedForApprovalDateJalali, tone: 'warning', route: 'approvals', cta: 'بررسی مستندات', weight: 88 }));
   const isOfficeManager = persona === 'OFFICE' || user.role === 'ADMIN';
   const isCeo = user.role === 'CEO';
+  const proposalWf = getProposalWorkflowSettings();
+  const canCeoReview = (p: Proposal) => proposalWf.ceoReview ? user.role !== 'ADMIN' && resolveApprovalAuthority(proposalWf.ceoReview, p.ceoDecisions || [], user).allowed : isCeo;
+  const canSecretaryConfirm = (p: Proposal) => proposalWf.secretaryConfirmation ? user.role !== 'ADMIN' && resolveApprovalAuthority(proposalWf.secretaryConfirmation, p.secretaryDecisions || [], user).allowed : perms.includes('APPROVE_MEETING_CONFIRMATION');
   proposals.forEach((p) => {
-    if (isCeo && ['PENDING_CEO_REVIEW', 'RESUBMITTED'].includes(p.status)) items.push({ id: `pceo-${p.id}`, kind: 'تصمیم درباره پیشنهاد', title: p.title, subtitle: `${p.proposerName} · ${p.proposerDepartmentName}`, date: p.dateJalali, tone: 'warning', route: 'proposals', cta: 'بررسی و تصمیم', weight: 80 });
+    if (['PENDING_CEO_REVIEW', 'RESUBMITTED'].includes(p.status) && canCeoReview(p)) items.push({ id: `pceo-${p.id}`, kind: 'تصمیم درباره پیشنهاد', title: p.title, subtitle: `${p.proposerName} · ${p.proposerDepartmentName}`, date: p.dateJalali, tone: 'warning', route: 'proposals', cta: 'بررسی و تصمیم', weight: 80 });
     if (persona === 'OFFICE' && p.status === 'RETURNED_BY_SECRETARY') items.push({ id: `poff-${p.id}`, kind: 'برگشتی از دبیر جلسه', title: p.title, subtitle: `${p.proposerName} · ${p.dateJalali}`, date: p.dateJalali, tone: 'primary', route: 'proposals', cta: 'بررسی پیشنهاد', weight: 70 });
     if (persona === 'OFFICE' && p.status === 'APPROVED') items.push({ id: `pconv-${p.id}`, kind: 'تبدیل به تأیید جلسه', title: p.title, subtitle: 'تأییدشده توسط مدیرعامل', date: p.dateJalali, tone: 'primary', route: 'proposals', cta: 'ادامه گردش', weight: 65 });
-    if (perms.includes('APPROVE_MEETING_CONFIRMATION') && p.status === 'PENDING_SECRETARY_CONFIRMATION') items.push({ id: `psec-${p.id}`, kind: 'تأیید نهایی دبیر', title: p.title, subtitle: `${p.proposerName} · ${p.proposerDepartmentName}`, date: p.dateJalali, tone: 'warning', route: 'proposals', cta: 'تأیید برای جلسه', weight: 78 });
+    if (p.status === 'PENDING_SECRETARY_CONFIRMATION' && canSecretaryConfirm(p)) items.push({ id: `psec-${p.id}`, kind: 'تأیید نهایی دبیر', title: p.title, subtitle: `${p.proposerName} · ${p.proposerDepartmentName}`, date: p.dateJalali, tone: 'warning', route: 'proposals', cta: 'تأیید برای جلسه', weight: 78 });
   });
   // گردش کار پویا: تأییدکننده دستورکار هر کسی است که در سیاست همان جلسه
   // نوبت/حق تأیید دارد (جلسات قدیمی: مدیرعامل).
