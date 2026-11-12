@@ -99,7 +99,7 @@ export function getMeetingStatusMeta(status: MeetingStatus): { label: string; bg
 export function getResolutionApprovalMeta(status: ResolutionApprovalStatus): { label: string; bg: string; text: string } {
   switch (status) {
     case 'APPROVED':
-      return { label: 'مصوب و ابلاغ شده', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', text: 'text-emerald-700' };
+      return { label: 'مصوب جلسه', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', text: 'text-emerald-700' };
     case 'CONDITIONAL_APPROVED':
       return { label: 'مصوب مشروط', bg: 'bg-blue-50 text-blue-700 border-blue-200', text: 'text-blue-700' };
     case 'REFERRED_FOR_REVIEW':
