@@ -267,7 +267,9 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
 
   const handleIssueNotices = async () => { try { await boardSecretariatService.issueNotices(meetingId, currentUser); await refreshGovernance(); showToast('ابلاغ مصوبات', 'ابلاغیه‌ها صادر شدند و Workflow اجرای مصوبات آغاز شد.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ابلاغ انجام نشد.', 'error'); } };
 
-  if (loading || !meeting) {
+  // اسپینر فقط در بارگذاری اول یا تعویض جلسه؛ تازه‌سازی پس‌زمینه نباید محتوا و
+  // State فرم‌های داخلی (مثل متن گفتار ضبط جلسه) را از بین ببرد.
+  if (!meeting || (loading && meeting.id !== meetingId)) {
     return (
       <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
         <div className="w-8 h-8 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>

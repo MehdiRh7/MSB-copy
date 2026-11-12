@@ -309,3 +309,89 @@ export const suggestMeetingSlots = (input: { participantIds: string[]; durationM
   results.sort((a, b) => b.score - a.score).forEach((slot) => { if (!bestPerDay.has(slot.dateJalali)) bestPerDay.set(slot.dateJalali, slot); });
   return Array.from(bestPerDay.values()).sort((a, b) => b.score - a.score).slice(0, 5);
 };
+
+// ——————————————————— ۷) پیشنهاد نتیجه بندها از روی گفتار ———————————————————
+
+export type AgendaOutcome = NonNullable<AgendaItem['outcomeStatus']>;
+
+export const AGENDA_OUTCOME_OPTIONS: { value: AgendaOutcome; label: string }[] = [
+  { value: 'APPROVED', label: 'تصویب شد' },
+  { value: 'NOT_APPROVED', label: 'تصویب نشد' },
+  { value: 'CONDITIONAL', label: 'تصویب مشروط' },
+  { value: 'DEFERRED', label: 'موکول به جلسه بعد' },
+  { value: 'REFERRED', label: 'ارجاع به واحد مربوطه' },
+  { value: 'NEEDS_MORE_REVIEW', label: 'نیاز به بررسی بیشتر' },
+  { value: 'NEEDS_REVISION', label: 'نیاز به اصلاح' },
+  { value: 'CLOSED', label: 'مختومه' },
+];
+
+export interface AgendaOutcomeSuggestion {
+  agendaItemId: string;
+  agendaTitle: string;
+  /** null یعنی در گفتار درباره این بند تصمیمی شنیده نشد — حدس زده نمی‌شود. */
+  outcome: AgendaOutcome | null;
+  notes: string;
+  /** جمله‌ای از خود گفتار که مبنای پیشنهاد است. */
+  evidence: string;
+}
+
+/** ترتیب مهم است: «تصویب نشد» نباید به‌عنوان «تصویب شد» تشخیص داده شود. */
+const OUTCOME_PATTERNS: { outcome: AgendaOutcome; re: RegExp }[] = [
+  { outcome: 'NOT_APPROVED', re: /(تصویب نشد|رد شد|رد گردید|مخالفت شد|موافقت نشد|تأیید نشد|تایید نشد)/ },
+  { outcome: 'CONDITIONAL', re: /(مشروط|به شرط|منوط به|مشروط بر)/ },
+  { outcome: 'DEFERRED', re: /(موکول|جلسه بعد|جلسه آینده|به تعویق|تعویق)/ },
+  { outcome: 'REFERRED', re: /(ارجاع|واگذار شد|به کمیته|به واحد .{1,30} سپرده)/ },
+  { outcome: 'NEEDS_MORE_REVIEW', re: /(بررسی بیشتر|بررسی تکمیلی|مطالعه بیشتر|نیاز به بررسی)/ },
+  { outcome: 'NEEDS_REVISION', re: /(اصلاح شود|نیاز به اصلاح|بازنگری شود|اصلاح و دوباره)/ },
+  { outcome: 'CLOSED', re: /(مختومه|منتفی شد|موضوعیت ندارد)/ },
+  { outcome: 'APPROVED', re: /(تصویب شد|مصوب شد|تصویب گردید|موافقت شد|تأیید شد|تایید شد|مقرر شد|مقرر گردید)/ },
+];
+
+const sentencesOf = (text: string) => text.split(/(?<=[.؟!\n])\s+|\s*[-•]\s+/).map((s) => s.trim()).filter((s) => s.length > 8);
+
+export const suggestAgendaOutcomes = (meeting: Meeting, transcript: string, actorId?: string): Promise<AiResult<AgendaOutcomeSuggestion[]>> => {
+  const agendas = meeting.agendaItems.filter((a) => !a.isRemoved);
+  const sentences = sentencesOf(transcript);
+  const normTranscript = norm(transcript);
+
+  const local = (): AgendaOutcomeSuggestion[] => agendas.map((agenda) => {
+    // جملاتی که به همین بند مربوط‌اند؛ اگر جلسه یک بند دارد، همه جملات.
+    const related = sentences
+      .map((s) => ({ s, score: textSimilarity(s, agenda.title) }))
+      .filter((x) => agendas.length === 1 || x.score >= 0.12)
+      .sort((a, b) => b.score - a.score)
+      .map((x) => x.s);
+    for (const sentence of related) {
+      const hit = OUTCOME_PATTERNS.find((p) => p.re.test(sentence));
+      if (hit) {
+        const condition = hit.outcome === 'CONDITIONAL' ? sentence.match(/(به شرط|منوط به|مشروط بر)(.+)/)?.[0] : undefined;
+        return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome: hit.outcome, notes: formalizeLocally(condition || sentence), evidence: sentence };
+      }
+    }
+    return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome: null, notes: '', evidence: '' };
+  });
+
+  if (agendas.length === 0) return Promise.resolve({ data: [], source: 'LOCAL' as const, notice: 'این جلسه بند فعالی ندارد.' });
+
+  return runAi({
+    feature: 'meetingRecorder',
+    actorId,
+    json: true,
+    maxTokens: 1500,
+    system: 'وظیفه: از روی متن پیاده‌شده گفتار جلسه، تصمیمی را که درباره هر بند دستورکار گرفته شده تشخیص بده. فقط اگر تصمیم صریحاً در متن آمده باشد. خروجی فقط JSON: items (آرایه {agendaItemId: دقیقاً یکی از شناسه‌های بندها, outcome: یکی از APPROVED | NOT_APPROVED | CONDITIONAL | DEFERRED | REFERRED | NEEDS_MORE_REVIEW | NEEDS_REVISION | CLOSED یا null اگر درباره این بند تصمیمی گفته نشده, notes: شرح کوتاه رسمی نتیجه (برای مشروط: شرط؛ برای ارجاع: به کجا), evidence: نقل‌قول دقیق یک جمله از خود متن که مبنای تشخیص است}). هرگز حدس نزن؛ اگر مطمئن نیستی outcome را null بگذار.',
+    messages: [{ role: 'user', content: `بندهای دستورکار:\n${agendas.map((a) => `${a.id}: ${a.title}`).join('\n')}\n\nمتن گفتار جلسه:\n${transcript.slice(0, 20000)}` }],
+    parse: (text) => {
+      const data = extractJson<{ items: Partial<AgendaOutcomeSuggestion>[] }>(text);
+      const allowed = AGENDA_OUTCOME_OPTIONS.map((o) => o.value);
+      return agendas.map((agenda) => {
+        const item = (data.items || []).find((i) => i.agendaItemId === agenda.id);
+        const evidence = String(item?.evidence || '').trim();
+        // شاهدی که در خود متن نیست پذیرفته نمی‌شود (جلوگیری از ساختگی بودن).
+        const grounded = evidence.length > 5 && normTranscript.includes(norm(evidence).slice(0, 40));
+        const outcome = item && allowed.includes(item.outcome as AgendaOutcome) && grounded ? item.outcome as AgendaOutcome : null;
+        return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome, notes: outcome ? String(item?.notes || evidence) : '', evidence: outcome ? evidence : '' };
+      });
+    },
+    fallback: local,
+  });
+};

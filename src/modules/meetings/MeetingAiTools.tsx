@@ -4,7 +4,9 @@ import { Meeting, Resolution } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { mockDepartments } from '../../mock/data';
 import { AiButton, AiSourceBadge, isVoiceSupported, useAiFeature } from '../../components/ai/AiKit';
-import { extractResolutions, ExtractedResolution, minutesFromTranscript } from '../../services/ai/aiInsights';
+import { AGENDA_OUTCOME_OPTIONS, AgendaOutcome, AgendaOutcomeSuggestion, extractResolutions, ExtractedResolution, minutesFromTranscript, suggestAgendaOutcomes } from '../../services/ai/aiInsights';
+import { meetingService } from '../../services/meetingService';
+import { CheckCircle2, ShieldCheck, XCircle } from 'lucide-react';
 import type { AiResult } from '../../services/ai/aiClient';
 import { getPriorityMeta, toPersianDigits } from '../../utils/formatters';
 
@@ -42,6 +44,74 @@ export const ExtractedResolutionsList: React.FC<{ meeting: Meeting; result: AiRe
 };
 
 /**
+ * «پیشنهاد نتیجه بندها از روی گفتار» — صرفاً کمکی. هوش مصنوعی برای هر بند
+ * نتیجه‌ای پیشنهاد می‌دهد و جمله مبنا را نشان می‌دهد؛ تا دبیرخانه همان بند
+ * را بررسی و «تأیید و ثبت» نکند، هیچ نتیجه‌ای در سامانه ثبت نمی‌شود. ثبت
+ * از همان مسیر رسمی «ثبت نتیجه» (recordAgendaOutcome) انجام می‌شود.
+ */
+const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaOutcomeSuggestion[]> }> = ({ meeting, result }) => {
+  const { currentUser, showToast, triggerRefresh } = useApp();
+  const [drafts, setDrafts] = useState<Record<string, { outcome: AgendaOutcome | ''; notes: string; state: 'pending' | 'saved' | 'dismissed' }>>(() =>
+    Object.fromEntries(result.data.map((s) => [s.agendaItemId, { outcome: s.outcome || '', notes: s.notes, state: 'pending' as const }])));
+  const [busy, setBusy] = useState<string | null>(null);
+  const label = (value?: string) => AGENDA_OUTCOME_OPTIONS.find((o) => o.value === value)?.label || '—';
+  const confirm = async (s: AgendaOutcomeSuggestion) => {
+    const d = drafts[s.agendaItemId];
+    if (!d.outcome) { showToast('ثبت نتیجه', 'ابتدا نتیجه بند را انتخاب کنید.', 'warning'); return; }
+    if (!d.notes.trim()) { showToast('ثبت نتیجه', 'شرح نتیجه بررسی الزامی است.', 'warning'); return; }
+    setBusy(s.agendaItemId);
+    try {
+      await meetingService.recordAgendaOutcome(meeting.id, s.agendaItemId, d.outcome, d.notes, currentUser);
+      setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], state: 'saved' } }));
+      showToast('ثبت نتیجه', `نتیجه «${label(d.outcome)}» برای بند «${s.agendaTitle}» با تأیید شما ثبت شد.`, 'success');
+      triggerRefresh();
+    } catch (error) {
+      showToast('خطا', error instanceof Error ? error.message : 'ثبت نتیجه انجام نشد.', 'error');
+    } finally { setBusy(null); }
+  };
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-900">
+        <ShieldCheck className="w-4 h-4 shrink-0" />
+        <span><b>فقط پیشنهاد است.</b> تا هر بند را بررسی و «تأیید و ثبت» نکنید، هیچ نتیجه‌ای در سامانه ثبت نمی‌شود. نتیجه و شرح را می‌توانید تغییر دهید.</span>
+        <AiSourceBadge result={result} />
+      </div>
+      {result.data.map((s) => {
+        const d = drafts[s.agendaItemId];
+        const agenda = meeting.agendaItems.find((a) => a.id === s.agendaItemId);
+        if (d.state === 'dismissed') return null;
+        return (
+          <div key={s.agendaItemId} className={`rounded-2xl border p-3 space-y-2 ${d.state === 'saved' ? 'border-emerald-200 bg-emerald-50/50' : 'border-slate-200 bg-white'}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-xs font-extrabold text-slate-900">بند {toPersianDigits(agenda?.order || '')}: {s.agendaTitle}</div>
+              {agenda?.outcomeStatus && d.state !== 'saved' && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">نتیجه ثبت‌شده فعلی: {label(agenda.outcomeStatus)}</span>}
+              {d.state === 'saved' && <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700"><CheckCircle2 className="w-4 h-4" />با تأیید شما ثبت شد</span>}
+            </div>
+            {s.outcome === null && d.state !== 'saved' && <p className="text-[11px] text-slate-500">در گفتار درباره این بند تصمیم صریحی شنیده نشد؛ در صورت نیاز نتیجه را خودتان انتخاب کنید.</p>}
+            {s.evidence && <p className="text-[10.5px] text-slate-500 border-r-2 border-violet-300 pr-2">مبنای پیشنهاد در گفتار: «{s.evidence.slice(0, 260)}»</p>}
+            {d.state !== 'saved' && (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2">
+                  <select aria-label="نتیجه بند" value={d.outcome} onChange={(e) => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], outcome: e.target.value as AgendaOutcome } }))} className="text-[11px] p-2 bg-white border border-slate-200 rounded-xl">
+                    <option value="">انتخاب نتیجه…</option>
+                    {AGENDA_OUTCOME_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}{o.value === s.outcome ? ' (پیشنهاد)' : ''}</option>)}
+                  </select>
+                  <input aria-label="شرح نتیجه" value={d.notes} onChange={(e) => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], notes: e.target.value } }))} placeholder="شرح نتیجه بررسی (الزامی)" className="text-[11px] p-2 bg-white border border-slate-200 rounded-xl" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" disabled={busy === s.agendaItemId} onClick={() => confirm(s)} className="flex items-center gap-1 text-[11px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 px-3 py-1.5 rounded-xl"><CheckCircle2 className="w-3.5 h-3.5" />تأیید و ثبت نتیجه</button>
+                  <button type="button" onClick={() => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], state: 'dismissed' } }))} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 border border-slate-200 bg-white px-3 py-1.5 rounded-xl"><XCircle className="w-3.5 h-3.5" />نادیده گرفتن</button>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/**
  * «ضبط جلسه» — گفتار جلسه به‌صورت زنده به متن تبدیل می‌شود (تشخیص گفتار
  * فارسی مرورگر)، فایل صوتی برای بایگانی قابل دانلود است و از متن، صورت‌جلسه
  * رسمی و مصوبات پیشنهادی ساخته می‌شود.
@@ -54,8 +124,9 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
   const [interim, setInterim] = useState('');
   const [seconds, setSeconds] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [busy, setBusy] = useState<'minutes' | 'extract' | null>(null);
+  const [busy, setBusy] = useState<'minutes' | 'extract' | 'outcomes' | null>(null);
   const [extracted, setExtracted] = useState<AiResult<ExtractedResolution[]> | null>(null);
+  const [outcomes, setOutcomes] = useState<AiResult<AgendaOutcomeSuggestion[]> | null>(null);
   const recRef = useRef<any>(null);
   const mediaRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -148,8 +219,10 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
       <div className="flex flex-wrap items-center gap-2">
         <AiButton disabled={!transcript.trim() || recording} loading={busy === 'minutes'} onClick={async () => { setBusy('minutes'); try { const res = await minutesFromTranscript(meeting, transcript, currentUser.id); onMinutes(res.data); showToast('صورت‌جلسه', `پیش‌نویس از گفتار جلسه تهیه شد (${res.source === 'AI' ? 'هوش مصنوعی' : 'موتور محلی'}).`, 'success'); } finally { setBusy(null); } }}>تبدیل به صورت‌جلسه</AiButton>
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'extract'} onClick={async () => { setBusy('extract'); try { setExtracted(await extractResolutions({ text: transcript, agendas: meeting.agendaItems.filter((a) => !a.isRemoved), users: availableUsers, departments: mockDepartments }, currentUser.id)); } finally { setBusy(null); } }}>استخراج مصوبات از گفتار</AiButton>
+        <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'outcomes'} onClick={async () => { setBusy('outcomes'); try { setOutcomes(await suggestAgendaOutcomes(meeting, transcript, currentUser.id)); } finally { setBusy(null); } }}>پیشنهاد نتیجه بندها از گفتار</AiButton>
         {audioUrl && <a href={audioUrl} download={`جلسه-${meeting.meetingNumber}.webm`} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 bg-white"><Download className="w-3.5 h-3.5" />دانلود فایل صوتی</a>}
       </div>
+      {outcomes && <AgendaOutcomeReview key={outcomes.data.map((o) => o.agendaItemId + o.outcome).join('|')} meeting={meeting} result={outcomes} />}
       {extracted && <ExtractedResolutionsList meeting={meeting} result={extracted} existing={resolutions} canCreate={canCreateResolution} />}
     </section>
   );
