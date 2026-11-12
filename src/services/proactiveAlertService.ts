@@ -9,6 +9,7 @@ import { loadLocalCollection, loadLocalValue, saveLocalValue } from './localStor
 import { computeResolutionRisk } from './ai/aiService';
 import { isAiFeatureEnabled } from './ai/aiSettings';
 import { todayJalali } from '../utils/jalaliDate';
+import { toPersianDigits } from '../utils/formatters';
 
 export const RISK_ALERT_THRESHOLD = 60;
 const LEDGER_KEY = 'riskAlertLedger';
@@ -36,8 +37,8 @@ export const buildProactiveRiskAlerts = (user: User, existing: AppNotification[]
       id: `risk-${r.id}-${user.id}-${today}`,
       recipientUserId: user.id,
       title: `هشدار ریسک تأخیر (${risk.score.toLocaleString('fa-IR')}٪)`,
-      message: `${r.resolutionNumber} — ${r.topicTitle}: ${risk.factors.slice(0, 2).join('؛ ')}`,
-      dateJalali: today,
+      message: toPersianDigits(`${r.resolutionNumber} — ${r.topicTitle}: ${risk.factors.slice(0, 2).join('؛ ')}`),
+      dateJalali: toPersianDigits(today),
       timeString: time,
       isRead: false,
       type: 'RISK_ALERT' as const,

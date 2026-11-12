@@ -244,13 +244,16 @@ export const summarizeDocument = (text: string, fileName: string, actorId?: stri
 
 // ——————————————————— ۵) صورت‌جلسه از گفتار ———————————————————
 
+const minutesHeader = (meeting: Meeting) => `صورت‌جلسه «${meeting.title}»\nشماره ${meeting.meetingNumber} — تاریخ ${meeting.dateJalali}، ساعت ${meeting.startTime} تا ${meeting.endTime}${meeting.location ? ` — ${meeting.location}` : ''}`;
+
 export const minutesFromTranscript = (meeting: Meeting, transcript: string, actorId?: string): Promise<AiResult<string>> => runAi({
   feature: 'meetingRecorder',
   actorId,
   maxTokens: 1800,
-  system: 'وظیفه: تبدیل متن پیاده‌شده گفتار یک جلسه (ممکن است محاوره‌ای و نامرتب باشد) به «صورت‌جلسه رسمی» فارسی اداری. ساختار: مشخصات جلسه، خلاصه مذاکرات هر بند، تصمیم‌های گرفته‌شده با مسئول و مهلت (فقط اگر در گفتار آمده)، جمع‌بندی. چیزی که گفته نشده اضافه نکن. بدون Markdown.',
+  system: 'وظیفه: تبدیل متن پیاده‌شده گفتار یک جلسه (ممکن است محاوره‌ای و نامرتب باشد) به «صورت‌جلسه رسمی» فارسی اداری. عنوان و مشخصات جلسه را ننویس (سامانه عیناً از پرونده جلسه اضافه می‌کند) و مستقیم با «خلاصه مذاکرات» شروع کن. ساختار: خلاصه مذاکرات هر بند، تصمیم‌های گرفته‌شده با مسئول و مهلت (فقط اگر در گفتار آمده)، جمع‌بندی. عنوان بندها را عیناً همان‌طور که داده شده بنویس. چیزی که گفته نشده اضافه نکن. بدون Markdown.',
   messages: [{ role: 'user', content: `جلسه: ${meeting.title} — ${meeting.meetingNumber} — ${meeting.dateJalali} ${meeting.startTime}\nبندها: ${meeting.agendaItems.filter((a) => !a.isRemoved).map((a) => a.title).join('؛ ')}\n\nمتن گفتار:\n${transcript.slice(0, 25000)}` }],
-  parse: (t) => t.replace(/\*\*/g, '').replace(/^#+\s*/gm, '').trim(),
+  // مشخصات جلسه از خود پرونده می‌آید تا عنوان و شماره هرگز تغییر نکند یا کوتاه نشود.
+  parse: (t) => `${minutesHeader(meeting)}\n\n${t.replace(/\*\*/g, '').replace(/^#+\s*/gm, '').trim()}`,
   fallback: () => [
     `صورت‌جلسه ${meeting.title}`,
     `شماره ${meeting.meetingNumber} — تاریخ ${meeting.dateJalali}، ساعت ${meeting.startTime} تا ${meeting.endTime}`,

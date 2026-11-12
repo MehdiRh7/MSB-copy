@@ -103,6 +103,9 @@ export const WorkflowDesigner: React.FC<{
           <span className="block text-[11px] font-bold text-slate-800 truncate">{user?.fullName || id}</span>
           <span className="block text-[9px] text-slate-500 truncate">{user?.title}</span>
         </span>
+        {stage && (
+          <button type="button" onClick={() => removeFrom({ userId: id, from: stage })} aria-label={`حذف ${user?.fullName || ''} از این مرحله`} title="حذف از این مرحله" className="mr-auto shrink-0 rounded-md px-1 text-[12px] leading-none text-slate-300 hover:bg-rose-50 hover:text-rose-600">×</button>
+        )}
       </div>
     );
   };
@@ -172,6 +175,16 @@ export const WorkflowDesigner: React.FC<{
                     {ids.length === 0
                       ? <p className="text-[10px] text-slate-400 text-center pt-6 leading-4">{stage.empty}</p>
                       : ids.map((id, index) => <React.Fragment key={id}>{renderPill({ id: id, stage: stage.id, index: index, ordered: stage.ordered })}</React.Fragment>)}
+                    {/* افزودن بدون کشیدن (صفحه لمسی، صفحه‌خوان یا مرورگری که کشیدن و رها کردن ندارد). */}
+                    <select
+                      aria-label={`افزودن فرد به ${stage.title}`}
+                      value=""
+                      onChange={(event) => { if (event.target.value) drop(stage.id, { userId: event.target.value }); }}
+                      className="w-full text-[10px] font-bold p-1.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-indigo-300"
+                    >
+                      <option value="">{stage.id === 'notice' && ids.length ? '↻ تغییر فرد…' : '＋ افزودن فرد…'}</option>
+                      {active.filter((u) => !ids.includes(u.id)).map((u) => <option key={u.id} value={u.id}>{u.fullName} — {u.title}</option>)}
+                    </select>
                   </div>
                 </div>
               </React.Fragment>

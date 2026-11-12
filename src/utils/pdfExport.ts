@@ -73,7 +73,8 @@ export const exportHtmlToPdf = (title: string, bodyHtml: string, options: { word
       <head>
         <meta charset="utf-8" />
         <base href="${escapeHtml(window.location.origin)}/" />
-        <title>${escapeHtml(title)}</title>
+        <!-- عنوان پنجره همان نام پیش‌فرض فایل در «ذخیره PDF» مرورگر است: لاتین و بدون «/». -->
+        <title>${escapeHtml(fileBase)}</title>
         <style>
           @page { size: A4; margin: 14mm; }
           * { box-sizing: border-box; }

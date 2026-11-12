@@ -287,7 +287,9 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
   const minutesPolicy = meeting.workflow?.minutesApproval?.approverUserIds.length ? meeting.workflow.minutesApproval : undefined;
   const canReviewMinutesNow = Boolean(minutesPolicy && boardMinutes && ['WAITING_SIGNATURES', 'PARTIALLY_SIGNED'].includes(boardMinutes.status) && resolveApprovalAuthority(minutesPolicy, boardMinutes.approvals || [], currentUser).allowed);
   const isSecretariat = currentUser.id === meeting.secretaryId || currentUser.role === 'SECRETARY' || currentUser.role === 'ADMIN';
-  const canArrangeAgenda = (isCeo || isSecretariat) && ['WAITING_FOR_CEO_APPROVAL', 'AGENDA_RETURNED'].includes(meeting.status);
+  // حذف و جابه‌جایی بند فقط برای مدیرعامل/مدیر سیستم و دبیرخانه؛ سایر تأییدکنندگان گردش پویا فقط تأیید یا برگشت می‌دهند.
+  const isCeoRole = currentUser.role === 'CEO' || currentUser.role === 'ADMIN';
+  const canArrangeAgenda = (isCeoRole || isSecretariat) && ['WAITING_FOR_CEO_APPROVAL', 'AGENDA_RETURNED'].includes(meeting.status);
   // Append-only addition of new invitees/agenda items to an already-created
   // meeting — gated purely by the Permission System (never hardcoded to a
   // role) and only meaningful before the meeting has concluded.
@@ -547,7 +549,7 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
                       </button>
                     )}
                     {canArrangeAgenda && <div className="flex gap-1"><button onClick={() => handleMoveAgenda(agendaIndex, -1)} disabled={agendaIndex === 0} className="p-1.5 rounded-lg border border-slate-200 disabled:opacity-30" title="انتقال به بالا"><ArrowUp className="w-4 h-4" /></button><button onClick={() => handleMoveAgenda(agendaIndex, 1)} disabled={agendaIndex === meeting.agendaItems.length - 1} className="p-1.5 rounded-lg border border-slate-200 disabled:opacity-30" title="انتقال به پایین"><ArrowDown className="w-4 h-4" /></button></div>}
-                    {isCeo && meeting.status === 'WAITING_FOR_CEO_APPROVAL' && !ag.isRemoved && <button onClick={() => handleRemoveAgendaByCeo(ag)} className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">حذف از این جلسه</button>}
+                    {isCeoRole && meeting.status === 'WAITING_FOR_CEO_APPROVAL' && !ag.isRemoved && <button onClick={() => handleRemoveAgendaByCeo(ag)} className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-[10px] font-bold">حذف از این جلسه</button>}
                   </div>
 
                   {ag.isRemoved && <div className="p-2.5 bg-white border border-rose-200 rounded-xl text-rose-700 text-[11px] font-bold">خارج‌شده از دستورکار جاری — دلیل: {ag.removalReason}</div>}

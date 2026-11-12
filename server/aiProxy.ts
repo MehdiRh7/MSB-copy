@@ -223,6 +223,10 @@ const callGeminiResilient = async (env: AiEnv, key: string, body: AiProxyRequest
       }
     }
   }
+  // شلوغی یا دیرکرد مدل اصلی: ۲ دقیقه کنار گذاشته می‌شود تا درخواست‌های بعدی بی‌معطلی سراغ جایگزین بروند.
+  if (last && !isQuota(last) && (isOverloaded(last) || isTimeout(last)) && !coolingDown(body.model)) {
+    quotaCooldown.set(body.model, { until: Date.now() + 120_000, error: last });
+  }
   const primaryError = last;
   for (const alt of GEMINI_FALLBACKS.filter((m) => m !== body.model)) {
     if (left() < 5_000) break;

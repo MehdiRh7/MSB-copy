@@ -159,6 +159,8 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       window.clearTimeout(slowPrompt);
       setAskingMic(false);
+      // اگر کاربر در این فاصله «لغو» زده باشد، میکروفن آزاد می‌شود و ضبط شروع نمی‌شود.
+      if (!activeRef.current) { stream.getTracks().forEach((t) => t.stop()); return; }
       const media = new MediaRecorder(stream);
       chunksRef.current = [];
       media.ondataavailable = (e) => { if (e.data.size) chunksRef.current.push(e.data); };
@@ -168,6 +170,7 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
     } catch (error) {
       window.clearTimeout(slowPrompt);
       setAskingMic(false);
+      if (!activeRef.current) return; // لغوشده توسط کاربر
       const name = (error as { name?: string })?.name;
       if (name === 'NotFoundError') { showToast('ضبط جلسه', 'میکروفنی به این دستگاه وصل نیست؛ می‌توانید متن را دستی وارد یا فایل متنی بارگذاری کنید.', 'warning'); activeRef.current = false; return; }
       showToast('ضبط جلسه', 'دسترسی به میکروفن داده نشد؛ می‌توانید متن را دستی وارد یا فایل متنی بارگذاری کنید.', 'warning');
@@ -230,7 +233,7 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
         <div className="flex items-center gap-2">
           {recording && <span className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />در حال ضبط {toPersianDigits(mmss)}</span>}
           {!recording
-            ? <button type="button" onClick={start} disabled={askingMic} className="flex items-center gap-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-70 px-4 py-2 rounded-xl"><Mic className="w-4 h-4" />{askingMic ? 'در انتظار اجازه میکروفن…' : 'شروع ضبط'}</button>
+            ? <span className="flex items-center gap-1.5"><button type="button" onClick={start} disabled={askingMic} className="flex items-center gap-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-70 px-4 py-2 rounded-xl"><Mic className="w-4 h-4" />{askingMic ? 'در انتظار اجازه میکروفن…' : 'شروع ضبط'}</button>{askingMic && <button type="button" onClick={() => { activeRef.current = false; setAskingMic(false); showToast('ضبط جلسه', 'درخواست ضبط لغو شد. هر وقت آماده بودید دوباره «شروع ضبط» را بزنید.', 'info'); }} className="text-[11px] font-bold px-3 py-2 rounded-xl border border-slate-300 text-slate-600 bg-white hover:bg-slate-50">لغو</button>}</span>
             : <button type="button" onClick={stop} className="flex items-center gap-1.5 text-xs font-bold text-white bg-slate-800 px-4 py-2 rounded-xl"><Square className="w-4 h-4" />پایان ضبط</button>}
           <label className="flex items-center gap-1 text-[11px] font-bold text-violet-700 px-3 py-2 rounded-xl border border-violet-200 bg-white cursor-pointer"><FileUp className="w-3.5 h-3.5" />فایل متن<input type="file" accept=".txt,.md" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadTranscript(f); e.target.value = ''; }} /></label>
         </div>
@@ -239,7 +242,7 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
       <textarea value={transcript + (interim ? ` ${interim}` : '')} onChange={(e) => setTranscript(e.target.value)} rows={transcript ? 6 : 3} placeholder="متن گفتار جلسه اینجا نوشته می‌شود؛ قابل ویرایش است..." className="w-full text-xs leading-6 p-3 bg-white border border-violet-200 rounded-2xl" />
       <div className="flex flex-wrap items-center gap-2">
         <AiButton disabled={!transcript.trim() || recording} loading={busy === 'minutes'} onClick={async () => { setBusy('minutes'); try { const res = await minutesFromTranscript(meeting, transcript, currentUser.id); setMinutesResult(res); onMinutes(res.data); showToast('صورت‌جلسه', `پیش‌نویس از گفتار جلسه تهیه شد (${res.source === 'AI' ? 'هوش مصنوعی' : 'موتور محلی'}).`, 'success'); } finally { setBusy(null); } }}>تبدیل به صورت‌جلسه</AiButton>
-        {minutesResult && <AiSourceBadge result={minutesResult} />}
+        {minutesResult && <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700"><AiSourceBadge result={minutesResult} />✓ متن در تب «پیش‌نمایش چاپ صورتجلسه» قرار گرفت</span>}
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'extract'} onClick={async () => { setBusy('extract'); try { setExtracted(await extractResolutions({ text: transcript, agendas: meeting.agendaItems.filter((a) => !a.isRemoved), users: availableUsers, departments: mockDepartments }, currentUser.id)); } finally { setBusy(null); } }}>استخراج مصوبات از گفتار</AiButton>
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'outcomes'} onClick={async () => { setBusy('outcomes'); try { setOutcomes(await suggestAgendaOutcomes(meeting, transcript, currentUser.id)); } finally { setBusy(null); } }}>پیشنهاد نتیجه بندها از گفتار</AiButton>
         {audioUrl && <a href={audioUrl} download={`جلسه-${meeting.meetingNumber}.webm`} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 bg-white"><Download className="w-3.5 h-3.5" />دانلود فایل صوتی</a>}

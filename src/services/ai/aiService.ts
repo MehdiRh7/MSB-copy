@@ -383,6 +383,15 @@ export const computeResolutionRisk = (resolution: Resolution, task?: Task): { sc
   return { score: Math.min(100, score), factors };
 };
 
+/** جمله قطعی درباره مهلت تا مدل درباره «گذشتن مهلت» حدس نزند. */
+const deadlineFact = (deadline?: string): string => {
+  const left = daysUntil(deadline);
+  if (left === null) return 'مهلت تعیین نشده است';
+  if (left < 0) return `مهلت ${fa(-left)} روز پیش گذشته است`;
+  if (left === 0) return 'مهلت امروز است';
+  return `مهلت هنوز نگذشته؛ ${fa(left)} روز باقی مانده است`;
+};
+
 export const analyzeResolutionRisk = (resolution: Resolution, task: Task | undefined, actorId?: string): Promise<AiResult<RiskAnalysis>> => {
   const base = computeResolutionRisk(resolution, task);
   const level: RiskAnalysis['level'] = base.score >= 60 ? 'HIGH' : base.score >= 30 ? 'MEDIUM' : 'LOW';
@@ -390,8 +399,8 @@ export const analyzeResolutionRisk = (resolution: Resolution, task: Task | undef
     feature: 'riskInsight',
     actorId,
     json: true,
-    system: 'وظیفه: تحلیل وضعیت اجرای یک مصوبه سازمانی. امتیاز ریسک توسط سامانه محاسبه شده و نباید تغییر کند. خروجی فقط JSON: summary (۲ جمله خلاصه وضعیت برای مدیر)، recommendation (یک تا دو اقدام مشخص و عملی بعدی).',
-    messages: [{ role: 'user', content: `مصوبه ${resolution.resolutionNumber}: ${resolution.topicTitle}\nمتن: ${resolution.executionDescription || resolution.requestDescription}\nوضعیت: ${getResolutionExecutionMeta(resolution.executionStatus).label}\nمسئول: ${resolution.mainResponsibleName || '—'}\nمهلت: ${resolution.deadlineJalali || '—'}\nپیشرفت: ${resolution.progressPercent ?? 0}٪\nآخرین اقدام: ${resolution.lastAction || '—'}\nموانع: ${resolution.obstacles || '—'}\nامتیاز ریسک: ${base.score}/100\nعوامل: ${base.factors.join('؛ ')}` }],
+    system: 'وظیفه: تحلیل وضعیت اجرای یک مصوبه سازمانی. امتیاز ریسک توسط سامانه محاسبه شده و نباید تغییر کند. فقط از واقعیت‌های داده‌شده استفاده کن؛ درباره گذشتن یا نگذشتن مهلت فقط طبق خط «وضعیت مهلت» حرف بزن و چیزی حدس نزن. خروجی فقط JSON: summary (۲ جمله خلاصه وضعیت برای مدیر)، recommendation (یک تا دو اقدام مشخص و عملی بعدی). املای فارسی را دقیق رعایت کن.',
+    messages: [{ role: 'user', content: `مصوبه ${resolution.resolutionNumber}: ${resolution.topicTitle}\nمتن: ${resolution.executionDescription || resolution.requestDescription}\nوضعیت: ${getResolutionExecutionMeta(resolution.executionStatus).label}\nمسئول: ${resolution.mainResponsibleName || '—'}\nامروز: ${todayJalali()}\nمهلت: ${resolution.deadlineJalali || '—'}\nوضعیت مهلت: ${deadlineFact(resolution.deadlineJalali)}\nپیشرفت: ${resolution.progressPercent ?? 0}٪\nآخرین اقدام: ${resolution.lastAction || '—'}\nموانع: ${resolution.obstacles || '—'}\nامتیاز ریسک: ${base.score}/100\nعوامل: ${base.factors.join('؛ ')}` }],
     parse: (text) => {
       const d = extractJson<Partial<RiskAnalysis>>(text);
       return { score: base.score, level, factors: base.factors, summary: d.summary || '', recommendation: d.recommendation || '' };

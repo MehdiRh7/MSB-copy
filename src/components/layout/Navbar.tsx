@@ -150,8 +150,8 @@ export const Navbar: React.FC = () => {
   // sequential Unicode code points, so plain string comparison on the
   // concatenated key sorts them chronologically without needing a parser.
   const sortedNotifications = [...notifications].sort((a, b) => {
-    const keyA = `${a.dateJalali} ${a.timeString}`;
-    const keyB = `${b.dateJalali} ${b.timeString}`;
+    const keyA = toPersianDigits(`${a.dateJalali} ${a.timeString}`);
+    const keyB = toPersianDigits(`${b.dateJalali} ${b.timeString}`);
     return keyA < keyB ? 1 : keyA > keyB ? -1 : 0;
   });
 

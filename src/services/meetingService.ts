@@ -310,7 +310,7 @@ class MockMeetingService implements IMeetingService {
     const meeting = meetings.find((item) => item.id === id);
     const agenda = meeting?.agendaItems.find((item) => item.id === agendaItemId);
     if (!meeting || !agenda) throw new Error('جلسه یا بند دستورکار یافت نشد');
-    if (!['CEO', 'ADMIN'].includes(actor.role) && !isAgendaApprover(meeting, actor)) throw new Error('فقط تأییدکننده دستورکار می‌تواند موضوع را از دستورکار خارج کند');
+    if (!['CEO', 'ADMIN'].includes(actor.role)) throw new Error('فقط مدیرعامل یا مدیر سیستم می‌تواند موضوع را از دستورکار خارج کند؛ سایر تأییدکنندگان می‌توانند دستورکار را با توضیح برگشت دهند.');
     if (meeting.status !== 'WAITING_FOR_CEO_APPROVAL') throw new Error('حذف موضوع فقط هنگام بررسی مدیرعامل امکان‌پذیر است');
     agenda.isRemoved = true;
     agenda.removalReason = reason.trim();

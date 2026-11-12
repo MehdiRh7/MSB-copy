@@ -40,6 +40,23 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   check('تأییدکننده دستورکار همه بندها را می‌بیند', svc.approverAgenda === 1, String(svc.approverAgenda));
   check('نام گردش ویرایش‌شده «اختصاصی» است', svc.templateName === 'گردش اختصاصی این جلسه', svc.templateName);
 
+  // ===== دور دوم: رقم فارسی در متن هوش مصنوعی، حذف بند فقط با مدیرعامل =====
+  const r2 = await page.evaluate(async () => {
+    const { polishProse } = await import('/src/services/ai/aiClient.ts');
+    const { meetingService } = await import('/src/services/meetingService.ts');
+    const brief = polishProse('dashboardBrief', { headline: 'تا 1405/08/24 تعداد 7 جلسه؛ هنور تصیه نشده', route: 'tasks', resolutionId: 'res-12' });
+    const untouched = polishProse('meetingPlanner', { order: [{ id: 'ag-1', minutes: 15 }] });
+    const users = JSON.parse(localStorage.getItem('postbank-mosavabat-v1:users'));
+    const meetings = JSON.parse(localStorage.getItem('postbank-mosavabat-v1:meetings'));
+    const m = meetings.find((x) => x.title === 'تست شماره ۱');
+    let removeError = '';
+    try { await meetingService.removeAgendaItem(m.id, m.agendaItems[0].id, 'تست', users.find((u) => u.id === 'user-14')); } catch (e) { removeError = String(e.message || e); }
+    return { brief, untouched, removeError };
+  });
+  check('رقم‌های متن هوش مصنوعی فارسی می‌شوند و غلط‌های رایج اصلاح می‌شوند', r2.brief.headline === 'تا ۱۴۰۵/۰۸/۲۴ تعداد ۷ جلسه؛ هنوز توصیه نشده', r2.brief.headline);
+  check('شناسه‌ها و مسیرها دست‌نخورده می‌مانند', r2.brief.route === 'tasks' && r2.brief.resolutionId === 'res-12' && r2.untouched.order[0].id === 'ag-1' && r2.untouched.order[0].minutes === 15, JSON.stringify([r2.brief, r2.untouched]));
+  check('تأییدکننده غیرمدیرعامل نمی‌تواند بند را از جلسه حذف کند', r2.removeError.includes('فقط مدیرعامل'), r2.removeError);
+
   // ===== هشدار ریسک: بدون تکرار پس از پاک‌کردن، برای مدیر سیستم =====
   const risk = await page.evaluate(async () => {
     const { buildProactiveRiskAlerts } = await import('/src/services/proactiveAlertService.ts');
@@ -82,6 +99,34 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   await page.locator('button', { hasText: 'برگزاری جلسه (ضبط و گفتار)' }).click();
   await page.waitForTimeout(400);
   check('ابزار ضبط و گفتار در همان تب است', await page.locator('textarea[placeholder^="متن گفتار جلسه"]').count() > 0);
+
+  // ===== طراح گرافیکی: افزودن نفر دوم به «امضای مصوبات» (بدون کشیدن و با کشیدن) =====
+  await page.locator('button', { hasText: 'ایجاد جلسه جدید' }).first().click().catch(() => {});
+  if (await page.locator('button', { hasText: 'ایجاد جلسه جدید' }).count() === 0) {
+    await page.locator('aside, nav').locator('text=مدیریت جلسات').first().click();
+    await page.waitForTimeout(600);
+    await page.locator('button', { hasText: 'ایجاد جلسه جدید' }).first().click();
+  }
+  await page.waitForTimeout(600);
+  for (let i = 0; i < 3; i++) { await page.locator('button', { hasText: 'مرحله بعد' }).click(); await page.waitForTimeout(250); }
+  const sigSelect = page.locator('select[aria-label="افزودن فرد به امضای مصوبات"]');
+  await sigSelect.selectOption({ label: await sigSelect.locator('option').nth(1).innerText() });
+  await page.waitForTimeout(200);
+  await sigSelect.selectOption({ label: await sigSelect.locator('option').nth(1).innerText() });
+  await page.waitForTimeout(200);
+  const sigStage = page.locator('div.flex-1.min-w-\\[112px\\]', { hasText: 'امضای مصوبات' });
+  const viaSelect = await sigStage.locator('[draggable=true]').count();
+  await page.locator('[draggable=true]', { hasText: 'سلیمانی' }).first().dragTo(sigStage);
+  await page.waitForTimeout(300);
+  const viaDrag = await sigStage.locator('[draggable=true]').count();
+  check('طراح: نفر دوم با «افزودن فرد» به امضای مصوبات اضافه می‌شود', viaSelect === 2, String(viaSelect));
+  check('طراح: نفر سوم با کشیدن روی مرحله پر اضافه می‌شود', viaDrag === 3, String(viaDrag));
+  await sigStage.locator('button[aria-label^="حذف"]').first().click();
+  await page.waitForTimeout(200);
+  check('طراح: دکمه × فرد را از مرحله حذف می‌کند', await sigStage.locator('[draggable=true]').count() === 2);
+  await page.keyboard.press('Escape');
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(800);
 
   // ===== Esc پنجره جزئیات مصوبه را می‌بندد =====
   await page.evaluate(() => localStorage.setItem('postbank-mosavabat-v1:currentUserId', JSON.stringify('user-admin')));

@@ -86,6 +86,22 @@ export const hasUsableKey = async (provider?: AiProviderId): Promise<boolean> =>
 
 window.addEventListener?.('msb-ai-settings-changed', () => { serverStatusPromise = null; });
 
+/** قابلیت‌هایی که خروجی‌شان متن روایی برای خواندن انسان است (نه شناسه، تاریخ فرم یا عدد قابل محاسبه). */
+const PROSE_FEATURES = new Set<AiFeatureId>(['dashboardBrief', 'reportNarrative', 'assistant', 'minutes', 'riskInsight', 'writer', 'meetingRecorder', 'documentReader', 'proposalReview']);
+/** غلط‌های املایی پرتکرار مدل‌ها در فارسی. */
+const COMMON_TYPOS: [RegExp, string][] = [[/تصیه/g, 'توصیه'], [/هنور/g, 'هنوز'], [/بنابر این/g, 'بنابراین'], [/می باشد/g, 'می‌باشد']];
+const SKIP_KEYS = /(^id$|Id$|^ids$|Ids$|^key$|^route$|^url$)/;
+const polishString = (text: string) => COMMON_TYPOS.reduce((acc, [re, to]) => acc.replace(re, to), text).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+const polishDeep = (value: unknown, key = ''): unknown => {
+  if (SKIP_KEYS.test(key)) return value;
+  if (typeof value === 'string') return polishString(value);
+  if (Array.isArray(value)) return value.map((item) => polishDeep(item));
+  if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, polishDeep(v, k)]));
+  return value;
+};
+/** رقم فارسی و اصلاح غلط‌های رایج فقط برای خروجی‌های روایی؛ شناسه‌ها دست‌نخورده می‌مانند. */
+export const polishProse = <T,>(feature: AiFeatureId, data: T): T => (PROSE_FEATURES.has(feature) ? polishDeep(data) as T : data);
+
 export const runAi = async <T,>(options: AiCallOptions<T>): Promise<AiResult<T>> => {
   const settings = getAiSettings();
   const local = (notice: string): AiResult<T> => ({ data: options.fallback(), source: 'LOCAL', notice });
@@ -98,7 +114,7 @@ export const runAi = async <T,>(options: AiCallOptions<T>): Promise<AiResult<T>>
   const started = performance.now();
   try {
     const raw = await callAiRaw({ ...options, provider: options.override?.provider });
-    const data = options.parse(raw.text);
+    const data = polishProse(options.feature, options.parse(raw.text));
     logAiUsage({ feature: options.feature, provider: raw.provider, model: raw.model, ok: true, latencyMs: raw.latencyMs || Math.round(performance.now() - started), userId: options.actorId || '' });
     return { data, source: 'AI', provider: raw.provider, model: raw.model, latencyMs: raw.latencyMs };
   } catch (error) {
