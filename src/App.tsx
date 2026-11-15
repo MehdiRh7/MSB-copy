@@ -28,7 +28,7 @@ import { SettingsView } from './modules/settings/SettingsView';
 import { WorkflowMapLauncher } from './modules/workflowMap/WorkflowMapLauncher';
 import { CommandPalette } from './components/ai/CommandPalette';
 
-import { MessageCircle, Bot, ShieldAlert } from 'lucide-react';
+import { MessageCircle, Bot, ShieldAlert, Zap } from 'lucide-react';
 
 const AccessDenied: React.FC = () => (
   <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -117,6 +117,21 @@ const AppContent: React.FC = () => {
             {renderCurrentView()}
           </div>
         </main>
+      </div>
+
+      {/* دکمه شناور فرمان سریع (Ctrl+K) — وسط پایین صفحه، متحرک تا همیشه در دید باشد */}
+      <div className="no-print command-fab-wrap">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent('msb-open-command-palette'))}
+          className="command-fab"
+          title="فرمان سریع (Ctrl+K): هر کاری را با یک جمله بنویسید یا بگویید"
+          aria-label="فرمان سریع"
+        >
+          <span className="command-fab-icon"><Zap className="w-4 h-4" /></span>
+          <span className="command-fab-label">فرمان سریع</span>
+          <kbd>Ctrl K</kbd>
+        </button>
       </div>
 
       {/* دکمه شناور دستیار */}

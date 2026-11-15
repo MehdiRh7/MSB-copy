@@ -28,7 +28,6 @@ import { toPersianDigits } from '../../utils/formatters';
 import { meetingService, resolutionService, taskService } from '../../services';
 import { Meeting, Resolution, Task } from '../../types';
 import { DEFAULT_ORGANIZATION_PROFILE, useOrganizationProfile } from '../../services/organizationProfile';
-import { hasDemoData } from '../../services/demoDataService';
 
 export const Navbar: React.FC = () => {
   const { 
@@ -51,12 +50,12 @@ export const Navbar: React.FC = () => {
   } = useApp();
   const organization = useOrganizationProfile();
   // برچسب واضح وقتی داده نمونه (دمو) در این مرورگر بارگذاری شده است.
-  const showingSample = hasDemoData();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<{ meetings: Meeting[]; resolutions: Resolution[]; tasks: Task[] }>({ meetings: [], resolutions: [], tasks: [] });
   const [now, setNow] = useState(new Date());
   const todayJalali = new Intl.DateTimeFormat('fa-IR-u-ca-persian', {
@@ -94,6 +93,7 @@ export const Navbar: React.FC = () => {
       }
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSearchResults(false);
+        setSearchOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -194,17 +194,15 @@ export const Navbar: React.FC = () => {
                 (آبی شیشه‌ای، سازمانی یا تیره) دیده شود. نام و لوگو از
                 «اطلاعات سازمان» در تنظیمات خوانده می‌شوند. */}
             {/* لوگو روی پلاک روشن با هاله آبی؛ اگر فایل ذخیره‌شده خراب باشد، نشان پیش‌فرض نمایش داده می‌شود. */}
-            <span className="app-logo-plate">
-              <img
-                src={organization.logoUrl || DEFAULT_ORGANIZATION_PROFILE.logoUrl}
-                onError={(e) => { if (!e.currentTarget.src.endsWith(DEFAULT_ORGANIZATION_PROFILE.logoUrl)) e.currentTarget.src = DEFAULT_ORGANIZATION_PROFILE.logoUrl; }}
-                alt={`نشان ${organization.name || organization.systemTitle}`}
-                className="app-logo"
-              />
-            </span>
-            <span className="hidden sm:block h-9 w-px bg-gradient-to-b from-transparent via-slate-300 to-transparent" aria-hidden="true" />
+            <img
+              src={organization.logoUrl || DEFAULT_ORGANIZATION_PROFILE.logoUrl}
+              onError={(e) => { if (!e.currentTarget.src.endsWith(DEFAULT_ORGANIZATION_PROFILE.logoUrl)) e.currentTarget.src = DEFAULT_ORGANIZATION_PROFILE.logoUrl; }}
+              alt={`نشان ${organization.name || organization.systemTitle}`}
+              className="header-logo"
+            />
             <span className="flex min-w-0 flex-col leading-tight">
-              <span className="truncate text-[13px] sm:text-[15px] font-black text-slate-900 dark:text-slate-100 tracking-tight">{organization.systemTitle}</span>
+              {/* عنوان شیشه‌ای متحرک: درخشش مداوم و هرازگاهی چرخش/تکان کوتاه */}
+              <span className="glass-title"><span className="glass-title-text">{organization.systemTitle}</span></span>
               {organization.name.trim() && (
                 <span className="hidden sm:block truncate text-[11px] font-bold text-[var(--app-primary)] mt-0.5">{organization.name}</span>
               )}
@@ -212,89 +210,18 @@ export const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Center: Global Search Bar */}
-        <div className="hidden lg:flex flex-1 max-w-md mx-4 items-center gap-2">
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('msb-open-command-palette'))}
-            title="فرمان سریع (Ctrl+K)"
-            className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold text-white bg-teal-700 hover:bg-teal-800 shadow-sm"
+        {/* وسط: تاریخ و ساعت */}
+        <div className="hidden md:flex flex-1 justify-center">
+          <div
+            className="flex items-center gap-2 bg-slate-50/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11.5px] py-1.5 px-3.5 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap"
+            title="تاریخ و ساعت جاری"
           >
-            <Zap className="w-3.5 h-3.5" aria-hidden />
-            <span>فرمان سریع</span>
-            <kbd className="rounded bg-white/20 px-1 text-[9px]">Ctrl K</kbd>
-          </button>
-          <div className="relative w-full" ref={searchRef}>
-            <input
-              type="text"
-              value={globalSearch}
-              onChange={(e) => setGlobalSearch(e.target.value)}
-              onFocus={() => { if (totalSearchResults > 0) setShowSearchResults(true); }}
-              placeholder="جستجوی شماره مصوبه، عنوان جلسه، نام مسئول..."
-              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 pr-9 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-            />
-            <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2" />
-            {globalSearch && (
-              <button
-                onClick={() => { setGlobalSearch(''); setShowSearchResults(false); }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600"
-              >
-                پاک کردن
-              </button>
-            )}
-
-            {showSearchResults && (
-              <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2">
-                {totalSearchResults === 0 ? (
-                  <div className="text-center py-6 text-xs text-slate-400">نتیجه‌ای یافت نشد</div>
-                ) : (
-                  <div className="space-y-2">
-                    {searchResults.resolutions.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">مصوبات</div>
-                        {searchResults.resolutions.map((r) => (
-                          <button key={r.id} onClick={() => handleSelectResolution(r)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
-                            <FileText className="w-3.5 h-3.5 text-teal-700 shrink-0" />
-                            <div className="min-w-0">
-                              <div className="text-xs font-bold truncate">{r.topicTitle}</div>
-                              <div className="text-[10px] text-slate-400">{r.resolutionNumber}</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.meetings.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">جلسات</div>
-                        {searchResults.meetings.map((m) => (
-                          <button key={m.id} onClick={() => handleSelectMeeting(m)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
-                            <Calendar className="w-3.5 h-3.5 text-blue-700 shrink-0" />
-                            <div className="min-w-0">
-                              <div className="text-xs font-bold truncate">{m.title}</div>
-                              <div className="text-[10px] text-slate-400">{m.meetingNumber}</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {searchResults.tasks.length > 0 && (
-                      <div>
-                        <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">وظایف</div>
-                        {searchResults.tasks.map((t) => (
-                          <button key={t.id} onClick={() => handleSelectTask(t)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                            <div className="min-w-0">
-                              <div className="text-xs font-bold truncate">{t.resolutionTitle}</div>
-                              <div className="text-[10px] text-slate-400">{t.resolutionNumber}</div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+            <Calendar className="w-3.5 h-3.5 text-[var(--app-primary)]" />
+            <span>{todayJalali}</span>
+            <span className="w-px h-3 bg-slate-300 dark:bg-slate-600" />
+            <Clock3 className="w-3.5 h-3.5 text-[var(--app-primary)] shrink-0" />
+            {/* عرض ثابت تا تغییر ثانیه‌ها چیزی را جابه‌جا نکند. */}
+            <span dir="ltr" className="tabular-nums inline-block text-left" style={{ width: '6.5ch' }}>{currentTime}</span>
           </div>
         </div>
 
@@ -354,9 +281,97 @@ export const Navbar: React.FC = () => {
           </div>
 
           {/* Notifications Dropdown (Item 5 Fixed) */}
-          {showingSample && (
-            <span className="order-1 hidden md:inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-2.5 py-1 text-[10.5px] font-extrabold text-sky-800" title="داده‌های نمونه برای نمایش؛ از تنظیمات ← داده نمایشی قابل حذف است">داده نمونه</span>
-          )}
+          {/* جستجو: فقط آیکون؛ با کلیک کادر جستجو باز می‌شود */}
+          <div className="relative order-2" ref={searchRef}>
+            <button
+              type="button"
+              onClick={() => { setSearchOpen((v) => !v); if (searchOpen) setShowSearchResults(false); }}
+              className={`p-2 rounded-full transition-colors cursor-pointer ${searchOpen ? 'bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300' : 'text-slate-500 dark:text-slate-400 hover:text-teal-800 dark:hover:text-teal-300 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+              title="جستجو"
+              aria-label="جستجو"
+              aria-expanded={searchOpen}
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            {searchOpen && (
+            <div className="absolute left-0 top-full mt-3 w-[min(440px,calc(100vw-2rem))] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 animate-in fade-in slide-in-from-top-2">
+                <div className="relative">
+              <input
+                type="text"
+                value={globalSearch}
+                onChange={(e) => setGlobalSearch(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Escape') { setSearchOpen(false); setShowSearchResults(false); } }}
+                onFocus={() => { if (totalSearchResults > 0) setShowSearchResults(true); }}
+                placeholder="جستجوی شماره مصوبه، عنوان جلسه، نام مسئول..."
+                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 pr-9 text-xs text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+              />
+              <Search className="w-4 h-4 text-slate-400 absolute right-3 top-5 -translate-y-1/2" />
+              {globalSearch && (
+                <button
+                  onClick={() => { setGlobalSearch(''); setShowSearchResults(false); }}
+                  className="absolute left-2 top-5 -translate-y-1/2 text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600"
+                >
+                  پاک کردن
+                </button>
+              )}
+
+              {showSearchResults && (
+                <div className="relative mt-2 w-full bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-50 max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2">
+                  {totalSearchResults === 0 ? (
+                    <div className="text-center py-6 text-xs text-slate-400">نتیجه‌ای یافت نشد</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {searchResults.resolutions.length > 0 && (
+                        <div>
+                          <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">مصوبات</div>
+                          {searchResults.resolutions.map((r) => (
+                            <button key={r.id} onClick={() => handleSelectResolution(r)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
+                              <FileText className="w-3.5 h-3.5 text-teal-700 shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold truncate">{r.topicTitle}</div>
+                                <div className="text-[10px] text-slate-400">{r.resolutionNumber}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.meetings.length > 0 && (
+                        <div>
+                          <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">جلسات</div>
+                          {searchResults.meetings.map((m) => (
+                            <button key={m.id} onClick={() => handleSelectMeeting(m)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
+                              <Calendar className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold truncate">{m.title}</div>
+                                <div className="text-[10px] text-slate-400">{m.meetingNumber}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      {searchResults.tasks.length > 0 && (
+                        <div>
+                          <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">وظایف</div>
+                          {searchResults.tasks.map((t) => (
+                            <button key={t.id} onClick={() => handleSelectTask(t)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold truncate">{t.resolutionTitle}</div>
+                                <div className="text-[10px] text-slate-400">{t.resolutionNumber}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              </div>
+            </div>
+            )}
+          </div>
           <div className="relative order-2" ref={notifRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -488,20 +503,6 @@ export const Navbar: React.FC = () => {
                 ))}
               </div>
             )}
-          </div>
-
-          <div
-            className="order-1 hidden xl:flex items-center gap-2 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11px] py-1.5 px-3 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap"
-            title="تاریخ و ساعت جاری"
-          >
-            <Calendar className="w-3.5 h-3.5 text-[var(--app-primary)]" />
-            <span>{todayJalali}</span>
-            <span className="w-px h-3 bg-slate-300 dark:bg-slate-600" />
-            <Clock3 className="w-3.5 h-3.5 text-[var(--app-primary)] shrink-0" />
-            {/* Fixed width (not just tabular-nums) so a second's digit change
-                never nudges the elements to its right — Persian numeral
-                glyphs aren't guaranteed tabular figures in every font. */}
-            <span dir="ltr" className="tabular-nums inline-block text-left" style={{ width: '6.5ch' }}>{currentTime}</span>
           </div>
 
           {/* Logout / Switch User */}
