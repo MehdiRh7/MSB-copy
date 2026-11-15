@@ -63,6 +63,12 @@ export const Navbar: React.FC = () => {
     month: '2-digit',
     day: '2-digit',
   }).format(now);
+  const weekdayName = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { weekday: 'long' }).format(now);
+  const longDate = new Intl.DateTimeFormat('fa-IR-u-ca-persian', { day: 'numeric', month: 'long', year: 'numeric' }).format(now);
+  const pad2 = (n: number) => toPersianDigits(String(n).padStart(2, '0'));
+  const clockHour = pad2(now.getHours());
+  const clockMinute = pad2(now.getMinutes());
+  const clockSecond = pad2(now.getSeconds());
   const currentTime = new Intl.DateTimeFormat('fa-IR', {
     hour: '2-digit',
     minute: '2-digit',
@@ -212,16 +218,18 @@ export const Navbar: React.FC = () => {
 
         {/* وسط: تاریخ و ساعت */}
         <div className="hidden md:flex flex-1 justify-center">
-          <div
-            className="flex items-center gap-2 bg-slate-50/80 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-[11.5px] py-1.5 px-3.5 rounded-full border border-slate-200 dark:border-slate-700 whitespace-nowrap"
-            title="تاریخ و ساعت جاری"
-          >
-            <Calendar className="w-3.5 h-3.5 text-[var(--app-primary)]" />
-            <span>{todayJalali}</span>
-            <span className="w-px h-3 bg-slate-300 dark:bg-slate-600" />
-            <Clock3 className="w-3.5 h-3.5 text-[var(--app-primary)] shrink-0" />
-            {/* عرض ثابت تا تغییر ثانیه‌ها چیزی را جابه‌جا نکند. */}
-            <span dir="ltr" className="tabular-nums inline-block text-left" style={{ width: '6.5ch' }}>{currentTime}</span>
+          <div className="hdr-clock" title="تاریخ و ساعت جاری">
+            <div className="hdr-clock-date">
+              <span className="hdr-clock-day">{weekdayName}</span>
+              <span className="hdr-clock-full">{longDate}</span>
+            </div>
+            <span className="hdr-clock-sep" aria-hidden="true" />
+            <div className="hdr-clock-time" dir="ltr" aria-label={`ساعت ${currentTime}`}>
+              <span className="hdr-clock-hm">{clockHour}</span>
+              <span className="hdr-clock-colon" aria-hidden="true">:</span>
+              <span className="hdr-clock-hm">{clockMinute}</span>
+              <span className="hdr-clock-sec">{clockSecond}</span>
+            </div>
           </div>
         </div>
 

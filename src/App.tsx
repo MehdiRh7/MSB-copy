@@ -119,18 +119,19 @@ const AppContent: React.FC = () => {
         </main>
       </div>
 
-      {/* دکمه شناور فرمان سریع (Ctrl+K) — وسط پایین صفحه، متحرک تا همیشه در دید باشد */}
-      <div className="no-print command-fab-wrap">
+      {/* دکمه شناور فرمان سریع (Ctrl+K) — بالای سایر دکمه‌های شناور، با درخشش ملایم */}
+      <div className="no-print fixed bottom-[7.75rem] left-4 z-40">
         <button
           type="button"
           onClick={() => window.dispatchEvent(new CustomEvent('msb-open-command-palette'))}
-          className="command-fab"
-          title="فرمان سریع (Ctrl+K): هر کاری را با یک جمله بنویسید یا بگویید"
+          title="فرمان سریع (Ctrl+K)"
           aria-label="فرمان سریع"
+          className="command-fab-mini group relative flex items-center text-white font-bold text-xs p-1.5 rounded-full border border-teal-800/30 transition-all cursor-pointer hover:brightness-110"
         >
-          <span className="command-fab-icon"><Zap className="w-4 h-4" /></span>
-          <span className="command-fab-label">فرمان سریع</span>
-          <kbd>Ctrl K</kbd>
+          <div className="command-fab-icon w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <Zap className="w-4 h-4" />
+          </div>
+          <span className="tracking-tight max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-40 group-hover:px-2 group-focus-visible:max-w-40 group-focus-visible:px-2">فرمان سریع <span className="opacity-70 text-[10px]">Ctrl K</span></span>
         </button>
       </div>
 
