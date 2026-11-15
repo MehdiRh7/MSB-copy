@@ -57,6 +57,7 @@ export const DashboardView: React.FC = () => {
   const model = useMemo(() => buildDashboardModel(currentUser), [currentUser, refreshTrigger]);
   const dash = useDashboardLayout(currentUser.id);
   const [customizerOpen, setCustomizerOpen] = useState(false);
+  React.useEffect(() => { if (!customizerOpen) return; const k = (e: KeyboardEvent) => { if (e.key === 'Escape') setCustomizerOpen(false); }; window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, [customizerOpen]);
   const canCreateMeeting = hasPermission('CREATE_MEETING');
   const [resTab, setResTab] = useState<ResTab | null>(null);
 
@@ -123,7 +124,7 @@ export const DashboardView: React.FC = () => {
 
       {/* ——— شاخص‌ها: چهار عدد اصلی، همیشه در یک ردیف ——— */}
       {dash.isVisible('pulse') && (
-        <section className="stat-grid" style={{ order: Math.min(dash.orderOf('brief'), dash.orderOf('pulse')) }} aria-label="شاخص‌های اصلی">
+        <section className="stat-grid" style={{ order: dash.orderOf('pulse') }} aria-label="شاخص‌های اصلی">
           {[
             { label: 'کارهای منتظر من', value: model.actionItems.length, icon: CheckCircle2, onClick: () => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth' }), alert: false },
             { label: 'جلسات پیش‌رو', value: model.upcomingMeetings.length, icon: CalendarDays, onClick: () => navigateTo('calendar'), alert: false },
@@ -140,10 +141,10 @@ export const DashboardView: React.FC = () => {
       )}
 
       {/* ——— خلاصه امروز و وضعیت مصوبات، کنار هم ——— */}
-      {(dash.isVisible('brief') || (dash.isVisible('pulse') && model.statusBreakdown.length > 0)) && (
-        <div className="grid gap-4 lg:grid-cols-3" style={{ order: Math.min(dash.orderOf('brief'), dash.orderOf('pulse')) }}>
-          {dash.isVisible('brief') && <div className={model.statusBreakdown.length > 0 && dash.isVisible('pulse') ? 'lg:col-span-2' : 'lg:col-span-3'}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => { if (model.overdue[0]) navigateTo('resolutions', { resolutionId: model.overdue[0].id }); else if (model.actionItems[0]) navigateTo(model.actionItems[0].route, model.actionItems[0].params); else navigateTo('resolutions'); }} /></div>}
-          {dash.isVisible('pulse') && model.statusBreakdown.length > 0 && (
+      {(dash.isVisible('brief') || (dash.isVisible('status') && model.statusBreakdown.length > 0)) && (
+        <div className="grid gap-4 lg:grid-cols-3" style={{ order: Math.min(dash.orderOf('brief'), dash.orderOf('status')) }}>
+          {dash.isVisible('brief') && <div className={model.statusBreakdown.length > 0 && dash.isVisible('status') ? 'lg:col-span-2' : 'lg:col-span-3'}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => { if (model.overdue[0]) navigateTo('resolutions', { resolutionId: model.overdue[0].id }); else if (model.actionItems[0]) navigateTo(model.actionItems[0].route, model.actionItems[0].params); else navigateTo('resolutions'); }} /></div>}
+          {dash.isVisible('status') && model.statusBreakdown.length > 0 && (
             <section className={`db-card ${dash.isVisible('brief') ? '' : 'lg:col-span-3'}`}>
               <header className="db-card-head">
                 <h2>وضعیت مصوبات</h2>

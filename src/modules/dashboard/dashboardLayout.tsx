@@ -4,12 +4,13 @@ import { loadLocalValue, saveLocalValue } from '../../services/localStore';
 
 /** بخش‌های قابل شخصی‌سازی داشبورد. */
 export const DASHBOARD_SECTIONS = [
+  { id: 'pulse', label: 'ردیف اعداد (کارها، جلسات، مصوبات)' },
   { id: 'brief', label: 'خلاصه امروز' },
-  { id: 'pulse', label: 'شاخص‌ها و وضعیت مصوبات' },
+  { id: 'status', label: 'نمودار وضعیت مصوبات' },
   { id: 'todo', label: 'کارهای من' },
   { id: 'meetings', label: 'جلسات پیش‌رو' },
   { id: 'resolutions', label: 'مصوبات در جریان' },
-  { id: 'role', label: 'کارت مخصوص نقش' },
+  { id: 'role', label: 'وضعیت واحدها / کارهای نقش من' },
   { id: 'activity', label: 'آخرین فعالیت‌ها' },
 ] as const;
 export type DashboardSectionId = typeof DASHBOARD_SECTIONS[number]['id'];
@@ -53,7 +54,7 @@ export const useDashboardLayout = (userId: string) => {
 
 export const DashboardCustomizer: React.FC<{ api: ReturnType<typeof useDashboardLayout>; onClose: () => void }> = ({ api, onClose }) => (
   <div className="fixed inset-0 z-50 bg-slate-950/30" onMouseDown={onClose} dir="rtl">
-    <div className="layout-drawer fixed right-0 inset-y-0 h-full w-full max-w-sm bg-white shadow-2xl border-l border-slate-200 p-4 space-y-3 overflow-y-auto" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="شخصی‌سازی داشبورد">
+    <div className="layout-drawer fixed left-0 inset-y-0 h-full w-full max-w-sm bg-white shadow-2xl border-r border-slate-200 p-4 space-y-3 overflow-y-auto" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="شخصی‌سازی داشبورد">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><LayoutGrid className="w-4 h-4 text-indigo-600" />چیدمان پیشخوان</h3>
         <button onClick={onClose} aria-label="بستن" className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
