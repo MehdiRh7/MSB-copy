@@ -52,10 +52,10 @@ export const useDashboardLayout = (userId: string) => {
 };
 
 export const DashboardCustomizer: React.FC<{ api: ReturnType<typeof useDashboardLayout>; onClose: () => void }> = ({ api, onClose }) => (
-  <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/40 p-4 pt-[12vh]" onMouseDown={onClose} dir="rtl">
-    <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl border border-slate-200 p-4 space-y-3" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="شخصی‌سازی داشبورد">
+  <div className="fixed inset-0 z-50 bg-slate-950/30" onMouseDown={onClose} dir="rtl">
+    <div className="layout-drawer absolute right-0 top-0 h-full w-full max-w-sm bg-white shadow-2xl border-l border-slate-200 p-4 space-y-3 overflow-y-auto" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="شخصی‌سازی داشبورد">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><LayoutGrid className="w-4 h-4 text-indigo-600" />شخصی‌سازی داشبورد</h3>
+        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><LayoutGrid className="w-4 h-4 text-indigo-600" />چیدمان پیشخوان</h3>
         <button onClick={onClose} aria-label="بستن" className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
       </div>
       <p className="text-[12px] text-slate-500">بخش‌ها را نمایش دهید یا پنهان کنید و ترتیبشان را تغییر دهید. چیدمان فقط برای شما ذخیره می‌شود.</p>

@@ -219,17 +219,9 @@ export const Navbar: React.FC = () => {
         {/* وسط: تاریخ و ساعت */}
         <div className="hidden md:flex flex-1 justify-center">
           <div className="hdr-clock" title="تاریخ و ساعت جاری">
-            <div className="hdr-clock-date">
-              <span className="hdr-clock-day">{weekdayName}</span>
-              <span className="hdr-clock-full">{longDate}</span>
-            </div>
-            <span className="hdr-clock-sep" aria-hidden="true" />
-            <div className="hdr-clock-time" dir="ltr" aria-label={`ساعت ${currentTime}`}>
-              <span className="hdr-clock-hm">{clockHour}</span>
-              <span className="hdr-clock-colon" aria-hidden="true">:</span>
-              <span className="hdr-clock-hm">{clockMinute}</span>
-              <span className="hdr-clock-sec">{clockSecond}</span>
-            </div>
+            <span>{weekdayName} {longDate}</span>
+            <span className="hdr-clock-dot" aria-hidden="true" />
+            <span dir="ltr" className="hdr-clock-time">{clockHour}:{clockMinute}</span>
           </div>
         </div>
 

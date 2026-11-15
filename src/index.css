@@ -1961,3 +1961,25 @@ html .app-page-header { border-radius: 12px; }
 html .app-page-header::before { display: none !important; }
 html .infographic-card::before, html .guide-card::before { background: var(--app-primary) !important; }
 .dark .app-modal-header, .dark .app-form-hero { background: #1e293b !important; }
+
+/* ——— نسخه آرام‌تر: ساعت ساده، شاخص‌های فشرده، چرخ‌دنده چیدمان ——— */
+.hdr-clock { display: flex; align-items: center; gap: 0.6rem; padding: 0; background: none !important; border: 0 !important; box-shadow: none !important; font-size: 13px; font-weight: 600; color: #475569; white-space: nowrap; }
+.hdr-clock-dot { width: 4px; height: 4px; border-radius: 999px; background: #cbd5e1; }
+.hdr-clock-time { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--app-ink); letter-spacing: 0.02em; }
+.dark .hdr-clock { color: #94a3b8; } .dark .hdr-clock-time { color: #e2e8f0; }
+
+.stat-grid { gap: 0.5rem; }
+.stat-card { flex-direction: row; align-items: center; gap: 0.5rem; padding: 0.55rem 0.85rem; border-radius: 10px; }
+.stat-card-icon { color: var(--app-primary); flex-shrink: 0; }
+.stat-card-label { flex: 1; font-size: 12.5px; }
+.stat-card-value { font-size: 1.15rem; }
+.stat-card-alert .stat-card-icon { color: #dc2626; }
+
+.layout-gear { position: fixed; right: 0; top: 50%; z-index: 41; width: 46px; height: 46px; transform: translate(50%, -50%); display: flex; align-items: center; justify-content: flex-start; padding-left: 6px; border-radius: 999px; color: #fff; background: var(--app-primary); box-shadow: 0 4px 12px -4px rgba(20,30,61,.45); transition: transform .25s ease; }
+.layout-gear:hover { transform: translate(35%, -50%); }
+.layout-gear svg { transition: transform .5s ease; }
+.layout-gear:hover svg { transform: rotate(90deg); }
+.layout-drawer { animation: drawer-in .25s ease-out; }
+@keyframes drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .layout-drawer { animation: none; } }
+.hdr-clock .hdr-clock-time { background: none !important; box-shadow: none !important; padding: 0 !important; border-radius: 0; color: var(--app-ink) !important; font-size: 13px; }

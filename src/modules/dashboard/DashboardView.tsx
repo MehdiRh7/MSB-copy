@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   Activity,
-  LayoutGrid,
+  Settings2,
   AlertTriangle,
   ArrowLeft,
   Building2,
@@ -116,16 +116,15 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4 pb-10">
+      <button type="button" onClick={() => setCustomizerOpen(true)} className="layout-gear" title="چیدمان پیشخوان" aria-label="چیدمان"><Settings2 className="h-5 w-5" /></button>
       {customizerOpen && <DashboardCustomizer api={dash} onClose={() => setCustomizerOpen(false)} />}
       {/* ——— عنوان صفحه و اقدام اصلی ——— */}
       <header className="page-head" style={{ order: 0 }}>
         <div className="min-w-0">
           <h1 className="page-head-title">پیشخوان</h1>
-          <p className="page-head-sub">{longToday()}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setCustomizerOpen(true)} className="app-btn-secondary" title="انتخاب و ترتیب بخش‌های پیشخوان"><LayoutGrid className="h-4 w-4" />چیدمان</button>
-          {primaryAction}
+          {!(dash.isVisible('meetings') && model.upcomingMeetings.length > 0) && primaryAction}
         </div>
       </header>
 
@@ -139,7 +138,8 @@ export const DashboardView: React.FC = () => {
             { label: 'مصوبات معوق', value: model.counts.overdue, icon: AlertTriangle, onClick: () => navigateTo('resolutions'), alert: model.counts.overdue > 0 },
           ].map(({ label, value, icon: Icon, onClick, alert }) => (
             <button key={label} type="button" onClick={onClick} className={`stat-card ${alert ? 'stat-card-alert' : ''}`}>
-              <span className="stat-card-label"><Icon className="h-4 w-4" />{label}</span>
+              <Icon className="h-4 w-4 stat-card-icon" />
+              <span className="stat-card-label">{label}</span>
               <span className="stat-card-value">{toPersianDigits(value)}</span>
             </button>
           ))}
@@ -149,7 +149,7 @@ export const DashboardView: React.FC = () => {
       {/* ——— خلاصه امروز و وضعیت مصوبات، کنار هم ——— */}
       {(dash.isVisible('brief') || (dash.isVisible('pulse') && model.statusBreakdown.length > 0)) && (
         <div className="grid gap-4 lg:grid-cols-3" style={{ order: Math.min(dash.orderOf('brief'), dash.orderOf('pulse')) }}>
-          {dash.isVisible('brief') && <div className={model.statusBreakdown.length > 0 && dash.isVisible('pulse') ? 'lg:col-span-2' : 'lg:col-span-3'}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>}
+          {dash.isVisible('brief') && <div className={model.statusBreakdown.length > 0 && dash.isVisible('pulse') ? 'lg:col-span-2' : 'lg:col-span-3'}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => { if (model.overdue[0]) navigateTo('resolutions', { resolutionId: model.overdue[0].id }); else if (model.actionItems[0]) navigateTo(model.actionItems[0].route, model.actionItems[0].params); else navigateTo('resolutions'); }} /></div>}
           {dash.isVisible('pulse') && model.statusBreakdown.length > 0 && (
             <section className={`db-card ${dash.isVisible('brief') ? '' : 'lg:col-span-3'}`}>
               <header className="db-card-head">
@@ -210,7 +210,7 @@ export const DashboardView: React.FC = () => {
 
         {/* ——— جلسات پیش‌رو ——— */}
         {dash.isVisible('meetings') && model.upcomingMeetings.length > 0 && <section className="db-card" style={ord('meetings')}>
-          <header className="db-card-head"><h2>جلسات پیش‌رو</h2><button onClick={() => navigateTo('calendar')} className="db-link">تقویم</button></header>
+          <header className="db-card-head"><h2>جلسات پیش‌رو</h2><div className="flex items-center gap-1">{canCreateMeeting && <button onClick={() => openCreateMeetingModal()} className="db-link flex items-center gap-1"><Plus className="h-3.5 w-3.5" />جلسه جدید</button>}<button onClick={() => navigateTo('calendar')} className="db-link">تقویم</button></div></header>
           <ul className="space-y-2">
               {model.upcomingMeetings.slice(0, 4).map((m) => {
                 const { day, month } = splitDate(m.dateJalali);
