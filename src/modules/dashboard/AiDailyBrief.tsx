@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowLeft, ClipboardList, RefreshCw } from 'lucide-react';
 import { User } from '../../types';
-import { AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
+import { useAiFeature } from '../../components/ai/AiKit';
 import { dashboardBrief, DailyBrief } from '../../services/ai/aiService';
 import type { AiResult } from '../../services/ai/aiClient';
 import type { DashboardModel } from './dashboardData';
@@ -56,14 +56,14 @@ export const AiDailyBrief: React.FC<{ user: User; model: DashboardModel; onOpenT
       <div className="pointer-events-none absolute -bottom-20 right-10 h-56 w-56 rounded-full bg-fuchsia-400/20 blur-3xl" />
       <div className="relative flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="rounded-2xl bg-white/15 p-2"><Sparkles className="h-5 w-5" /></span>
+          <span className="rounded-2xl bg-white/15 p-2"><ClipboardList className="h-5 w-5" /></span>
           <div>
             <div className="text-[11px] font-bold text-blue-100">خلاصه هوشمند امروز</div>
             {loading && !result ? <div className="mt-1 h-4 w-64 animate-pulse rounded bg-white/20" /> : <h2 className="text-sm sm:text-base font-extrabold leading-7">{result?.data.headline}</h2>}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {result && <span className="rounded-full bg-white p-0.5"><AiSourceBadge result={result} /></span>}
+          
           <button onClick={() => generate(true)} disabled={loading} title="تولید دوباره" aria-label="تولید دوباره خلاصه" className="rounded-xl bg-white/10 p-2 hover:bg-white/20 disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, Lightbulb } from 'lucide-react';
 import { Resolution } from '../../types';
-import { AiButton, AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, useAiFeature } from '../../components/ai/AiKit';
 import { analyzeResolutionRisk, computeResolutionRisk, RiskAnalysis } from '../../services/ai/aiService';
 import type { AiResult } from '../../services/ai/aiClient';
 import { toPersianDigits } from '../../utils/formatters';
@@ -39,7 +39,7 @@ export const ResolutionAiInsight: React.FC<{ resolution: Resolution; actorId: st
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-extrabold text-slate-900 flex items-center gap-1"><Activity className="w-4 h-4 text-indigo-600" />پیش‌بینی ریسک تأخیر</span>
             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.chip}`}>سطح {meta.label}</span>
-            <AiSourceBadge result={result} />
+            
           </div>
           <div className="flex flex-wrap gap-1.5">
             {base.factors.map((factor) => <span key={factor} className="text-[10px] px-2 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">{factor}</span>)}

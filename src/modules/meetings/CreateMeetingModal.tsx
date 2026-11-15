@@ -15,7 +15,7 @@ import { describePolicy, getTemplateForMeetingType, getWorkflowTemplates, namesO
 import { describeAssignment, getStageAssignment } from '../../services/signatureWorkflowSettingsService';
 // منطق زمان‌بندی/همپوشانی بندها فقط در همین یک ماژول است (بدون کپی موازی).
 import { getMinutesDiff, validateAgendaTimeSlot, formatAgendaTimeRange, timeToMinutes } from '../../utils/agendaTime';
-import { AiButton, AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, useAiFeature } from '../../components/ai/AiKit';
 import { planAgenda, AgendaPlan } from '../../services/ai/aiService';
 import { suggestMeetingSlots, SlotSuggestion } from '../../services/ai/aiInsights';
 import type { AiResult } from '../../services/ai/aiClient';
@@ -526,7 +526,7 @@ export const CreateMeetingModal: React.FC = () => {
             {aiScheduler && (selectedMemberIds.length > 0 || organizerId || secretaryId) && (
               <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] font-extrabold text-indigo-950">✨ پیشنهاد زمان: زمان‌هایی که این افراد جلسه دیگری ندارند (۱۴ روز آینده)</span>
+                  <span className="text-[11px] font-extrabold text-indigo-950">پیشنهاد زمان: زمان‌هایی که این افراد جلسه دیگری ندارند (۱۴ روز آینده)</span>
                   <AiButton variant="soft" loading={slotsBusy} onClick={handleSuggestSlots}>پیدا کردن زمان مناسب</AiButton>
                 </div>
                 {slots && slots.length === 0 && <p className="text-[11px] text-slate-500">زمان آزاد مشترکی پیدا نشد.</p>}
@@ -556,8 +556,8 @@ export const CreateMeetingModal: React.FC = () => {
             {aiPlanner && agendas.length > 0 && (
               <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] font-extrabold text-indigo-950">✨ برنامه‌ریز هوشمند: ترتیب و زمان هر بند را بر اساس اهمیت و مدت جلسه پیشنهاد می‌دهد</span>
-                  <div className="flex items-center gap-2"><AiSourceBadge result={planResult} /><AiButton onClick={handleSmartPlan} loading={planning}>زمان‌بندی هوشمند</AiButton></div>
+                  <span className="text-[11px] font-extrabold text-indigo-950">برنامه‌ریز دستورکار: ترتیب و زمان هر بند را بر اساس اهمیت و مدت جلسه پیشنهاد می‌دهد</span>
+                  <div className="flex items-center gap-2"><AiButton onClick={handleSmartPlan} loading={planning}>زمان‌بندی هوشمند</AiButton></div>
                 </div>
                 {planResult && (
                   <ul className="text-[10.5px] text-slate-600 space-y-0.5">

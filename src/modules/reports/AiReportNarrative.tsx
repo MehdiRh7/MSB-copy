@@ -3,7 +3,7 @@ import { getCurrentJalaliDate } from '../../utils/date';
 import React, { useState } from 'react';
 import { Copy, FileText } from 'lucide-react';
 import { DashboardKPIs, DepartmentPerformance } from '../../types';
-import { AiButton, AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, useAiFeature } from '../../components/ai/AiKit';
 import { reportNarrative } from '../../services/ai/aiService';
 import { exportHtmlToPdf } from '../../utils/pdfExport';
 import type { AiResult } from '../../services/ai/aiClient';
@@ -38,7 +38,7 @@ export const AiReportNarrative: React.FC<{ kpis: DashboardKPIs | null; departmen
           <p className="text-[11px] text-slate-500">تحلیل متنی آمار، گلوگاه‌ها و توصیه‌های اقدام — آماده ارائه در جلسه هیئت مدیره</p>
         </div>
         <div className="flex items-center gap-2">
-          <AiSourceBadge result={result} />
+          
           {result && <button onClick={() => {
             const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
             const body = esc(result.data).split('\n').map((line) => line.trim() ? (line.length < 40 && !/[.،]$/.test(line) ? `<h2>${line}</h2>` : `<p style="margin:4px 0">${line}</p>`) : '').join('');

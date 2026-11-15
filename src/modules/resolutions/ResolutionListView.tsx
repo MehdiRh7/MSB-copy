@@ -23,7 +23,7 @@ import { CreateResolutionModal } from './CreateResolutionModal';
 import { ResolutionDetailModal } from './ResolutionDetailModal';
 import { ListViewActions, ListViewMode } from '../../components/common/ListViewActions';
 import { exportListToPdf } from '../../utils/pdfExport';
-import { AiButton, AiSourceBadge, useAiFeature, VoiceInputButton } from '../../components/ai/AiKit';
+import { AiButton, useAiFeature, VoiceInputButton } from '../../components/ai/AiKit';
 import { semanticSearch, SemanticHit } from '../../services/ai/aiInsights';
 import type { AiResult } from '../../services/ai/aiClient';
 
@@ -139,7 +139,7 @@ export const ResolutionListView: React.FC = () => {
             <AiButton onClick={() => { void runSemantic(); }} loading={semanticBusy} disabled={!semanticQuery.trim()}>جستجوی مفهومی</AiButton>
             {semantic && <button onClick={() => { setSemantic(null); setSemanticQuery(''); }} className="text-[11px] font-bold text-slate-500 px-2 py-1 rounded-lg hover:bg-slate-100">نمایش همه</button>}
           </div>
-          {semantic && <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600"><b>{toPersianDigits(semantic.data.length)}</b> مصوبه مرتبط با مفهوم «{semanticQuery}» (به ترتیب ارتباط) <AiSourceBadge result={semantic} /></div>}
+          {semantic && <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600"><b>{toPersianDigits(semantic.data.length)}</b> مصوبه مرتبط با مفهوم «{semanticQuery}» (به ترتیب ارتباط) </div>}
         </div>
       )}
 

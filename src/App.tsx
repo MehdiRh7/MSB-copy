@@ -28,7 +28,7 @@ import { SettingsView } from './modules/settings/SettingsView';
 import { WorkflowMapLauncher } from './modules/workflowMap/WorkflowMapLauncher';
 import { CommandPalette } from './components/ai/CommandPalette';
 
-import { Sparkles, Bot, ShieldAlert } from 'lucide-react';
+import { MessageCircle, Bot, ShieldAlert } from 'lucide-react';
 
 const AccessDenied: React.FC = () => (
   <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -119,7 +119,7 @@ const AppContent: React.FC = () => {
         </main>
       </div>
 
-      {/* Floating AI Assistant Trigger */}
+      {/* دکمه شناور دستیار */}
       <div className="no-print fixed bottom-4 left-4 z-40">
         <button
           onClick={() => setIsAiAssistantOpen(true)}
@@ -128,7 +128,7 @@ const AppContent: React.FC = () => {
           className="group relative flex items-center text-white font-bold text-xs p-1.5 rounded-full shadow-lg hover:shadow-xl border border-blue-900/40 transition-all cursor-pointer bg-gradient-to-br from-[#1d5fd1] to-[#0b2a5b]"
         >
           <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center font-bold">
-            <Sparkles className="w-4 h-4" />
+            <MessageCircle className="w-4 h-4" />
           </div>
           <span className="tracking-tight max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-40 group-hover:px-2 group-focus-visible:max-w-40 group-focus-visible:px-2">دستیار هوشمند (چت)</span>
         </button>

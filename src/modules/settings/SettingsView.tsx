@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Settings, Users2, PieChart, BookOpen, Network, PenTool, UserCheck, Database, GitBranch, Sparkles } from 'lucide-react';
+import { Settings, Users2, PieChart, BookOpen, Network, PenTool, UserCheck, Database, GitBranch } from 'lucide-react';
 import { WorkflowTemplatesTab } from './WorkflowTemplatesTab';
-import { AiSettingsTab } from './AiSettingsTab';
 import { GeneralSettingsTab } from './GeneralSettingsTab';
 import { UserManagementTab } from './UserManagementTab';
 import { LdapSettingsTab } from './LdapSettingsTab';
@@ -13,7 +12,7 @@ import { UserGuideView } from '../guide/UserGuideView';
 import { PageHeader } from '../../components/common/PageHeader';
 import { useApp } from '../../context/AppContext';
 
-type SettingsMainTab = 'GENERAL' | 'USERS' | 'SIGNATURE_WORKFLOW' | 'WORKFLOW_TEMPLATES' | 'AI' | 'LDAP' | 'DELEGATION' | 'INFOGRAPHICS' | 'GUIDE' | 'DEMO';
+type SettingsMainTab = 'GENERAL' | 'USERS' | 'SIGNATURE_WORKFLOW' | 'WORKFLOW_TEMPLATES' | 'LDAP' | 'DELEGATION' | 'INFOGRAPHICS' | 'GUIDE' | 'DEMO';
 
 export const SettingsView: React.FC = () => {
   const { currentUser, hasPermission } = useApp();
@@ -33,8 +32,6 @@ export const SettingsView: React.FC = () => {
           { id: 'DEMO' as SettingsMainTab, label: 'داده نمایشی', icon: Database },
         ]
       : []),
-    // انتخاب و پیکربندی ارائه‌دهنده هوش مصنوعی فقط با مدیر سیستم است.
-    ...(currentUser.role === 'ADMIN' ? [{ id: 'AI' as SettingsMainTab, label: 'هوش مصنوعی', icon: Sparkles }] : []),
     { id: 'DELEGATION' as SettingsMainTab, label: 'جانشین امضا', icon: UserCheck },
     { id: 'INFOGRAPHICS' as SettingsMainTab, label: 'اینفوگراف', icon: PieChart },
     { id: 'GUIDE' as SettingsMainTab, label: 'راهنمای کاربری', icon: BookOpen },
@@ -75,7 +72,6 @@ export const SettingsView: React.FC = () => {
       {activeTab === 'USERS' && <UserManagementTab />}
       {activeTab === 'SIGNATURE_WORKFLOW' && <SignatureWorkflowTab />}
       {activeTab === 'WORKFLOW_TEMPLATES' && <WorkflowTemplatesTab />}
-      {activeTab === 'AI' && currentUser.role === 'ADMIN' && <AiSettingsTab />}
       {activeTab === 'LDAP' && <LdapSettingsTab />}
       {activeTab === 'DEMO' && <DemoDataTab />}
       {activeTab === 'DELEGATION' && <SignatureDelegationTab />}

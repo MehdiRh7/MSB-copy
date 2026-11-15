@@ -1,11 +1,11 @@
 /**
- * «گردش کار پویا» + تنظیمات هوش مصنوعی — سناریوهای پذیرش.
+ * «گردش کار پویا» + پنهان بودن سرویس کمکی — سناریوهای پذیرش.
  *  - تأیید دستورکار: ترتیبی / همه / یک نفر، برگشت و ارسال مجدد
  *  - جلسات بدون تنظیم پویا (رفتار تاریخی: مدیرعامل)
  *  - زنجیره امضای اختصاصی جلسه (موازی) و امضاکننده ابلاغیه اختصاصی
  *  - تأیید صورت‌جلسه پیش از نهایی‌سازی
  *  - قالب گردش کار به تفکیک نوع جلسه (فقط مدیر سیستم)
- *  - انتخاب ارائه‌دهنده هوش مصنوعی فقط توسط مدیر سیستم
+ *  - هیچ تنظیم یا نامی از سرویس کمکی در مرورگر نیست
  */
 const { chromium } = require('playwright');
 const BASE = process.env.E2E_BASE_URL || 'http://localhost:4183';
@@ -159,20 +159,24 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   check('۷ کاربر عادی نمی‌تواند قالب گردش کار را تغییر دهد', tpl.nonAdmin !== 'ALLOWED', tpl.nonAdmin);
   check('۷ جلسه هیئت مدیره قالب مخصوص خودش را گرفت', tpl.templateId === 'wf-board' && tpl.mode === 'ALL' && tpl.approvers.length === 2, JSON.stringify(tpl));
 
-  // ===== ۸) هوش مصنوعی: فقط مدیر سیستم =====
+  // ===== ۸) سرویس کمکی: هیچ تنظیم یا نامی در مرورگر نیست =====
   const ai = await page.evaluate(async () => {
-    const mod = await import('/src/services/ai/aiSettings.ts');
-    const s = mod.getAiSettings();
-    let manager = 'ALLOWED';
-    const usersAll = await window.loadUsers();
-    const managerUser = { ...usersAll.find((u) => u.id === 'user-17'), permissions: ['MANAGE_USERS'] };
-    try { mod.saveAiSettings({ ...s, activeProvider: 'grok' }, managerUser); } catch (e) { manager = e.message; }
-    mod.saveAiSettings({ ...s, activeProvider: 'deepseek' }, await window.actor('user-admin'));
-    return { manager, active: mod.getAiSettings().activeProvider, providers: Object.keys(s.providers).join(',') };
+    localStorage.setItem('postbank-mosavabat-v1:aiSettings', JSON.stringify({ activeProvider: 'gemini', providers: { gemini: { apiKey: 'old' } } }));
+    await import('/src/services/ai/aiSettings.ts?reload=' + Date.now());
+    const status = await (await fetch('/api/assist/status')).json();
+    const oldRoute = (await fetch('/api/ai/status')).status;
+    return { leftover: localStorage.getItem('postbank-mosavabat-v1:aiSettings'), statusKeys: Object.keys(status).sort().join(','), oldRoute };
   });
-  check('۸ سه ارائه‌دهنده DeepSeek / Gemini / Grok تعریف شده‌اند', ai.providers === 'gemini,deepseek,grok', ai.providers);
-  check('۸ حتی دارنده مجوز مدیریت کاربران نمی‌تواند ارائه‌دهنده را تغییر دهد', ai.manager !== 'ALLOWED', ai.manager);
-  check('۸ مدیر سیستم ارائه‌دهنده فعال را تغییر داد', ai.active === 'deepseek', ai.active);
+  check('۸ تنظیمات قدیمی سرویس (که ممکن بود کلید داشته باشد) از مرورگر پاک می‌شود', ai.leftover === null, String(ai.leftover));
+  check('۸ وضعیت سرویس فقط «در دسترس بودن» را می‌گوید، بدون نام ارائه‌دهنده', ai.statusKeys === 'available,ok', ai.statusKeys);
+  await page.evaluate(() => localStorage.setItem('postbank-mosavabat-v1:currentUserId', JSON.stringify('user-admin')));
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(900);
+  await page.locator('aside, nav').locator('text=تنظیمات').first().click();
+  await page.waitForTimeout(700);
+  const bodyText = await page.locator('body').innerText();
+  check('۸ تب «هوش مصنوعی» حتی برای مدیر سیستم در تنظیمات نیست', !bodyText.includes('هوش مصنوعی'), '');
+  check('۸ هیچ نامی از Gemini / DeepSeek / Grok در صفحه نیست', !/Gemini|DeepSeek|Grok/.test(bodyText), '');
 
   // ===== ۹) موتور محلی بدون کلید =====
   const localAi = await page.evaluate(async () => {
@@ -180,7 +184,7 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
     const r = await svc.draftProposal('راه‌اندازی سامانه نوبت‌دهی آنلاین شعب', 'فناوری اطلاعات');
     return { source: r.source, title: r.data.title, hasDescription: r.data.description.length > 40 };
   });
-  check('۹ بدون کلید، موتور محلی پاسخ می‌دهد و صادقانه برچسب می‌خورد', localAi.source === 'LOCAL' && localAi.hasDescription, JSON.stringify(localAi));
+  check('۹ بدون سرویس، تحلیل داخلی سامانه پاسخ می‌دهد', localAi.source === 'LOCAL' && localAi.hasDescription, JSON.stringify(localAi));
 
   check('بدون خطای صفحه', pageErrors.length === 0, pageErrors.join(' | '));
   await browser.close();

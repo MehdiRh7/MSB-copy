@@ -3,7 +3,7 @@ import { Download, FileUp, Gavel, Mic, Square, Wand2 } from 'lucide-react';
 import { Meeting, Resolution } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { mockDepartments } from '../../mock/data';
-import { AiButton, AiSourceBadge, isVoiceSupported, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, isVoiceSupported, useAiFeature } from '../../components/ai/AiKit';
 import { AGENDA_OUTCOME_OPTIONS, AgendaOutcome, AgendaOutcomeSuggestion, extractResolutions, ExtractedResolution, minutesFromTranscript, suggestAgendaOutcomes } from '../../services/ai/aiInsights';
 import { meetingService } from '../../services/meetingService';
 import { CheckCircle2, ShieldCheck, XCircle } from 'lucide-react';
@@ -16,7 +16,7 @@ export const ExtractedResolutionsList: React.FC<{ meeting: Meeting; result: AiRe
   if (result.data.length === 0) return <p className="text-[11px] text-slate-500 bg-white border border-slate-200 rounded-xl p-2.5">تصمیم یا مصوبه مشخصی در متن پیدا نشد.</p>;
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-[11px] font-bold text-slate-700">{toPersianDigits(result.data.length)} مصوبه پیشنهادی از متن <AiSourceBadge result={result} /></div>
+      <div className="flex items-center gap-2 text-[11px] font-bold text-slate-700">{toPersianDigits(result.data.length)} مصوبه پیشنهادی از متن </div>
       {result.data.map((item, index) => {
         const alreadyRegistered = item.agendaItemId && existing.some((r) => r.agendaItemId === item.agendaItemId);
         const priority = getPriorityMeta(item.priority);
@@ -74,7 +74,7 @@ const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaO
       <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-900">
         <ShieldCheck className="w-4 h-4 shrink-0" />
         <span><b>فقط پیشنهاد است.</b> تا هر بند را بررسی و «تأیید و ثبت» نکنید، هیچ نتیجه‌ای در سامانه ثبت نمی‌شود. نتیجه و شرح را می‌توانید تغییر دهید.</span>
-        <AiSourceBadge result={result} />
+        
       </div>
       {result.data.map((s) => {
         const d = drafts[s.agendaItemId];
@@ -241,8 +241,8 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
       {!isVoiceSupported() && <p className="text-[10.5px] text-amber-700 bg-amber-50 rounded-lg p-2">تبدیل زنده گفتار به متن در این مرورگر پشتیبانی نمی‌شود (Chrome یا Edge را استفاده کنید). صدا همچنان ضبط می‌شود و می‌توانید متن را وارد یا بارگذاری کنید.</p>}
       <textarea value={transcript + (interim ? ` ${interim}` : '')} onChange={(e) => setTranscript(e.target.value)} rows={transcript ? 6 : 3} placeholder="متن گفتار جلسه اینجا نوشته می‌شود؛ قابل ویرایش است..." className="w-full text-xs leading-6 p-3 bg-white border border-violet-200 rounded-2xl" />
       <div className="flex flex-wrap items-center gap-2">
-        <AiButton disabled={!transcript.trim() || recording} loading={busy === 'minutes'} onClick={async () => { setBusy('minutes'); try { const res = await minutesFromTranscript(meeting, transcript, currentUser.id); setMinutesResult(res); onMinutes(res.data); showToast('صورت‌جلسه', `پیش‌نویس از گفتار جلسه تهیه شد (${res.source === 'AI' ? 'هوش مصنوعی' : 'موتور محلی'}).`, 'success'); } finally { setBusy(null); } }}>تبدیل به صورت‌جلسه</AiButton>
-        {minutesResult && <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700"><AiSourceBadge result={minutesResult} />✓ متن در تب «پیش‌نمایش چاپ صورتجلسه» قرار گرفت</span>}
+        <AiButton disabled={!transcript.trim() || recording} loading={busy === 'minutes'} onClick={async () => { setBusy('minutes'); try { const res = await minutesFromTranscript(meeting, transcript, currentUser.id); setMinutesResult(res); onMinutes(res.data); showToast('صورت‌جلسه', 'پیش‌نویس از گفتار جلسه تهیه شد.', 'success'); } finally { setBusy(null); } }}>تبدیل به صورت‌جلسه</AiButton>
+        {minutesResult && <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700">✓ متن در تب «پیش‌نمایش چاپ صورتجلسه» قرار گرفت</span>}
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'extract'} onClick={async () => { setBusy('extract'); try { setExtracted(await extractResolutions({ text: transcript, agendas: meeting.agendaItems.filter((a) => !a.isRemoved), users: availableUsers, departments: mockDepartments }, currentUser.id)); } finally { setBusy(null); } }}>استخراج مصوبات از گفتار</AiButton>
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'outcomes'} onClick={async () => { setBusy('outcomes'); try { setOutcomes(await suggestAgendaOutcomes(meeting, transcript, currentUser.id)); } finally { setBusy(null); } }}>پیشنهاد نتیجه بندها از گفتار</AiButton>
         {audioUrl && <a href={audioUrl} download={`جلسه-${meeting.meetingNumber}.webm`} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 bg-white"><Download className="w-3.5 h-3.5" />دانلود فایل صوتی</a>}

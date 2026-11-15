@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Archive, BarChart3, Bell, BookOpen, Bot, Calendar, CalendarDays, ClipboardCheck, Command, CornerDownLeft, FileText, Gavel,
-  LayoutDashboard, Lightbulb, ListTodo, Loader2, Moon, Plus, Search, Send, Settings, Sparkles, Sun, Users, Zap,
+  LayoutDashboard, Lightbulb, ListTodo, Loader2, Moon, Plus, Search, Send, Settings, Sun, Users, Zap,
 } from 'lucide-react';
 import { AppRoute, useApp } from '../../context/AppContext';
 import { loadLocalCollection, loadLocalValue } from '../../services/localStore';
@@ -62,7 +62,7 @@ export const CommandPalette: React.FC = () => {
     if (hasPermission('CREATE_MEETING')) list.push({ id: 'new-meeting', title: 'ایجاد جلسه جدید', keywords: 'جلسه جدید بساز برنامه ریزی تشکیل جلسه', icon: Plus, group: 'اقدام', run: () => { openCreateMeetingModal(); close(); } });
     if (hasPermission('CREATE_RESOLUTION')) list.push({ id: 'new-resolution', title: 'ثبت مصوبه جدید', keywords: 'مصوبه جدید ثبت تصویب', icon: Gavel, group: 'اقدام', run: () => { openCreateResolutionModal(); close(); } });
     list.push({ id: 'new-proposal', title: 'ثبت مصوبه پیشنهادی', keywords: 'پیشنهاد جدید ایده ثبت پیشنهاد', icon: Lightbulb, group: 'اقدام', run: () => go('proposals') });
-    list.push({ id: 'ask-ai', title: 'پرسش از دستیار هوشمند', keywords: 'دستیار چت سوال هوش مصنوعی', icon: Bot, group: 'اقدام', run: () => { setIsAiAssistantOpen(true); close(); } });
+    list.push({ id: 'ask-ai', title: 'پرسش از دستیار', keywords: 'دستیار چت سوال پرسش', icon: Bot, group: 'اقدام', run: () => { setIsAiAssistantOpen(true); close(); } });
     list.push({ id: 'go-dashboard', title: 'داشبورد', keywords: 'خانه پیشخوان داشبورد', icon: LayoutDashboard, group: 'رفتن به', run: () => go('dashboard') });
     list.push({ id: 'go-meetings', title: 'مدیریت جلسات', keywords: 'جلسات فهرست جلسه', icon: Calendar, group: 'رفتن به', run: () => go('meetings') });
     list.push({ id: 'go-resolutions', title: 'بانک مصوبات', keywords: 'مصوبات فهرست', icon: FileText, group: 'رفتن به', run: () => go('resolutions') });
@@ -182,8 +182,8 @@ export const CommandPalette: React.FC = () => {
           )}
           {showAiRow && (
             <button className={`${rowClass(rows.length - 1)} bg-gradient-to-l from-indigo-50 to-white`} onMouseEnter={() => setActive(rows.length - 1)} onClick={() => runNaturalLanguage()}>
-              <span className="p-1.5 rounded-lg bg-gradient-to-br from-violet-600 to-sky-500 text-white"><Sparkles className="w-4 h-4" /></span>
-              <span className="flex-1 text-[13px] font-bold text-indigo-900">انجام با هوش مصنوعی: «{query}»</span>
+              <span className="p-1.5 rounded-lg bg-teal-700 text-white"><Send className="w-4 h-4" /></span>
+              <span className="flex-1 text-[13px] font-bold text-indigo-900">انجام این درخواست: «{query}»</span>
               <Zap className="w-3.5 h-3.5 text-amber-500" />
             </button>
           )}
@@ -191,7 +191,7 @@ export const CommandPalette: React.FC = () => {
         </div>
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-t border-slate-100 bg-slate-50 text-[10px] text-slate-500">
           <span className="flex items-center gap-1"><Command className="w-3 h-3" />K برای باز و بسته کردن · ↑↓ برای حرکت · Enter برای اجرا</span>
-          {aiCommand && <span className="flex items-center gap-1 text-indigo-600 font-bold"><Sparkles className="w-3 h-3" />درک زبان طبیعی فعال است</span>}
+          
         </div>
       </div>
     </div>

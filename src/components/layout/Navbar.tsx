@@ -20,6 +20,7 @@ import {
   ,Palette
   ,Droplets
   ,Clock3
+  ,Zap
 } from 'lucide-react';
 import { useApp, AppRoute } from '../../context/AppContext';
 import { requestDesktopNotifications } from '../../services/proactiveAlertService';
@@ -216,10 +217,10 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent('msb-open-command-palette'))}
-            title="فرمان سریع هوشمند (Ctrl+K)"
-            className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold text-white bg-gradient-to-l from-violet-600 via-indigo-600 to-sky-500 shadow-sm hover:shadow-md"
+            title="فرمان سریع (Ctrl+K)"
+            className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2.5 text-[11px] font-bold text-white bg-teal-700 hover:bg-teal-800 shadow-sm"
           >
-            <span aria-hidden>✨</span>
+            <Zap className="w-3.5 h-3.5" aria-hidden />
             <span>فرمان سریع</span>
             <kbd className="rounded bg-white/20 px-1 text-[9px]">Ctrl K</kbd>
           </button>

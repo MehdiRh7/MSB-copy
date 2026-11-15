@@ -22,7 +22,7 @@ export const OPERATIONAL_STORAGE_KEYS = [
   'archiveItems',           // محتوای بایگانی و ارتباط آن با پرونده‌های قبلی
   'notificationLetterSequence', // شمارنده شماره نامه ابلاغیه
   'smsMockLog',             // لاگ پیامک‌های شبیه‌سازی‌شده
-  'aiUsageLog',             // لاگ مصرف هوش مصنوعی
+  'aiUsageLog',             // (نسخه‌های قبلی)
   'riskAlertLedger',        // دفترچه هشدارهای ریسک صادرشده
 ] as const;
 
@@ -46,7 +46,7 @@ export const PRESERVED_STORAGE_KEYS = [
   'proposalWorkflowSettings',  // گردش پویای پیشنهادها (تنظیم سامانه)
   'dashboardLayouts',          // چیدمان شخصی داشبورد هر کاربر
   'userSigningKeys',           // کلیدهای امضای دیجیتال رمزنگاری‌شده کاربران
-  'aiSettings',                // تنظیمات ارائه‌دهنده هوش مصنوعی (فقط مدیر سیستم)
+  'aiSettings',                // (نسخه‌های قبلی)
 ] as const;
 
 /**

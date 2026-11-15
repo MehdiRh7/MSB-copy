@@ -1,21 +1,17 @@
 /**
- * لایه فراخوانی هوش مصنوعی در مرورگر. همه درخواست‌ها از پراکسی سمت سرور
- * (/api/ai/chat) عبور می‌کنند. اگر سرویس در دسترس نباشد و «موتور محلی»
- * فعال باشد، پاسخ از تحلیل قاعده‌محور خود سامانه می‌آید و صریحاً با برچسب
- * «موتور محلی» نمایش داده می‌شود — هیچ پاسخی به‌دروغ به AI نسبت داده نمی‌شود.
+ * لایه فراخوانی سرویس کمکی در مرورگر. همه درخواست‌ها از درگاه سرور (/api/assist/run)
+ * عبور می‌کنند؛ مرورگر نه نوع سرویس را می‌داند و نه کلیدی دارد. اگر سرویس در دسترس نباشد،
+ * همان قابلیت با تحلیل قاعده‌محور خود سامانه انجام می‌شود.
  */
-import { adoptReplacementModel, AiFeatureId, AiProviderId, getAiSettings, isAiFeatureEnabled, logAiUsage } from './aiSettings';
+import { AiFeatureId, isAiFeatureEnabled } from './aiSettings';
 
 export interface AiMessage { role: 'system' | 'user' | 'assistant'; content: string }
 
 export interface AiResult<T> {
   data: T;
+  /** فقط برای منطق داخلی (مثلاً Cache)؛ در رابط کاربری نمایش داده نمی‌شود. */
   source: 'AI' | 'LOCAL';
-  provider?: AiProviderId;
-  model?: string;
   latencyMs?: number;
-  /** توضیح برای کاربر وقتی پاسخ از موتور محلی آمده است. */
-  notice?: string;
 }
 
 export interface AiCallOptions<T> {
@@ -27,15 +23,13 @@ export interface AiCallOptions<T> {
   actorId?: string;
   parse: (text: string) => T;
   fallback: () => T;
-  /** برای تست اتصال: ارائه‌دهنده/مدل غیر از تنظیم فعال. */
-  override?: { provider: AiProviderId };
 }
 
 export class AiUnavailableError extends Error {}
 
-const SYSTEM_PREAMBLE = 'شما «دستیار هوشمند سامانه مدیریت جلسات و مصوبات سازمانی» هستید. همیشه به فارسی رسمی، دقیق، مختصر و حرفه‌ای پاسخ دهید. هرگز داده‌ای را که در متن داده نشده جعل نکنید؛ اگر اطلاعات کافی نیست صریحاً بگویید.';
+const SYSTEM_PREAMBLE = 'شما «دستیار سامانه مدیریت جلسات و مصوبات سازمانی» هستید. همیشه به فارسی رسمی، دقیق، مختصر و حرفه‌ای پاسخ دهید. هرگز داده‌ای را که در متن داده نشده جعل نکنید؛ اگر اطلاعات کافی نیست صریحاً بگویید. هرگز درباره اینکه چه مدل یا سرویسی هستید یا توسط چه شرکتی ساخته شده‌اید صحبت نکنید.';
 
-/** استخراج JSON از پاسخ مدل‌ها (حذف ```json و متن اضافه). */
+/** استخراج JSON از پاسخ (حذف ```json و متن اضافه). */
 export const extractJson = <T,>(text: string): T => {
   const cleaned = text.replace(/```(?:json)?/gi, '').trim();
   try { return JSON.parse(cleaned) as T; } catch { /* continue */ }
@@ -45,46 +39,28 @@ export const extractJson = <T,>(text: string): T => {
   throw new Error('پاسخ JSON معتبر نیست');
 };
 
-export const callAiRaw = async (options: { feature: AiFeatureId; system: string; messages: AiMessage[]; json?: boolean; maxTokens?: number; provider?: AiProviderId }) => {
-  const settings = getAiSettings();
-  const provider = options.provider || settings.activeProvider;
-  const config = settings.providers[provider];
-  const response = await fetch('/api/ai/chat', {
+export const callAiRaw = async (options: { system: string; messages: AiMessage[]; json?: boolean; maxTokens?: number }) => {
+  const response = await fetch('/api/assist/run', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      provider,
-      connection: config.connection,
-      model: config.model,
       messages: [{ role: 'system', content: `${SYSTEM_PREAMBLE}\n\n${options.system}` }, ...options.messages],
-      temperature: settings.temperature,
+      temperature: 0.4,
       maxTokens: options.maxTokens || 1200,
       json: options.json,
-      apiKey: config.apiKey,
     }),
   });
   const data = await response.json().catch(() => ({ ok: false, error: `HTTP ${response.status}` }));
   if (!response.ok || !data.ok) throw new AiUnavailableError(data.error || `HTTP ${response.status}`);
-  if (data.replacedModel && data.model) adoptReplacementModel(provider, String(data.model));
-  return { text: String(data.text), provider, model: String(data.model || config.model), latencyMs: Number(data.latencyMs || 0), replacedModel: data.replacedModel ? String(data.replacedModel) : undefined, fallbackFrom: data.fallbackFrom ? String(data.fallbackFrom) : undefined };
+  return { text: String(data.text), latencyMs: Number(data.latencyMs || 0) };
 };
 
-// وضعیت کلیدهای سمت سرور یک بار در هر بارگذاری خوانده می‌شود.
-let serverStatusPromise: Promise<Record<string, boolean> | null> | null = null;
-const cachedServerStatus = () => (serverStatusPromise ||= getAiServerStatus());
-
-/** آیا برای ارائه‌دهنده فعال کلیدی (سرور یا محلی) وجود دارد؟ */
-export const hasUsableKey = async (provider?: AiProviderId): Promise<boolean> => {
-  const settings = getAiSettings();
-  const id = provider || settings.activeProvider;
-  const config = settings.providers[id];
-  if (config.apiKey) return true;
-  const status = await cachedServerStatus();
-  if (!status) return true; // وضعیت نامعلوم: تلاش کن و در صورت خطا به موتور محلی برگرد.
-  return config.connection === 'OPENROUTER' ? Boolean(status.openrouter) : Boolean(status[id]);
-};
-
-window.addEventListener?.('msb-ai-settings-changed', () => { serverStatusPromise = null; });
+// در دسترس بودن سرویس یک بار در هر بارگذاری خوانده می‌شود.
+let availabilityPromise: Promise<boolean> | null = null;
+export const isAssistAvailable = (): Promise<boolean> => (availabilityPromise ||= fetch('/api/assist/status')
+  .then((r) => r.json())
+  .then((d) => d?.available !== false)
+  .catch(() => true)); // وضعیت نامعلوم: تلاش کن و در صورت خطا به تحلیل داخلی برگرد.
 
 /** قابلیت‌هایی که خروجی‌شان متن روایی برای خواندن انسان است (نه شناسه، تاریخ فرم یا عدد قابل محاسبه). */
 const PROSE_FEATURES = new Set<AiFeatureId>(['dashboardBrief', 'reportNarrative', 'assistant', 'minutes', 'riskInsight', 'writer', 'meetingRecorder', 'documentReader', 'proposalReview']);
@@ -103,68 +79,15 @@ const polishDeep = (value: unknown, key = ''): unknown => {
 export const polishProse = <T,>(feature: AiFeatureId, data: T): T => (PROSE_FEATURES.has(feature) ? polishDeep(data) as T : data);
 
 export const runAi = async <T,>(options: AiCallOptions<T>): Promise<AiResult<T>> => {
-  const settings = getAiSettings();
-  const local = (notice: string): AiResult<T> => ({ data: options.fallback(), source: 'LOCAL', notice });
-  if (!isAiFeatureEnabled(options.feature)) {
-    return local(settings.enabled ? 'این قابلیت توسط مدیر سیستم برای هوش مصنوعی غیرفعال شده؛ نتیجه از موتور هوشمند محلی است.' : 'هوش مصنوعی غیرفعال است؛ نتیجه از موتور هوشمند محلی است.');
-  }
-  if (!options.override && settings.localFallback && !(await hasUsableKey())) {
-    return local('کلید API برای ارائه‌دهنده فعال تنظیم نشده؛ نتیجه از موتور هوشمند محلی است. (تنظیمات ← هوش مصنوعی)');
-  }
-  const started = performance.now();
+  const local = (): AiResult<T> => ({ data: options.fallback(), source: 'LOCAL' });
+  if (!isAiFeatureEnabled(options.feature)) return local();
+  if (!(await isAssistAvailable())) return local();
   try {
-    const raw = await callAiRaw({ ...options, provider: options.override?.provider });
+    const raw = await callAiRaw(options);
     const data = polishProse(options.feature, options.parse(raw.text));
-    logAiUsage({ feature: options.feature, provider: raw.provider, model: raw.model, ok: true, latencyMs: raw.latencyMs || Math.round(performance.now() - started), userId: options.actorId || '' });
-    return { data, source: 'AI', provider: raw.provider, model: raw.model, latencyMs: raw.latencyMs };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'خطای ناشناخته';
-    logAiUsage({ feature: options.feature, provider: settings.activeProvider, model: settings.providers[settings.activeProvider].model, ok: false, latencyMs: Math.round(performance.now() - started), userId: options.actorId || '', error: message });
-    if (!settings.localFallback) throw new AiUnavailableError(message);
-    return local(`سرویس هوش مصنوعی در دسترس نبود (${message})؛ نتیجه از موتور هوشمند محلی است.`);
-  }
-};
-
-export const getAiServerStatus = async (): Promise<Record<string, boolean> | null> => {
-  try {
-    const response = await fetch('/api/ai/status');
-    const data = await response.json();
-    return data?.serverKeys || null;
+    return { data, source: 'AI', latencyMs: raw.latencyMs };
   } catch {
-    return null;
+    // سرویس در دسترس نبود یا پاسخ قابل استفاده نبود: تحلیل داخلی سامانه.
+    return local();
   }
-};
-
-/** توضیح فارسی خطاهای رایج ارائه‌دهنده‌ها برای «تست اتصال». */
-const toFa = (n: number) => String(n).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
-
-export const explainAiError = (message: string): string => {
-  const m = message.toLowerCase();
-  if (m.includes('api key not valid') || m.includes('invalid api key') || m.includes('incorrect api key') || m.includes('401')) return 'کلید API نامعتبر است. کلید را دوباره از سایت ارائه‌دهنده کپی کنید (بدون فاصله اضافه) و پس از ذخیره در Vercel، Redeploy کنید.';
-  if (m.includes('location is not supported') || m.includes('failed_precondition')) return 'ارائه‌دهنده این سرویس را برای منطقه سرور ارائه نمی‌دهد. ناحیه اجرای توابع Vercel را بررسی کنید یا از OpenRouter استفاده کنید.';
-  if (m.includes('http 504') || m.includes('زمان پاسخ‌گویی')) return 'کلید معتبر است اما مدل انتخابی در زمان مجاز پاسخ نداد (سرورهای Google کند یا شلوغ‌اند). چند دقیقه بعد دوباره امتحان کنید یا از فهرست مدل‌ها یک مدل سبک‌تر (مثلاً lite) انتخاب کنید؛ تا آن زمان موتور محلی پاسخ می‌دهد.';
-  if (m.includes('high demand') || m.includes('overloaded') || m.includes('503') || m.includes('unavailable')) return 'کلید شما معتبر است؛ فقط سرورهای Google برای این مدل فعلاً شلوغ‌اند (موقتی). سامانه خودکار دوباره تلاش می‌کند و به مدل دیگر Gemini می‌رود؛ اگر باز هم این پیام آمد، چند دقیقه بعد امتحان کنید یا از فهرست مدل‌ها مدل دیگری (مثلاً نسخه lite) انتخاب کنید. تا آن زمان موتور محلی پاسخ می‌دهد.';
-  if (m.includes('quota') || m.includes('resource_exhausted') || m.includes('429') || m.includes('rate limit')) {
-    const model = message.match(/model:\s*([A-Za-z0-9._-]+)/)?.[1];
-    const limit = message.match(/limit:\s*(\d+)/)?.[1];
-    const retry = message.match(/retry in\s+(?:(\d+)h)?(?:(\d+)m)?/i);
-    const hours = retry ? Number(retry[1] || 0) : 0, minutes = retry ? Number(retry[2] || 0) : 0;
-    const when = retry ? (hours ? `حدود ${toFa(hours)} ساعت${minutes ? ` و ${toFa(minutes)} دقیقه` : ''} دیگر` : minutes ? `حدود ${toFa(minutes)} دقیقه دیگر` : 'چند ثانیه دیگر') : 'کمی بعد';
-    const daily = /per\s*day|perday/i.test(message);
-    return `کلید شما معتبر است؛ ${daily ? 'سهمیه روزانه رایگان' : 'سهمیه دقیقه‌ای رایگان'}${model ? ` مدل «${model}»` : ''}${limit ? ` (${toFa(Number(limit))} درخواست)` : ''} تمام شده و ${when} دوباره باز می‌شود. سامانه خودکار مدل‌های دیگر Gemini (که سهمیه جداگانه دارند) را امتحان کرد و آن‌ها هم پاسخ ندادند. راه‌حل: از «دریافت مدل‌های در دسترس حساب» یک مدل lite انتخاب و ذخیره کنید، یا در Google AI Studio صورت‌حساب (Billing) را فعال کنید، یا کلید OpenRouter اضافه کنید. تا آن زمان موتور محلی پاسخ می‌دهد.`;
-  }
-  if (m.includes('not found') && m.includes('model')) return 'نام مدل در دسترس نیست. از فهرست مدل‌ها گزینه دیگری را انتخاب کنید.';
-  if (m.includes('کلید api برای این ارائه‌دهنده تنظیم نشده')) return 'کلید روی سرور پیدا نشد. در Vercel متغیر GEMINI_API_KEY (یا OPENROUTER_API_KEY) را تنظیم و حتماً Redeploy کنید.';
-  if (m.includes('http 500') || m.includes('http 404')) return 'سرویس هوش مصنوعی روی سرور در دسترس نیست. آخرین نسخه را Deploy کنید و دوباره امتحان کنید.';
-  return message;
-};
-
-export interface LiveModel { id: string; label: string; free: boolean }
-
-/** فهرست زنده مدل‌های در دسترس همین حساب از سرور. */
-export const fetchLiveModels = async (provider: AiProviderId, connection: 'DIRECT' | 'OPENROUTER'): Promise<LiveModel[]> => {
-  const response = await fetch(`/api/ai/models?provider=${provider}&connection=${connection}`);
-  const data = await response.json().catch(() => ({ ok: false, error: `HTTP ${response.status}` }));
-  if (!response.ok || !data.ok) throw new AiUnavailableError(data.error || `HTTP ${response.status}`);
-  return data.models || [];
 };

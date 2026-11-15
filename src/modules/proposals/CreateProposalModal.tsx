@@ -4,7 +4,7 @@ import { X, Lightbulb, Send } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { proposalService } from '../../services/proposalService';
 import { Proposal } from '../../types';
-import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature, VoiceInputButton } from '../../components/ai/AiKit';
+import { AiButton, AiTextAssist, useAiFeature, VoiceInputButton } from '../../components/ai/AiKit';
 import { draftProposal, textSimilarity } from '../../services/ai/aiService';
 import type { AiResult } from '../../services/ai/aiClient';
 
@@ -130,8 +130,8 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
           {aiWriter && (
             <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 via-white to-sky-50 p-3.5 space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-indigo-950">✨ ایده‌تان را در یک جمله بگویید؛ بقیه را هوش مصنوعی می‌نویسد</span>
-                <AiSourceBadge result={draftResult} />
+                <span className="text-xs font-extrabold text-indigo-950">ایده‌تان را در یک جمله بگویید؛ سامانه متن کامل پیشنهاد را آماده می‌کند</span>
+                
               </div>
               <div className="flex items-center gap-2">
                 <input value={idea} onChange={(e) => setIdea(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleDraft(); } }} placeholder="مثلاً: راه‌اندازی سامانه نوبت‌دهی آنلاین برای مراجعان شعب" className="flex-1 text-xs p-2.5 bg-white border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-400 focus:outline-none" />

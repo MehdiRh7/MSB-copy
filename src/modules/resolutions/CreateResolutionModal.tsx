@@ -26,7 +26,7 @@ import { FormStepTabs, FormErrorSummary, FormFieldError, focusField } from '../.
 import { buildFollowUpPlan } from '../../services/followUpService';
 import { Meeting } from '../../types';
 import { addDaysToJalaliDate, getCurrentJalaliDate } from '../../utils/date';
-import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
 import { suggestResolution, ResolutionSuggestion } from '../../services/ai/aiService';
 import { checkResolutionConflicts, ConflictFinding, KIND_LABEL } from '../../services/ai/aiInsights';
 import type { ResolutionPrefill } from '../../context/AppContext';
@@ -452,8 +452,8 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
               {aiResolution && (
                 <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-1.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] font-extrabold text-indigo-950">✨ متن اجرایی، مسئول، واحد، اولویت و مهلت را هوش مصنوعی پیشنهاد دهد</span>
-                    <div className="flex items-center gap-2"><AiSourceBadge result={suggestion} /><AiButton onClick={handleSuggest} loading={suggesting} disabled={!topicTitle.trim() && !requestDescription.trim()}>پیشنهاد هوشمند</AiButton></div>
+                    <span className="text-[11px] font-extrabold text-indigo-950">پیشنهاد خودکار متن اجرایی، مسئول، واحد، اولویت و مهلت</span>
+                    <div className="flex items-center gap-2"><AiButton onClick={handleSuggest} loading={suggesting} disabled={!topicTitle.trim() && !requestDescription.trim()}>پیشنهاد هوشمند</AiButton></div>
                   </div>
                   {suggestion?.data.rationale && <p className="text-[10.5px] text-slate-600">{suggestion.data.rationale} — همه موارد قابل ویرایش است.</p>}
                 </div>
@@ -474,7 +474,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                     <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-1.5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" />بررسی تکرار و تناقض با مصوبات قبلی</span>
-                        <div className="flex items-center gap-2"><AiSourceBadge result={conflicts} /><AiButton variant="soft" loading={checkingConflicts} onClick={() => { void runConflictCheck(); }} disabled={!topicTitle.trim() && !executionDescription.trim()}>بررسی کن</AiButton></div>
+                        <div className="flex items-center gap-2"><AiButton variant="soft" loading={checkingConflicts} onClick={() => { void runConflictCheck(); }} disabled={!topicTitle.trim() && !executionDescription.trim()}>بررسی کن</AiButton></div>
                       </div>
                       {conflicts && conflicts.data.length === 0 && <p className="text-[11px] text-emerald-700">✓ مصوبه تکراری یا متناقضی پیدا نشد.</p>}
                       {conflicts?.data.map((f) => (

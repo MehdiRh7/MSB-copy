@@ -7,7 +7,7 @@ import { Attachment } from '../../types';
 import { toPersianDigits } from '../../utils/formatters';
 import { todayJalali } from '../../utils/jalaliDate';
 import { buildAttachmentFromFile } from '../../utils/attachmentFile';
-import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
 import { draftFollowUp } from '../../services/ai/aiService';
 import { resolutionService } from '../../services/resolutionService';
 import type { AiResult } from '../../services/ai/aiClient';
@@ -84,7 +84,7 @@ export const RecordFollowUpForm: React.FC<RecordFollowUpFormProps> = ({ resoluti
     <div className="p-3.5 bg-amber-50/60 border border-amber-200/80 rounded-2xl space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="text-xs font-bold text-amber-950">ثبت پیگیری جدید</div>
-        {aiWriter && <div className="flex items-center gap-2"><AiSourceBadge result={draftResult} /><AiButton variant="soft" onClick={handleDraft} loading={drafting}>پیشنهاد متن پیگیری</AiButton></div>}
+        {aiWriter && <div className="flex items-center gap-2"><AiButton variant="soft" onClick={handleDraft} loading={drafting}>پیشنهاد متن پیگیری</AiButton></div>}
       </div>
 
       <div>

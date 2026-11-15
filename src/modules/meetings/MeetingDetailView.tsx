@@ -3,7 +3,7 @@ import { useApp } from '../../context/AppContext';
 import { meetingService, resolutionService, boardSecretariatService } from '../../services';
 import { Meeting, Resolution, AgendaItem, BoardMinutes, ResolutionNotice, MeetingOutcomeLetter } from '../../types';
 import { AgendaApprovalPanel, ApprovalProgress, MeetingWorkflowSummary } from './MeetingWorkflowPanel';
-import { AiButton, AiSourceBadge, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, AiTextAssist, useAiFeature } from '../../components/ai/AiKit';
 import { draftMinutes } from '../../services/ai/aiService';
 import { MeetingRecorder, MinutesExtraction } from './MeetingAiTools';
 import type { AiResult } from '../../services/ai/aiClient';
@@ -219,7 +219,7 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
     setBoardMinutes(minutesRes.data); setNotices(noticesRes.data); if (minutesRes.data) setMinutesContent(minutesRes.data.content); triggerRefresh();
   };
 
-  /** پیش‌نویس رسمی صورت‌جلسه از بندها، نتایج و مصوبات (AI یا موتور محلی). */
+  /** پیش‌نویس رسمی صورت‌جلسه از بندها، نتایج و مصوبات . */
   const handleAiMinutes = async () => {
     if (!meeting) return;
     setMinutesDrafting(true);
@@ -231,7 +231,7 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
         await refreshGovernance();
       }
       setMinutesContent(res.data);
-      showToast('صورت‌جلسه هوشمند', 'پیش‌نویس صورت‌جلسه تولید شد؛ پس از بازبینی ذخیره کنید.', 'success');
+      showToast('صورت‌جلسه', 'پیش‌نویس صورت‌جلسه تولید شد؛ پس از بازبینی ذخیره کنید.', 'success');
     } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'تولید پیش‌نویس انجام نشد.', 'error'); } finally { setMinutesDrafting(false); }
   };
 
@@ -776,8 +776,8 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
         <div className="space-y-3">
           <div className="no-print bg-white border border-slate-200 rounded-3xl p-5 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-sm font-extrabold text-slate-900">صورت‌جلسه تجمیعی هیأت‌مدیره</h3><p className="text-[11px] text-slate-500">پیش‌نویس، نهایی‌سازی سه نسخه و ابلاغ مصوبات (امضای اعضا و مدعوین لازم نیست)</p></div>{boardMinutes && <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-bold">{boardMinutes.status === 'FINALIZED' ? 'نهایی‌شده' : boardMinutes.status === 'SIGNED' ? 'تأییدشده — آماده نهایی‌سازی' : boardMinutes.status === 'WAITING_SIGNATURES' || boardMinutes.status === 'PARTIALLY_SIGNED' ? 'در انتظار تأیید' : 'پیش‌نویس'}</span>}</div>
-            {!boardMinutes && isSecretariat && <div className="flex flex-wrap gap-2"><button onClick={handleCreateMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">ایجاد پیش‌نویس صورت‌جلسه</button>{aiMinutes && <AiButton size="md" onClick={handleAiMinutes} loading={minutesDrafting}>نوشتن صورت‌جلسه با هوش مصنوعی</AiButton>}</div>}
-            {boardMinutes && boardMinutes.status === 'DRAFT' && isSecretariat && aiMinutes && <div className="flex flex-wrap items-center gap-2"><AiButton variant="soft" onClick={handleAiMinutes} loading={minutesDrafting}>بازنویسی کامل از روی نتایج جلسه</AiButton><AiSourceBadge result={minutesAiResult} /></div>}
+            {!boardMinutes && isSecretariat && <div className="flex flex-wrap gap-2"><button onClick={handleCreateMinutes} className="bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-bold">ایجاد پیش‌نویس صورت‌جلسه</button>{aiMinutes && <AiButton size="md" onClick={handleAiMinutes} loading={minutesDrafting}>نوشتن خودکار صورت‌جلسه</AiButton>}</div>}
+            {boardMinutes && boardMinutes.status === 'DRAFT' && isSecretariat && aiMinutes && <div className="flex flex-wrap items-center gap-2"><AiButton variant="soft" onClick={handleAiMinutes} loading={minutesDrafting}>بازنویسی کامل از روی نتایج جلسه</AiButton></div>}
             {boardMinutes && <>
               <textarea rows={minutesContent.split('\n').length > 6 ? 12 : 5} value={minutesContent} onChange={(event) => setMinutesContent(event.target.value)} disabled={boardMinutes.status !== 'DRAFT' || !isSecretariat} className="w-full text-xs leading-7 p-4 bg-slate-50 border border-slate-200 rounded-2xl disabled:opacity-80" />
               {boardMinutes.status === 'DRAFT' && isSecretariat && <AiTextAssist value={minutesContent} onChange={setMinutesContent} purpose="minutes" actorId={currentUser.id} />}

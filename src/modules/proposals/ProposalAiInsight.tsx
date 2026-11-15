@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle2, HelpCircle, Copy, Gauge } from 'lucide-react';
 import { Proposal } from '../../types';
-import { AiButton, AiSourceBadge, useAiFeature } from '../../components/ai/AiKit';
+import { AiButton, useAiFeature } from '../../components/ai/AiKit';
 import { analyzeProposal, ProposalAnalysis, RECOMMENDATION_LABELS } from '../../services/ai/aiService';
 import type { AiResult } from '../../services/ai/aiClient';
 import { toPersianDigits } from '../../utils/formatters';
@@ -23,7 +23,7 @@ export const ProposalAiInsight: React.FC<{ proposal: Proposal; allProposals: Pro
         <span className="font-extrabold text-indigo-950">تحلیل هوشمند پیشنهاد</span>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-slate-600" title="میزان کامل‌بودن اطلاعات پیشنهاد"><Gauge className="w-3.5 h-3.5" />کامل‌بودن {toPersianDigits(a.completeness)}٪</span>
-          <AiSourceBadge result={result} />
+          
         </div>
       </div>
       <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden"><div className={`h-full ${a.completeness >= 70 ? 'bg-emerald-500' : a.completeness >= 45 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${a.completeness}%` }} /></div>

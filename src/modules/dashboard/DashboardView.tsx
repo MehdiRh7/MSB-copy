@@ -16,7 +16,7 @@ import {
   Plus,
   Send,
   ShieldCheck,
-  Sparkles,
+  LayoutDashboard,
   TrendingUp,
 } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
@@ -75,7 +75,7 @@ export const DashboardView: React.FC = () => {
     return (
       <div className="flex min-h-[70vh] items-center justify-center">
         <section className="dash-empty">
-          <div className="dash-empty-icon"><Sparkles className="h-7 w-7" /></div>
+          <div className="dash-empty-icon"><LayoutDashboard className="h-7 w-7" /></div>
           <h1 className="text-xl font-black text-slate-900">{greeting()}، {currentUser.fullName}</h1>
           <p className="mx-auto mt-2 max-w-sm text-[13px] leading-7 text-slate-600">
             {canCreateMeeting ? 'هنوز جلسه‌ای ثبت نشده است. با برنامه‌ریزی اولین جلسه شروع کنید.' : 'هنوز موردی برای شما ثبت نشده است. می‌توانید پیشنهاد خود را ثبت کنید.'}

@@ -111,7 +111,7 @@ export const checkResolutionConflicts = async (draft: { topic: string; text: str
     if (similarity >= 0.35) return { resolution: r, kind: 'DUPLICATE' as const, similarity, reason: `${fa(Math.round(similarity * 100))}٪ هم‌پوشانی متنی با این مصوبه قبلی (${getResolutionExecutionMeta(r.executionStatus).label}).` };
     return { resolution: r, kind: 'RELATED' as const, similarity, reason: 'موضوع مرتبط؛ برای هماهنگی و جلوگیری از دوباره‌کاری بررسی شود.' };
   }).filter((f) => f.kind !== 'RELATED' || f.similarity >= 0.2);
-  if (candidates.length === 0) return { data: [], source: 'LOCAL', notice: 'مصوبه مشابهی در سامانه پیدا نشد.' };
+  if (candidates.length === 0) return { data: [], source: 'LOCAL' };
   return runAi({
     feature: 'conflictCheck',
     actorId,

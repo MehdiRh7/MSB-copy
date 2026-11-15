@@ -16,7 +16,7 @@ import {
 export const mockOrganizations: Organization[] = [
   { id: 'org-1', name: 'سازمان مرکزی فناوری و اطلاعات', type: 'INTERNAL' },
   { id: 'org-2', name: 'شرکت صنایع داده‌پردازی پایا (پیمانکار)', type: 'EXTERNAL_CONTRACTOR', contactPerson: 'مهندس رضایی', phone: '021-88776655' },
-  { id: 'org-3', name: 'پژوهشگاه تحول دیجیتال و هوش مصنوعی', type: 'SUBSIDIARY', contactPerson: 'دکتر علوی', phone: '021-22334455' },
+  { id: 'org-3', name: 'پژوهشگاه تحول دیجیتال', type: 'SUBSIDIARY', contactPerson: 'دکتر علوی', phone: '021-22334455' },
   { id: 'org-4', name: 'مرکز توسعه مدیریت و بهره‌وری دولتی', type: 'MINISTRY', contactPerson: 'مهندس فرهمند', phone: '021-66554433' },
 ];
 

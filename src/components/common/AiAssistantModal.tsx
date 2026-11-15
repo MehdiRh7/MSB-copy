@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   AlertCircle, ArrowLeft, BarChart3, Bot, CalendarDays, Check, ChevronDown,
   ChevronUp, ClipboardCheck, Copy, FileCheck2, ListFilter, LoaderCircle,
-  RotateCcw, Send, Sparkles, User as UserIcon, X,
+  RotateCcw, Send, MessageCircle, User as UserIcon, X,
 } from 'lucide-react';
 import {
   Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart,
@@ -13,7 +13,7 @@ import {
   ChatChartResult, ChatEntity, ChatResponse, ChatResultItem, chatService,
 } from '../../services/chatService';
 import { toPersianDigits } from '../../utils/formatters';
-import { AiSourceBadge, VoiceInputButton, useAiFeature } from '../ai/AiKit';
+import { VoiceInputButton, useAiFeature } from '../ai/AiKit';
 import { assistantAnswer, buildAssistantContext } from '../../services/ai/aiService';
 import { buildDashboardModel } from '../../modules/dashboard/dashboardData';
 import type { AiResult } from '../../services/ai/aiClient';
@@ -257,7 +257,7 @@ export const AiAssistantModal: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-4xl w-full h-[90vh] max-h-[820px] overflow-hidden flex flex-col">
         <div className="app-modal-header text-white p-3.5 sm:p-4 flex items-center justify-between shrink-0 shadow-xs">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-400 to-emerald-300 flex items-center justify-center text-slate-950 font-black shadow-sm shrink-0"><Sparkles className="w-5 h-5" /></div>
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-400 to-emerald-300 flex items-center justify-center text-slate-950 font-black shadow-sm shrink-0"><MessageCircle className="w-5 h-5" /></div>
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-extrabold text-white truncate">دستیار هوشمند اطلاعات سامانه مصوبات</h3>
@@ -292,7 +292,7 @@ export const AiAssistantModal: React.FC = () => {
                   <div className="flex items-center justify-between gap-3 border-b border-black/5 dark:border-white/5 pb-1.5">
                     <span className={`text-[10px] font-bold ${message.sender === 'user' ? 'text-teal-200' : message.isError ? 'text-rose-600 dark:text-rose-300' : 'text-teal-700 dark:text-teal-400'}`}>{message.sender === 'user' ? 'شما' : 'دستیار هوشمند'}</span>
                     <div className="flex items-center gap-2">
-                      {message.ai && <AiSourceBadge result={message.ai} />}
+                      
                       <span className={`text-[9px] ${message.sender === 'user' ? 'text-teal-200' : 'text-slate-400'}`}>{message.timestamp}</span>
                       {message.sender === 'bot' && <button onClick={() => handleCopy(message.text, message.id)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" title="کپی متن">{copiedId === message.id ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}</button>}
                     </div>

@@ -1,6 +1,6 @@
 /**
- * پراکسی سمت سرور هوش مصنوعی — تنها نقطه‌ای که با DeepSeek / Gemini / Grok
- * صحبت می‌کند.
+ * پراکسی سمت سرور موتور پیشنهاددهنده — تنها نقطه‌ای که با سرویس بیرونی صحبت می‌کند.
+ * ارائه‌دهنده و مدل در server/aiConfig.ts ثابت‌اند و به مرورگر گفته نمی‌شوند.
  *
  * چرا سمت سرور؟
  *  - کلید API در مرورگر کاربران پخش نمی‌شود (کلیدها از متغیرهای محیطی سرور
@@ -12,6 +12,8 @@
  * همین Handler هم در Vite (dev/preview) و هم در سرور Express تولید استفاده
  * می‌شود.
  */
+
+import { ENGINE_CHAIN } from './aiConfig.js';
 
 export type AiProviderId = 'gemini' | 'deepseek' | 'grok';
 export type AiConnectionMode = 'DIRECT' | 'OPENROUTER';
@@ -282,58 +284,62 @@ export const handleAiChat = async (body: AiProxyRequest, env: AiEnv): Promise<Ai
   }
 };
 
-export interface AiModelInfo { id: string; label: string; free: boolean }
+// ——————————————————— درگاه عمومی (آنچه مرورگر می‌بیند) ———————————————————
 
-/**
- * فهرست زنده مدل‌های در دسترس همین کلید/حساب — تا با منسوخ شدن مدل‌ها،
- * نام مدل‌ها در کد ثابت نماند.
- */
-export const handleAiModels = async (provider: AiProviderId, connection: AiConnectionMode, env: AiEnv, apiKey?: string): Promise<{ ok: boolean; models?: AiModelInfo[]; error?: string; status?: number }> => {
-  if (!['gemini', 'deepseek', 'grok'].includes(provider) || !['DIRECT', 'OPENROUTER'].includes(connection)) return { ok: false, error: 'درخواست نامعتبر است', status: 400 };
-  try {
-    if (connection === 'OPENROUTER') {
-      const response = await withTimeout(`${baseUrl(env, 'openrouter')}/v1/models`, { headers: { Accept: 'application/json' } }, 20_000);
-      const data: any = await response.json().catch(() => ({}));
-      if (!response.ok) return { ok: false, error: data?.error?.message || `HTTP ${response.status}`, status: response.status };
-      const vendor = provider === 'gemini' ? 'google/' : provider === 'deepseek' ? 'deepseek/' : 'x-ai/';
-      const models = (data?.data || [])
-        .filter((m: any) => String(m?.id || '').startsWith(vendor))
-        .map((m: any) => ({ id: String(m.id), label: String(m.name || m.id), free: String(m.id).endsWith(':free') || (Number(m?.pricing?.prompt) === 0 && Number(m?.pricing?.completion) === 0) }))
-        .sort((a: AiModelInfo, b: AiModelInfo) => Number(b.free) - Number(a.free));
-      return { ok: true, models };
-    }
-    if (provider !== 'gemini') return { ok: true, models: [] };
-    const key = serverKey(env, 'gemini', 'DIRECT') || apiKey?.trim();
-    if (!key) return { ok: false, error: 'کلید API برای این ارائه‌دهنده تنظیم نشده است', status: 401 };
-    const response = await withTimeout(`${baseUrl(env, 'gemini')}/v1beta/models?pageSize=200`, { headers: { 'x-goog-api-key': key } }, 20_000);
-    const data: any = await response.json().catch(() => ({}));
-    if (!response.ok) return { ok: false, error: data?.error?.message || `HTTP ${response.status}`, status: response.status };
-    const models = (data?.models || [])
-      .filter((m: any) => (m?.supportedGenerationMethods || []).includes('generateContent') && /gemini/i.test(String(m?.name || '')) && !/embedding|image|tts|audio|live/i.test(String(m?.name || '')))
-      .map((m: any) => ({ id: String(m.name).replace(/^models\//, ''), label: String(m.displayName || m.name), free: true }));
-    return { ok: true, models };
-  } catch (error: any) {
-    return { ok: false, error: error?.name === 'AbortError' ? 'زمان پاسخ‌گویی به پایان رسید' : (error?.message || 'خطای ناشناخته'), status: 502 };
-  }
+/** درخواست مرورگر: فقط متن‌ها و تنظیمات خروجی؛ ارائه‌دهنده، مدل و کلید از سرور تعیین می‌شود. */
+export interface PublicAssistRequest {
+  messages: AiChatMessage[];
+  temperature?: number;
+  maxTokens?: number;
+  json?: boolean;
+}
+/** پاسخ به مرورگر: هیچ نامی از ارائه‌دهنده یا مدل در آن نیست. */
+export interface PublicAssistResponse { ok: boolean; text?: string; latencyMs?: number; error?: string; status?: number }
+
+const selectEngine = (env: AiEnv) => ENGINE_CHAIN.find((option) => Boolean(serverKey(env, option.provider, option.connection)));
+
+/** آیا سرویس روی سرور پیکربندی شده است (بدون افشای نوع آن). */
+export const assistAvailable = (env: AiEnv) => Boolean(selectEngine(env));
+
+/** خطای داخلی ← پیام عمومی و بی‌نام برای مرورگر. */
+const publicError = (status: number | undefined, raw: string | undefined): string => {
+  const m = String(raw || '').toLowerCase();
+  if (status === 429 || m.includes('quota') || m.includes('resource_exhausted')) return 'سهمیه سرویس فعلاً تمام شده است.';
+  if (status === 504 || m.includes('زمان پاسخ')) return 'سرویس در زمان مجاز پاسخ نداد.';
+  if (status === 401 || status === 403 || m.includes('api key')) return 'سرویس روی سرور به‌درستی پیکربندی نشده است.';
+  return 'سرویس فعلاً در دسترس نیست.';
 };
 
-/** Middleware سازگار با Connect/Express برای مسیرهای /api/ai/*. */
+export const handlePublicAssist = async (body: PublicAssistRequest, env: AiEnv): Promise<PublicAssistResponse> => {
+  if (!body || typeof body !== 'object' || !Array.isArray(body.messages)) return { ok: false, error: 'درخواست نامعتبر است', status: 400 };
+  const engine = selectEngine(env);
+  if (!engine) return { ok: false, error: 'سرویس روی سرور پیکربندی نشده است.', status: 503 };
+  const result = await handleAiChat({
+    provider: engine.provider,
+    connection: engine.connection,
+    model: engine.model,
+    messages: body.messages,
+    temperature: typeof body.temperature === 'number' ? body.temperature : undefined,
+    maxTokens: typeof body.maxTokens === 'number' ? Math.min(body.maxTokens, 4000) : undefined,
+    json: Boolean(body.json),
+  }, env);
+  if (result.ok) return { ok: true, text: result.text, latencyMs: result.latencyMs };
+  // جزئیات فقط در لاگ سرور می‌ماند.
+  console.warn('[assist]', result.status, result.error);
+  return { ok: false, error: publicError(result.status, result.error), status: result.status && result.status >= 400 ? result.status : 502 };
+};
+
 export const createAiMiddleware = (env: AiEnv) => async (req: any, res: any, next: () => void) => {
   const url: string = req.url || '';
-  if (!url.startsWith('/api/ai/')) return next();
+  if (!url.startsWith('/api/assist/')) return next();
   const send = (status: number, payload: unknown) => {
     res.statusCode = status;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Cache-Control', 'no-store');
     res.end(JSON.stringify(payload));
   };
-  if (req.method === 'GET' && url.startsWith('/api/ai/status')) return send(200, { ok: true, serverKeys: aiServerStatus(env) });
-  if (req.method === 'GET' && url.startsWith('/api/ai/models')) {
-    const params = new URL(url, 'http://local').searchParams;
-    const result = await handleAiModels(params.get('provider') as AiProviderId, (params.get('connection') || 'DIRECT') as AiConnectionMode, env);
-    return send(result.ok ? 200 : (result.status || 500), result);
-  }
-  if (req.method !== 'POST' || !url.startsWith('/api/ai/chat')) return send(404, { ok: false, error: 'not found' });
+  if (req.method === 'GET' && url.startsWith('/api/assist/status')) return send(200, { ok: true, available: assistAvailable(env) });
+  if (req.method !== 'POST' || !url.startsWith('/api/assist/run')) return send(404, { ok: false, error: 'not found' });
   let raw = '';
   let size = 0;
   req.on('data', (chunk: Buffer) => {
@@ -343,9 +349,9 @@ export const createAiMiddleware = (env: AiEnv) => async (req: any, res: any, nex
   });
   req.on('end', async () => {
     if (res.writableEnded) return;
-    let body: AiProxyRequest;
+    let body: PublicAssistRequest;
     try { body = JSON.parse(raw || '{}'); } catch { return send(400, { ok: false, error: 'JSON نامعتبر' }); }
-    const result = await handleAiChat(body, env);
+    const result = await handlePublicAssist(body, env);
     send(result.ok ? 200 : (result.status || 500), result);
   });
 };

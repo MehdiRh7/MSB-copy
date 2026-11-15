@@ -11,22 +11,22 @@ import path from 'path';
 
 const out = mkdtempSync(path.join(tmpdir(), 'vercel-sim-'));
 writeFileSync(path.join(out, 'package.json'), '{"type":"module"}');
-const files = [...readdirSync('api/ai').map((f) => `api/ai/${f}`), 'server/aiProxy.ts'];
+const files = [...readdirSync('api/assist').map((f) => `api/assist/${f}`), 'server/aiProxy.ts', 'server/aiConfig.ts'];
 for (const file of files) {
   await build({ entryPoints: [file], outfile: path.join(out, file.replace(/\.ts$/, '.js')), format: 'esm', platform: 'node', bundle: false, logLevel: 'error' });
 }
 let failed = 0;
 const res = () => ({ code: 0, setHeader() {}, status(c) { this.code = c; return this; }, json(b) { this.body = b; return this; } });
-for (const file of readdirSync('api/ai')) {
+for (const file of readdirSync('api/assist')) {
   try {
-    const mod = await import(path.join(out, 'api/ai', file.replace(/\.ts$/, '.js')));
+    const mod = await import(path.join(out, 'api/assist', file.replace(/\.ts$/, '.js')));
     const r = res();
     await mod.default({ method: file.startsWith('status') ? 'GET' : 'POST', body: {} }, r);
     const ok = r.code > 0 && r.code < 500 && r.body && typeof r.body.ok === 'boolean';
-    console.log(`[${ok ? 'PASS' : 'FAIL'}] api/ai/${file} → ${r.code}`);
+    console.log(`[${ok ? 'PASS' : 'FAIL'}] api/assist/${file} → ${r.code}`);
     if (!ok) failed++;
   } catch (error) {
-    console.log(`[FAIL] api/ai/${file} → ${error.code || ''} ${error.message.split('\n')[0]}`);
+    console.log(`[FAIL] api/assist/${file} → ${error.code || ''} ${error.message.split('\n')[0]}`);
     failed++;
   }
 }
