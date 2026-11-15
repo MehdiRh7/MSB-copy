@@ -128,7 +128,7 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
   await page.locator('button[aria-label="چیدمان"]').first().click();
-  await page.locator('[role="dialog"] li', { hasText: 'خلاصه امروز' }).locator('button').first().click();
+  await page.locator('[role="dialog"] li', { hasText: 'خلاصه امروز' }).locator('button[role="switch"]').click();
   await page.keyboard.press('Escape');
   await page.mouse.click(10, 10);
   await page.reload({ waitUntil: 'networkidle' });
