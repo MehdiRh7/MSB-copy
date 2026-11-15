@@ -19,7 +19,8 @@ export type AiFeatureId =
   | 'extraction'      // استخراج مصوبه از متن
   | 'documentReader'  // خلاصه پیوست‌ها
   | 'meetingRecorder' // صورت‌جلسه از گفتار جلسه
-  | 'meetingScheduler'; // پیشنهاد زمان جلسه
+  | 'meetingScheduler' // پیشنهاد زمان جلسه
+  | 'reportBuilder';   // گزارش‌ساز با درخواست متنی
 
 /** همه قابلیت‌ها فعال‌اند؛ تا اضافه شدن بک‌اند، کنترلی در رابط کاربری وجود ندارد. */
 export const isAiFeatureEnabled = (_feature: AiFeatureId): boolean => true;
