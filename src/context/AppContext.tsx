@@ -217,7 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (knownNotificationIds.current) {
         const fresh = mine.filter((n) => !knownNotificationIds.current!.has(n.id));
         fresh.slice(0, 3).forEach((n) => {
-          showToast(`🔔 ${n.title}`, n.message, n.type === 'RISK_ALERT' || n.type === 'DEADLINE' ? 'warning' : 'info');
+          showToast(n.title, n.message, n.type === 'RISK_ALERT' || n.type === 'DEADLINE' ? 'warning' : 'info');
           showDesktopNotification(n.title, n.message);
         });
       }

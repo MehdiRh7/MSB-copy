@@ -246,10 +246,10 @@ export const MyTasksView: React.FC = () => {
                     <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                       {task.resolutionNumber}
                     </span>
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${statusBadge.bg}`}>
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${statusBadge.bg}`}>
                       {statusBadge.label}
                     </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pMeta.bg} ${pMeta.text} border ${pMeta.border}`}>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${pMeta.bg} ${pMeta.text} border ${pMeta.border}`}>
                       اولویت: {pMeta.label}
                     </span>
                   </div>
@@ -282,14 +282,14 @@ export const MyTasksView: React.FC = () => {
                   </div>
                 )}
 
-                <div className="space-y-1.5"><div className="flex items-center justify-between text-[11px] font-bold text-slate-600"><span>پیشرفت اجرای مصوبه</span><span>{toPersianDigits(task.progressPercent || 0)}٪</span></div><div className="h-2.5 rounded-full bg-slate-100 overflow-hidden"><div className="h-full bg-teal-600 rounded-full transition-all" style={{ width: `${task.progressPercent || 0}%` }} /></div>{task.lastAction && <div className="text-[11px] text-slate-600">آخرین اقدام: {task.lastAction}</div>}{task.obstacles && <div className="text-[11px] text-orange-700">موانع: {task.obstacles}</div>}</div>
+                <div className="space-y-1.5"><div className="flex items-center justify-between text-[12px] font-bold text-slate-600"><span>پیشرفت اجرای مصوبه</span><span>{toPersianDigits(task.progressPercent || 0)}٪</span></div><div className="h-2.5 rounded-full bg-slate-100 overflow-hidden"><div className="h-full bg-teal-600 rounded-full transition-all" style={{ width: `${task.progressPercent || 0}%` }} /></div>{task.lastAction && <div className="text-[12px] text-slate-600">آخرین اقدام: {task.lastAction}</div>}{task.obstacles && <div className="text-[12px] text-orange-700">موانع: {task.obstacles}</div>}</div>
 
                 <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 pt-2 border-t border-slate-100">
                   <div>تاریخ ارجاع: {toPersianDigits(task.referralDateJalali)}</div>
                   <div>مهلت اقدام: <strong className="text-slate-700">{toPersianDigits(task.deadlineJalali)}</strong></div>
                   <div>جلسه: {task.meetingTitle}</div>
                   {task.requiresVerification && (
-                    <div className="mr-auto text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                    <div className="mr-auto text-[12px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span>نیاز به صحه‌گذاری پس از اتمام</span>
                     </div>
@@ -304,7 +304,7 @@ export const MyTasksView: React.FC = () => {
           <table className="w-full min-w-[1000px] text-xs text-right">
             <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">شماره</th><th className="p-3">عنوان وظیفه</th><th className="p-3">جلسه</th><th className="p-3">مهلت</th><th className="p-3">پیشرفت</th><th className="p-3">اولویت</th><th className="p-3">وضعیت</th><th className="p-3">عملیات</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {tasks.map((task) => { const status = getTaskStatusBadge(task.status); const canReport = ['IN_PROGRESS', 'WAITING_RESPONSE', 'NEEDS_FOLLOW_UP', 'RETURNED', 'NEW', 'OVERDUE'].includes(task.status); return <tr key={task.id} onClick={() => setSelectedResolutionId(task.resolutionId)} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{task.resolutionNumber}</td><td className="p-3 font-bold text-slate-800">{task.resolutionTitle}</td><td className="p-3 text-slate-600">{task.meetingTitle}</td><td className="p-3">{toPersianDigits(task.deadlineJalali)}</td><td className="p-3"><div className="w-24"><div className="flex justify-between text-[10px] mb-1"><span>{toPersianDigits(task.progressPercent || 0)}٪</span></div><div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-teal-600" style={{ width: `${task.progressPercent || 0}%` }} /></div></div></td><td className="p-3">{getPriorityMeta(task.priority).label}</td><td className="p-3"><span className={`px-2 py-1 rounded-full border font-bold ${status.bg}`}>{status.label}</span></td><td className="p-3">{canReport && <button onClick={(event) => handleOpenProgressModal(event, task)} className="px-3 py-1.5 bg-teal-700 text-white rounded-lg font-bold">ثبت پیشرفت</button>}</td></tr>; })}
+              {tasks.map((task) => { const status = getTaskStatusBadge(task.status); const canReport = ['IN_PROGRESS', 'WAITING_RESPONSE', 'NEEDS_FOLLOW_UP', 'RETURNED', 'NEW', 'OVERDUE'].includes(task.status); return <tr key={task.id} onClick={() => setSelectedResolutionId(task.resolutionId)} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{task.resolutionNumber}</td><td className="p-3 font-bold text-slate-800">{task.resolutionTitle}</td><td className="p-3 text-slate-600">{task.meetingTitle}</td><td className="p-3">{toPersianDigits(task.deadlineJalali)}</td><td className="p-3"><div className="w-24"><div className="flex justify-between text-[11px] mb-1"><span>{toPersianDigits(task.progressPercent || 0)}٪</span></div><div className="h-1.5 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-teal-600" style={{ width: `${task.progressPercent || 0}%` }} /></div></div></td><td className="p-3">{getPriorityMeta(task.priority).label}</td><td className="p-3"><span className={`px-2 py-1 rounded-full border font-bold ${status.bg}`}>{status.label}</span></td><td className="p-3">{canReport && <button onClick={(event) => handleOpenProgressModal(event, task)} className="px-3 py-1.5 bg-teal-700 text-white rounded-lg font-bold">ثبت پیشرفت</button>}</td></tr>; })}
             </tbody>
           </table>
         </div>
@@ -351,7 +351,7 @@ export const MyTasksView: React.FC = () => {
               {completionFiles.length > 0 && (
                 <div className="space-y-1.5">
                   {completionFiles.map((file, index) => (
-                    <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 p-2 bg-white border border-slate-200 rounded-xl text-[11px]">
+                    <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 p-2 bg-white border border-slate-200 rounded-xl text-[12px]">
                       <span className="font-bold text-slate-700 truncate">{file.name}</span>
                       <div className="flex items-center gap-2 shrink-0">
                         <span className="text-slate-400">{formatFileSize(file.size)}</span>

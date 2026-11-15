@@ -409,7 +409,7 @@ export const ProposalsView: React.FC = () => {
                 <Icon className="w-3.5 h-3.5" />
                 <span>{label}</span>
                 {count > 0 && (
-                  <span className={`text-[9px] font-bold px-1.5 rounded-full ${activeTab === id ? 'bg-white/20' : 'bg-slate-100'}`}>
+                  <span className={`text-[11px] font-bold px-1.5 rounded-full ${activeTab === id ? 'bg-white/20' : 'bg-slate-100'}`}>
                     {toPersianDigits(count)}
                   </span>
                 )}
@@ -417,7 +417,7 @@ export const ProposalsView: React.FC = () => {
             ))}
           </div>
         )}
-        {activeTabInfo && <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[11px] leading-5 text-slate-600"><span className="font-bold text-slate-800">{activeTabInfo.label}: </span>{activeTabInfo.description}</div>}
+        {activeTabInfo && <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] leading-5 text-slate-600"><span className="font-bold text-slate-800">{activeTabInfo.label}: </span>{activeTabInfo.description}</div>}
       </div>
 
       {activeTab === 'OFFICE' && isOfficeManager && (
@@ -439,7 +439,7 @@ export const ProposalsView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px] text-right text-xs">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[11px]">
+                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[12px]">
                   <th className="py-2.5 px-3 font-semibold">عنوان</th>
                   <th className="py-2.5 px-3 font-semibold">ارائه‌دهنده</th>
                   <th className="py-2.5 px-3 font-semibold">تاریخ ثبت</th>
@@ -454,15 +454,15 @@ export const ProposalsView: React.FC = () => {
                   <tr key={p.id} className="hover:bg-slate-50/70">
                     <td className="py-3 px-3">
                       <div className="font-bold text-slate-800">{p.title}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{p.description}</div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">پیشنهاددهنده: {p.proposerName} — {p.proposerDepartmentName}</div>
-                      <div className="text-[10px] text-slate-600 mt-0.5"><span className="font-bold">اقدام بعدی:</span> {getNextAction(p.status)}</div>
-                      {p.assignedMeetingTitle && <div className="text-[10px] text-emerald-700 mt-0.5">جلسه: {p.assignedMeetingTitle}</div>}
+                      <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">{p.description}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">پیشنهاددهنده: {p.proposerName} — {p.proposerDepartmentName}</div>
+                      <div className="text-[11px] text-slate-600 mt-0.5"><span className="font-bold">اقدام بعدی:</span> {getNextAction(p.status)}</div>
+                      {p.assignedMeetingTitle && <div className="text-[11px] text-emerald-700 mt-0.5">جلسه: {p.assignedMeetingTitle}</div>}
                       {p.source === 'EXCEL_IMPORT' && (
-                        <div className="text-[10px] text-teal-700 mt-0.5">منبع ثبت: ورود از Excel{p.sourceLetterNumber ? ` — نامه ${toPersianDigits(p.sourceLetterNumber)}` : ''}</div>
+                        <div className="text-[11px] text-teal-700 mt-0.5">منبع ثبت: ورود از Excel{p.sourceLetterNumber ? ` — نامه ${toPersianDigits(p.sourceLetterNumber)}` : ''}</div>
                       )}
                       {p.status === 'CEO_ORDER_ISSUED' && p.ceoOrder && (
-                        <div className="text-[10px] text-purple-700 mt-0.5 font-bold">
+                        <div className="text-[11px] text-purple-700 mt-0.5 font-bold">
                           مسئول اجرا: {p.ceoOrder.assigneeName} — وضعیت اجرا: {CEO_ORDER_STATUS_LABEL[p.ceoOrder.status]}
                         </div>
                       )}
@@ -472,11 +472,11 @@ export const ProposalsView: React.FC = () => {
                       {toPersianDigits(p.dateJalali)}
                     </td>
                     <td className="py-3 px-3">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getStatusMeta(p.status).bg}`}>{getStatusMeta(p.status).label}</span>
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${getStatusMeta(p.status).bg}`}>{getStatusMeta(p.status).label}</span>
                     </td>
                     <td className="py-3 px-3">
                       {p.status === 'APPROVED' && (
-                        <button onClick={() => handleOpenConfirm(p)} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
+                        <button onClick={() => handleOpenConfirm(p)} className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
                           <FileCheck2 className="w-3.5 h-3.5" />
                           <span>تبدیل به تایید جلسه</span>
                         </button>
@@ -484,7 +484,7 @@ export const ProposalsView: React.FC = () => {
                       {p.status === 'RETURNED_BY_SECRETARY' && (
                         <div className="space-y-1.5 min-w-[210px]">
                           {p.managementDecisionNotes && (
-                            <div className="text-[10px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-1.5">
+                            <div className="text-[11px] text-rose-700 bg-rose-50 border border-rose-200 rounded-lg p-1.5">
                               دلیل برگشت دبیر جلسه: {p.managementDecisionNotes}
                             </div>
                           )}
@@ -493,22 +493,22 @@ export const ProposalsView: React.FC = () => {
                             value={decisionNotes[p.id] ?? p.managementDecisionNotes ?? ''}
                             onChange={(e) => setDecisionNotes((prev) => ({ ...prev, [p.id]: e.target.value }))}
                             placeholder="دلیل برگشت به پیشنهاددهنده..."
-                            className="w-full text-[11px] p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                            className="w-full text-[12px] p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
                           />
-                          <button onClick={() => handleForwardSecretaryReturn(p)} className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
+                          <button onClick={() => handleForwardSecretaryReturn(p)} className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-[12px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span>جهت اصلاح به پیشنهاددهنده</span>
                           </button>
                         </div>
                       )}
                       {p.status === 'RETURNED_FOR_REVISION' && p.proposerUserId === currentUser.id && (
-                        <button onClick={() => setResubmittingProposal(p)} className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
+                        <button onClick={() => setResubmittingProposal(p)} className="flex items-center gap-1.5 bg-orange-600 hover:bg-orange-700 text-white text-[12px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
                           <Edit3 className="w-3.5 h-3.5" />
                           <span>اصلاح و ارسال مجدد</span>
                         </button>
                       )}
                       {p.status === 'NO_BOARD_REQUIRED' && (
-                        <button onClick={() => handleRecoverProposal(p)} className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
+                        <button onClick={() => handleRecoverProposal(p)} className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-[12px] font-bold py-1.5 px-3 rounded-xl cursor-pointer">
                           <Undo2 className="w-3.5 h-3.5" />
                           <span>بازیابی</span>
                         </button>
@@ -530,7 +530,7 @@ export const ProposalsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCeoViewMode('cards')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${ceoViewMode === 'cards' ? 'bg-teal-800 text-white' : 'text-slate-600 hover:bg-white'}`}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold transition-colors cursor-pointer ${ceoViewMode === 'cards' ? 'bg-teal-800 text-white' : 'text-slate-600 hover:bg-white'}`}
                 >
                   <LayoutGrid className="w-3.5 h-3.5" />
                   <span>کارتی</span>
@@ -538,7 +538,7 @@ export const ProposalsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setCeoViewMode('grid')}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors cursor-pointer ${ceoViewMode === 'grid' ? 'bg-teal-800 text-white' : 'text-slate-600 hover:bg-white'}`}
+                  className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold transition-colors cursor-pointer ${ceoViewMode === 'grid' ? 'bg-teal-800 text-white' : 'text-slate-600 hover:bg-white'}`}
                 >
                   <Table2 className="w-3.5 h-3.5" />
                   <span>گرید</span>
@@ -564,7 +564,7 @@ export const ProposalsView: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-x-auto">
               <table className="w-full min-w-[900px] text-right text-xs">
                 <thead>
-                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[11px]">
+                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[12px]">
                     <th className="py-2.5 px-3 font-semibold w-8"></th>
                     <th className="py-2.5 px-3 font-semibold">عنوان و توضیحات</th>
                     <th className="py-2.5 px-3 font-semibold">پیشنهاددهنده</th>
@@ -582,9 +582,9 @@ export const ProposalsView: React.FC = () => {
                         </td>
                         <td className="py-3 px-3">
                           <div className="font-bold text-slate-800">{p.title}</div>
-                          <div className="text-[10px] text-slate-400 mt-0.5 line-clamp-2">{p.description}</div>
-                          <div className="text-[10px] font-bold text-teal-700 mt-0.5">{p.proposalNumber}</div>
-                          {p.source === 'EXCEL_IMPORT' && <div className="text-[10px] text-teal-700 mt-0.5">منبع ثبت: ورود از Excel</div>}
+                          <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">{p.description}</div>
+                          <div className="text-[11px] font-bold text-teal-700 mt-0.5">{p.proposalNumber}</div>
+                          {p.source === 'EXCEL_IMPORT' && <div className="text-[11px] text-teal-700 mt-0.5">منبع ثبت: ورود از Excel</div>}
                         </td>
                         <td className="py-3 px-3 text-slate-600">{p.proposerName} — {p.proposerDepartmentName}</td>
                         <td className="py-3 px-3 text-slate-600">{p.presenterName || '—'}</td>
@@ -596,13 +596,13 @@ export const ProposalsView: React.FC = () => {
                               value={decisionNotes[p.id] || ''}
                               onChange={(e) => setDecisionNotes((prev) => ({ ...prev, [p.id]: e.target.value }))}
                               placeholder="توضیحات تصمیم..."
-                              className="w-full text-[11px] p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                              className="w-full text-[12px] p-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 focus:outline-none"
                             />
                             <div className="flex flex-wrap items-center gap-1.5">
                               <button onClick={() => handleReview(p, 'APPROVED')} title="تایید" className="p-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer"><CheckCircle2 className="w-3.5 h-3.5" /></button>
                               <button onClick={() => handleReview(p, 'REJECTED')} title="رد" className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 cursor-pointer"><XCircle className="w-3.5 h-3.5" /></button>
                               <button onClick={() => handleCeoAlternative(p, 'RETURN')} title="برگشت جهت اصلاح" className="p-1.5 rounded-lg bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 cursor-pointer"><RotateCcw className="w-3.5 h-3.5" /></button>
-                              <button onClick={() => handleCeoAlternative(p, 'NO_BOARD_REQUIRED')} title="عدم نیاز به طرح" className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer text-[10px] font-bold px-2">عدم نیاز</button>
+                              <button onClick={() => handleCeoAlternative(p, 'NO_BOARD_REQUIRED')} title="عدم نیاز به طرح" className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer text-[11px] font-bold px-2">عدم نیاز</button>
                               <button
                                 onClick={() => setOrderFormOpen((prev) => ({ ...prev, [p.id]: !prev[p.id] }))}
                                 title="صدور دستور"
@@ -618,7 +618,7 @@ export const ProposalsView: React.FC = () => {
                         <tr>
                           <td colSpan={6} className="p-3 bg-purple-50 border-t border-purple-200">
                             <div className="space-y-2">
-                              <div className="text-[10px] font-bold text-purple-800">مشخصات دستور مستقیم مدیرعامل (فقط برای «صدور دستور»)</div>
+                              <div className="text-[11px] font-bold text-purple-800">مشخصات دستور مستقیم مدیرعامل (فقط برای «صدور دستور»)</div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                 <select value={orderAssignees[p.id] || ''} onChange={(e) => setOrderAssignees((prev) => ({ ...prev, [p.id]: e.target.value }))} className="text-xs p-2.5 bg-white border border-purple-200 rounded-xl">
                                   <option value="">مسئول دستور مدیرعامل...</option>
@@ -642,10 +642,10 @@ export const ProposalsView: React.FC = () => {
                 <input type="checkbox" checked={selectedIds.includes(p.id)} onChange={() => toggleSelect(p.id)} className="w-4 h-4 mt-1 text-teal-700 rounded-md cursor-pointer shrink-0" />
                 <div className="flex-1">
               <h4 className="text-sm font-bold text-slate-800">{p.title}</h4>
-              <div className="text-[10px] font-bold text-teal-700">{p.proposalNumber}</div>
+              <div className="text-[11px] font-bold text-teal-700">{p.proposalNumber}</div>
               <p className="text-xs text-slate-600">{p.description}</p>
-              {p.rationale && <p className="text-[11px] text-slate-500"><strong>ضرورت طرح:</strong> {p.rationale}</p>}
-              <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-slate-500">
+              {p.rationale && <p className="text-[12px] text-slate-500"><strong>ضرورت طرح:</strong> {p.rationale}</p>}
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-slate-500">
                 <span>پیشنهاددهنده: {p.proposerName} — {p.proposerDepartmentName}</span>
                 <span>ارائه‌دهنده: {p.presenterName || '—'}</span>
                 <span>تاریخ ثبت: {toPersianDigits(p.dateJalali)}</span>
@@ -655,7 +655,7 @@ export const ProposalsView: React.FC = () => {
                   </span>
                 )}
               </div>
-              <div className="rounded-lg border border-teal-100 bg-teal-50 px-2.5 py-2 text-[11px] text-teal-900"><span className="font-bold">اقدام بعدی: </span>{getNextAction(p.status)}</div>
+              <div className="rounded-lg border border-teal-100 bg-teal-50 px-2.5 py-2 text-[12px] text-teal-900"><span className="font-bold">اقدام بعدی: </span>{getNextAction(p.status)}</div>
               {proposalWorkflow.ceoReview && <ApprovalProgress policy={proposalWorkflow.ceoReview} decisions={p.ceoDecisions} />}
               <ProposalAiInsight proposal={p} allProposals={proposals} actorId={currentUser.id} onUseNote={(text) => setDecisionNotes((prev) => ({ ...prev, [p.id]: text }))} />
               <input
@@ -692,7 +692,7 @@ export const ProposalsView: React.FC = () => {
                   resubmitProposal). */}
               {orderFormOpen[p.id] && (
                 <div className="p-3 bg-purple-50 border border-purple-200 rounded-xl space-y-2">
-                  <div className="text-[10px] font-bold text-purple-800">مشخصات دستور مستقیم مدیرعامل (فقط برای «صدور دستور»)</div>
+                  <div className="text-[11px] font-bold text-purple-800">مشخصات دستور مستقیم مدیرعامل (فقط برای «صدور دستور»)</div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select value={orderAssignees[p.id] || ''} onChange={(e) => setOrderAssignees((prev) => ({ ...prev, [p.id]: e.target.value }))} className="text-xs p-2.5 bg-white border border-purple-200 rounded-xl">
                       <option value="">مسئول دستور مدیرعامل...</option>
@@ -714,7 +714,7 @@ export const ProposalsView: React.FC = () => {
               {issuedOrders.map((p) => (
                 <div key={p.id} className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 space-y-1.5">
                   <h4 className="text-sm font-bold text-slate-800">{p.title}</h4>
-                  <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-xl text-[11px] space-y-1">
+                  <div className="p-2.5 bg-purple-50 border border-purple-200 rounded-xl text-[12px] space-y-1">
                     <div>{p.ceoOrder!.text}</div>
                     <div>مسئول اجرا: {p.ceoOrder!.assigneeName} — مهلت: {toPersianDigits(p.ceoOrder!.deadlineJalali)}</div>
                     <div className="font-bold">
@@ -757,11 +757,11 @@ export const ProposalsView: React.FC = () => {
                 <input type="checkbox" checked={selectedIds.includes(p.id)} onChange={() => toggleSelect(p.id)} className="w-4 h-4 mt-1 text-teal-700 rounded-md cursor-pointer shrink-0" />
                 <h4 className="text-sm font-bold text-slate-800">{p.title}</h4>
               </div>
-              <div className="text-[10px] font-bold text-teal-700">{p.proposalNumber}</div>
+              <div className="text-[11px] font-bold text-teal-700">{p.proposalNumber}</div>
               <p className="text-xs text-slate-600">{p.description}</p>
-              <p className="text-[11px] text-slate-600"><strong>اقدام بعدی:</strong> {getNextAction(p.status)}</p>
+              <p className="text-[12px] text-slate-600"><strong>اقدام بعدی:</strong> {getNextAction(p.status)}</p>
               {proposalWorkflow.secretaryConfirmation && <ApprovalProgress policy={proposalWorkflow.secretaryConfirmation} decisions={p.secretaryDecisions} />}
-              <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-slate-500">
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-slate-500">
                 <span>پیشنهاددهنده: {p.proposerName} — {p.proposerDepartmentName}</span>
                 <span>ارائه‌دهنده: {p.confirmedPresenterName || p.presenterName || '—'}</span>
                 <span>تاریخ تبدیل به تایید جلسه: {toPersianDigits(p.confirmedDateJalali || '—')}</span>
@@ -809,20 +809,20 @@ export const ProposalsView: React.FC = () => {
             <div key={p.id} className="bg-white rounded-2xl p-4 shadow-xs border border-slate-100 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <h4 className="text-sm font-bold text-slate-800">{p.title}</h4>
-                <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${getStatusMeta(p.status).bg}`}>{getStatusMeta(p.status).label}</span>
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${getStatusMeta(p.status).bg}`}>{getStatusMeta(p.status).label}</span>
               </div>
               <p className="text-xs text-slate-600">{p.description}</p>
-              <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-slate-500">
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-slate-500">
                 <span>ارائه‌دهنده: {p.presenterName || '—'}</span>
                 <span>تاریخ ثبت: {toPersianDigits(p.dateJalali)}</span>
                 {p.source === 'EXCEL_IMPORT' && <span className="text-teal-700 font-bold">منبع ثبت: ورود از Excel</span>}
               </div>
               {p.managementDecisionNotes && (
-                <p className="text-[11px] text-slate-500">یادداشت تصمیم: {p.managementDecisionNotes}</p>
+                <p className="text-[12px] text-slate-500">یادداشت تصمیم: {p.managementDecisionNotes}</p>
               )}
               {p.ceoOrder && (
-                <div className="p-3 bg-purple-50 border border-purple-200 rounded-2xl text-[11px] space-y-1">
-                  <div className="font-extrabold text-purple-900">دستور مستقیم مدیرعامل</div>
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-2xl text-[12px] space-y-1">
+                  <div className="font-bold text-purple-900">دستور مستقیم مدیرعامل</div>
                   <div>{p.ceoOrder.text}</div>
                   <div>مسئول: {p.ceoOrder.assigneeName} — مهلت: {toPersianDigits(p.ceoOrder.deadlineJalali)} — وضعیت: {p.ceoOrder.status === 'PENDING' ? 'در انتظار اقدام' : p.ceoOrder.status === 'IN_PROGRESS' ? 'در حال اقدام' : 'انجام‌شده'}</div>
                   {p.ceoOrder.completionNotes && <div className="p-2 bg-white/70 border border-purple-100 rounded-lg"><span className="font-bold text-purple-900">توضیحات اقدام انجام‌شده: </span>{p.ceoOrder.completionNotes}</div>}
@@ -833,7 +833,7 @@ export const ProposalsView: React.FC = () => {
                         value={orderCompletionNotes[p.id] || ''}
                         onChange={(e) => setOrderCompletionNotes((prev) => ({ ...prev, [p.id]: e.target.value }))}
                         placeholder="توضیح دهید چه اقدامی انجام شد (برای اعلام انجام الزامی است)..."
-                        className="w-full text-[11px] p-2 bg-white border border-purple-200 rounded-lg"
+                        className="w-full text-[12px] p-2 bg-white border border-purple-200 rounded-lg"
                       />
                       <div className="flex gap-2">
                         {p.ceoOrder.status === 'PENDING' && <button onClick={() => handleOrderStatus(p, 'IN_PROGRESS')} className="bg-purple-700 text-white px-3 py-1.5 rounded-lg font-bold">شروع اقدام</button>}
@@ -851,7 +851,7 @@ export const ProposalsView: React.FC = () => {
                   <button onClick={() => handleResubmit(p)} className="bg-orange-600 text-white px-4 py-2 rounded-xl text-xs font-bold">ذخیره اصلاحات و ارسال مجدد</button>
                 </div>
               )}
-              {(p.history?.length || 0) > 0 && <details className="text-[11px] text-slate-500"><summary className="cursor-pointer font-bold">تاریخچه اقدامات ({toPersianDigits(p.history?.length || 0)})</summary><div className="mt-2 space-y-1">{p.history?.map((entry) => <div key={entry.id} className="p-2 bg-slate-50 rounded-lg">{entry.action} — {entry.actorName} — {toPersianDigits(entry.dateJalali)} {toPersianDigits(entry.timeString)}{entry.notes ? ` — ${entry.notes}` : ''}</div>)}</div></details>}
+              {(p.history?.length || 0) > 0 && <details className="text-[12px] text-slate-500"><summary className="cursor-pointer font-bold">تاریخچه اقدامات ({toPersianDigits(p.history?.length || 0)})</summary><div className="mt-2 space-y-1">{p.history?.map((entry) => <div key={entry.id} className="p-2 bg-slate-50 rounded-lg">{entry.action} — {entry.actorName} — {toPersianDigits(entry.dateJalali)} {toPersianDigits(entry.timeString)}{entry.notes ? ` — ${entry.notes}` : ''}</div>)}</div></details>}
             </div>
           ))}
         </div>
@@ -905,12 +905,12 @@ export const ProposalsView: React.FC = () => {
             </div>
             <p className="text-xs text-slate-600">{resubmittingProposal.title}</p>
             {resubmittingProposal.managementDecisionNotes && (
-              <p className="text-[11px] p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-orange-800">دلیل برگشت: {resubmittingProposal.managementDecisionNotes}</p>
+              <p className="text-[12px] p-2.5 bg-orange-50 border border-orange-200 rounded-xl text-orange-800">دلیل برگشت: {resubmittingProposal.managementDecisionNotes}</p>
             )}
 
             {resubmittingProposal.source === 'EXCEL_IMPORT' ? (
               <div className="space-y-3">
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[12px] text-slate-500">
                   این پیشنهاد از طریق Excel وارد شده است. برای اصلاح، یک فایل Excel اصلاح‌شده (با همان قالب ورود پیشنهادها، شامل یک ردیف) را دوباره بارگذاری کنید.
                 </p>
                 <label className="flex items-center justify-center gap-1.5 border-2 border-dashed border-slate-200 hover:border-orange-400 rounded-xl p-4 cursor-pointer text-xs font-bold text-slate-600">
@@ -923,17 +923,17 @@ export const ProposalsView: React.FC = () => {
                     onChange={(e) => { if (e.target.files?.[0]) handleResubmitExcelFile(e.target.files[0]); e.target.value = ''; }}
                   />
                 </label>
-                {resubmitExcelError && <p className="text-[11px] text-rose-600 font-bold">{resubmitExcelError}</p>}
+                {resubmitExcelError && <p className="text-[12px] text-rose-600 font-bold">{resubmitExcelError}</p>}
                 {resubmitExcelResult && (
                   resubmitExcelResult.rows[0]?.isValid ? (
-                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-800 space-y-1">
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[12px] text-emerald-800 space-y-1">
                       <div className="font-bold">ردیف معتبر است و آماده ارسال مجدد:</div>
                       <div>عنوان: {resubmitExcelResult.rows[0].title}</div>
                       <div>سازمان: {resubmitExcelResult.rows[0].matchedDepartment?.name}</div>
                       <div>ارائه‌دهنده: {resubmitExcelResult.rows[0].matchedPresenter?.fullName}</div>
                     </div>
                   ) : (
-                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-700 space-y-1">
+                    <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-[12px] text-rose-700 space-y-1">
                       <div className="font-bold">ردیف دارای خطا است:</div>
                       <ul className="list-disc pr-4">
                         {(resubmitExcelResult.rows[0]?.errors || ['ردیف معتبری در فایل یافت نشد.']).map((err, idx) => <li key={idx}>{err}</li>)}

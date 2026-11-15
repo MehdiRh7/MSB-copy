@@ -44,7 +44,7 @@ export const BulkSelectionBar: React.FC<BulkSelectionBarProps> = ({
 
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <label className="flex items-center gap-2 text-[11px] font-bold text-slate-600 cursor-pointer select-none">
+      <label className="flex items-center gap-2 text-[12px] font-bold text-slate-600 cursor-pointer select-none">
         <input
           ref={checkboxRef}
           type="checkbox"
@@ -57,14 +57,14 @@ export const BulkSelectionBar: React.FC<BulkSelectionBarProps> = ({
 
       {selectedCount > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-500">{toPersianDigits(selectedCount)} مورد انتخاب شده</span>
-          <button onClick={onApprove} className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-1.5 px-3 rounded-full cursor-pointer">
+          <span className="text-[12px] font-bold text-slate-500">{toPersianDigits(selectedCount)} مورد انتخاب شده</span>
+          <button onClick={onApprove} className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-bold py-1.5 px-3 rounded-full cursor-pointer">
             <CheckCircle2 className="w-3.5 h-3.5" />{approveLabel}
           </button>
-          <button onClick={onReject} className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold py-1.5 px-3 rounded-full cursor-pointer">
+          <button onClick={onReject} className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[12px] font-bold py-1.5 px-3 rounded-full cursor-pointer">
             <XCircle className="w-3.5 h-3.5" />{rejectLabel}
           </button>
-          <button onClick={onClear} className="text-[11px] font-bold text-slate-500 hover:text-slate-700 px-2 cursor-pointer">لغو انتخاب</button>
+          <button onClick={onClear} className="text-[12px] font-bold text-slate-500 hover:text-slate-700 px-2 cursor-pointer">لغو انتخاب</button>
         </div>
       )}
     </div>

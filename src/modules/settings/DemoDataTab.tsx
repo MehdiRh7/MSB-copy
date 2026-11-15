@@ -41,7 +41,7 @@ export const DemoDataTab: React.FC = () => {
         <div className="flex items-start gap-3">
           <span className="dash-section-icon"><Database className="h-4 w-4" /></span>
           <div>
-            <h2 className="text-sm font-extrabold text-slate-800">داده نمایشی دمو</h2>
+            <h2 className="text-sm font-bold text-slate-800">داده نمایشی دمو</h2>
             <p className="mt-1 text-xs leading-6 text-slate-500">یک گردش کامل و قابل کلیک شامل پیشنهاد، جلسه، مصوبه در حال اجرا، مصوبه معوق، مورد در انتظار امضا، ابلاغیه، وظیفه مجری و مورد در انتظار صحه‌گذاری. همه رکوردها شناسه «demo-» دارند و در همین مرورگر (localStorage) ذخیره می‌شوند.</p>
           </div>
         </div>
@@ -65,16 +65,16 @@ export const DemoDataTab: React.FC = () => {
 
         {confirmReset && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4">
-            <p className="text-xs font-extrabold text-amber-900">محدوده بازنشانی</p>
-            <p className="mt-1 text-[11px] leading-6 text-amber-900/80">فقط رکوردهای زیر حذف می‌شوند. {totalManual > 0 ? `${toPersianDigits(totalManual)} رکورد ثبت‌شده توسط کاربران` : 'رکوردهای ثبت‌شده توسط کاربران'}، کاربران، ساختار سازمانی و تنظیمات دست‌نخورده می‌مانند. تغییراتی که روی رکوردهای نمایشی انجام داده‌اید نیز حذف می‌شود.</p>
+            <p className="text-xs font-bold text-amber-900">محدوده بازنشانی</p>
+            <p className="mt-1 text-[12px] leading-6 text-amber-900/80">فقط رکوردهای زیر حذف می‌شوند. {totalManual > 0 ? `${toPersianDigits(totalManual)} رکورد ثبت‌شده توسط کاربران` : 'رکوردهای ثبت‌شده توسط کاربران'}، کاربران، ساختار سازمانی و تنظیمات دست‌نخورده می‌مانند. تغییراتی که روی رکوردهای نمایشی انجام داده‌اید نیز حذف می‌شود.</p>
             <ul className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
               {DEMO_COLLECTION_KEYS.filter((k) => demoCounts[k] > 0).map((key) => (
-                <li key={key} className="flex items-center justify-between rounded-lg bg-white/80 px-2.5 py-1.5 text-[11px]"><span className="text-slate-600">{DEMO_COLLECTION_LABELS[key]}</span><strong className="text-slate-900">{toPersianDigits(demoCounts[key])}</strong></li>
+                <li key={key} className="flex items-center justify-between rounded-lg bg-white/80 px-2.5 py-1.5 text-[12px]"><span className="text-slate-600">{DEMO_COLLECTION_LABELS[key]}</span><strong className="text-slate-900">{toPersianDigits(demoCounts[key])}</strong></li>
               ))}
             </ul>
             <div className="mt-3 flex flex-wrap justify-end gap-2">
               <button onClick={() => setConfirmReset(false)} className="rounded-xl px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-white">انصراف</button>
-              <button onClick={handleReset} disabled={busy !== null} aria-busy={busy === 'reset'} className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-xs font-extrabold text-white shadow-sm hover:bg-red-700 disabled:opacity-50">
+              <button onClick={handleReset} disabled={busy !== null} aria-busy={busy === 'reset'} className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-red-700 disabled:opacity-50">
                 {busy === 'reset' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eraser className="h-4 w-4" />}حذف {toPersianDigits(totalDemo)} رکورد نمایشی
               </button>
             </div>
@@ -83,7 +83,7 @@ export const DemoDataTab: React.FC = () => {
       </section>
 
       <section className="app-panel p-5">
-        <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[var(--app-primary)]" /><h3 className="text-xs font-extrabold text-slate-800">داده‌های فعلی این مرورگر</h3></div>
+        <div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-[var(--app-primary)]" /><h3 className="text-xs font-bold text-slate-800">داده‌های فعلی این مرورگر</h3></div>
         <table className="dash-table mt-3">
           <thead><tr><th>مجموعه</th><th>دستی</th><th>نمایشی</th></tr></thead>
           <tbody>
@@ -93,7 +93,7 @@ export const DemoDataTab: React.FC = () => {
             {totalDemo + totalManual === 0 && <tr><td colSpan={3} className="text-center text-slate-400">هنوز داده‌ای ثبت نشده است.</td></tr>}
           </tbody>
         </table>
-        <p className="mt-3 text-[11px] leading-6 text-slate-500">بارگذاری مجدد فقط رکوردهای نمایشی را بازسازی می‌کند و داده دستی را پاک نمی‌کند.</p>
+        <p className="mt-3 text-[12px] leading-6 text-slate-500">بارگذاری مجدد فقط رکوردهای نمایشی را بازسازی می‌کند و داده دستی را پاک نمی‌کند.</p>
       </section>
     </div>
   );

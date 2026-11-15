@@ -145,7 +145,7 @@ const UPLOADED_PNG = Buffer.from(
         steps: [
           { id: 'sg1', signerUserId: 'user-17', signerName: 'مسئول دفتر', signerTitle: 'مسئول دفتر مدیرعامل', signerRole: 'OFFICE_MANAGER', order: 1, status: 'SIGNED', signedDateJalali: '1405/06/25', signedTimeString: '۰۹:۰۰' },
           { id: 'sg2', signerUserId: 'user-16', signerName: 'مدیرعامل', signerTitle: 'مدیرعامل', signerRole: 'CEO', order: 2, status: 'SIGNED', signedDateJalali: '1405/06/25', signedTimeString: '۰۹:۱۰' },
-          { id: 'sg3', signerUserId: 'user-admin', signerName: 'مدیر کل سیستم (Admin)', signerTitle: 'راهبر ارشد سامانه مصوبات', signerRole: 'ADMIN', order: 3, status: 'PENDING' },
+          { id: 'sg3', signerUserId: 'user-admin', signerName: 'مدیر سیستم', signerTitle: 'راهبر ارشد سامانه مصوبات', signerRole: 'ADMIN', order: 3, status: 'PENDING' },
         ],
       },
     };
@@ -230,7 +230,7 @@ const UPLOADED_PNG = Buffer.from(
   if (documentPages.length) {
     const doc = documentPages[0];
     const text = await doc.locator('body').innerText();
-    check('CR-E Test3 هر سه امضاکننده روی سند مصوبه هستند', text.includes('مسئول دفتر') && text.includes('مدیرعامل') && text.includes('مدیر کل سیستم'));
+    check('CR-E Test3 هر سه امضاکننده روی سند مصوبه هستند', text.includes('مسئول دفتر') && text.includes('مدیرعامل') && text.includes('مدیر سیستم'));
     check('CR-E Test3 تصویر هر سه امضا روی سند درج شده است', (await doc.locator('img[alt^="امضای"]').count()) === 3);
     await doc.close();
   }

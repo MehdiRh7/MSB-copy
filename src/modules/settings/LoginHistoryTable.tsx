@@ -53,7 +53,7 @@ export const LoginHistoryTable: React.FC = () => {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[700px] text-right text-xs">
           <thead>
-            <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[11px]">
+            <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[12px]">
               <th className="py-2.5 px-3 font-semibold">کاربر</th>
               <th className="py-2.5 px-3 font-semibold">تاریخ و زمان</th>
               <th className="py-2.5 px-3 font-semibold">IP</th>
@@ -71,7 +71,7 @@ export const LoginHistoryTable: React.FC = () => {
                 <td className="py-3 px-3 text-slate-600" dir="ltr">{h.ip}</td>
                 <td className="py-3 px-3 text-slate-600">{h.device}</td>
                 <td className="py-3 px-3">
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${h.status === 'SUCCESS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${h.status === 'SUCCESS' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
                     {h.status === 'SUCCESS' ? 'موفق' : 'ناموفق'}
                   </span>
                 </td>

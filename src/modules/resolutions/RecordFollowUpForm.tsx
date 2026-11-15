@@ -48,7 +48,7 @@ export const RecordFollowUpForm: React.FC<RecordFollowUpFormProps> = ({ resoluti
   // here too — and again in the service, which is the real gate.
   if (!hasPermission('MANAGE_RESOLUTION_FOLLOWUP')) {
     return (
-      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[11px] text-slate-500">
+      <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-[12px] text-slate-500">
         شما فقط مجوز مشاهده پیگیری را دارید و امکان ثبت پیگیری برای شما فعال نیست.
       </div>
     );

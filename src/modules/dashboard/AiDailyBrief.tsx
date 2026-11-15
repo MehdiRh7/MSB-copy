@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, ClipboardList, RefreshCw } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { User } from '../../types';
 import { useAiFeature } from '../../components/ai/AiKit';
 import { dashboardBrief, DailyBrief } from '../../services/ai/aiService';
@@ -16,7 +16,7 @@ const AUTO_REFRESH_MS = 2 * 60 * 60 * 1000;
 interface CachedBrief { res: AiResult<DailyBrief>; sig: string; at: number }
 
 /**
- * «خلاصه هوشمند امروز» — روزی یک بار برای هر کاربر تولید و در مرورگر Cache می‌شود؛
+ * «خلاصه امروز» — روزی یک بار برای هر کاربر تولید و در مرورگر Cache می‌شود؛
  * تغییرات کارتابل حداکثر هر ۲ ساعت یک درخواست جدید می‌سازند. دکمه تازه‌سازی همیشه فوری است.
  */
 export const AiDailyBrief: React.FC<{ user: User; model: DashboardModel; onOpenTodo: () => void }> = ({ user, model, onOpenTodo }) => {
@@ -51,33 +51,23 @@ export const AiDailyBrief: React.FC<{ user: User; model: DashboardModel; onOpenT
 
   if (!enabled || !model.hasAnyData) return null;
   return (
-    <section className="ai-brief relative overflow-hidden rounded-3xl p-4 sm:p-5 text-white shadow-lg bg-gradient-to-l from-[#0b2a5b] via-[#1e40af] to-[#6d28d9]">
-      <div className="pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full bg-sky-400/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-20 right-10 h-56 w-56 rounded-full bg-fuchsia-400/20 blur-3xl" />
-      <div className="relative flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="rounded-2xl bg-white/15 p-2"><ClipboardList className="h-5 w-5" /></span>
-          <div>
-            <div className="text-[11px] font-bold text-blue-100">خلاصه هوشمند امروز</div>
-            {loading && !result ? <div className="mt-1 h-4 w-64 animate-pulse rounded bg-white/20" /> : <h2 className="text-sm sm:text-base font-extrabold leading-7">{result?.data.headline}</h2>}
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          
-          <button onClick={() => generate(true)} disabled={loading} title="تولید دوباره" aria-label="تولید دوباره خلاصه" className="rounded-xl bg-white/10 p-2 hover:bg-white/20 disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></button>
-        </div>
-      </div>
+    <section className="db-card h-full">
+      <header className="db-card-head">
+        <h2>خلاصه امروز</h2>
+        <button onClick={() => generate(true)} disabled={loading} title="به‌روزرسانی خلاصه" aria-label="به‌روزرسانی خلاصه" className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-50"><RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} /></button>
+      </header>
+      {loading && !result ? <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100" /> : <p className="text-sm font-bold leading-7 text-slate-800">{result?.data.headline}</p>}
       {result && (
-        <div className="relative mt-3 grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
-          <ul className="space-y-1.5 text-[12px] text-blue-50">
-            {result.data.bullets.map((bullet) => <li key={bullet} className="flex gap-2"><span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-300" />{bullet}</li>)}
+        <>
+          <ul className="mt-2 space-y-1.5 text-[13px] leading-6 text-slate-600">
+            {result.data.bullets.map((bullet) => <li key={bullet} className="flex gap-2"><span className="mt-2.5 h-1 w-1 shrink-0 rounded-full bg-slate-400" />{bullet}</li>)}
           </ul>
           {result.data.focus && (
-            <button onClick={onOpenTodo} className="flex items-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-[12px] font-extrabold text-indigo-900 shadow hover:bg-blue-50">
-              <span>🎯 {result.data.focus}</span><ArrowLeft className="h-4 w-4 shrink-0" />
+            <button onClick={onOpenTodo} className="mt-3 inline-flex items-center gap-1.5 text-[13px] font-bold text-[var(--app-primary)] hover:underline">
+              {result.data.focus}<ArrowLeft className="h-4 w-4 shrink-0" />
             </button>
           )}
-        </div>
+        </>
       )}
     </section>
   );

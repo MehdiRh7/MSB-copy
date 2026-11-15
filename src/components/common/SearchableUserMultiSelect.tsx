@@ -40,13 +40,13 @@ export const SearchableUserMultiSelect: React.FC<SearchableUserMultiSelectProps>
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-[11px] font-bold text-slate-700">{label}</label>
-        <span className="text-[10px] text-slate-400">{selectedIds.length} نفر</span>
+        <label className="text-[12px] font-bold text-slate-700">{label}</label>
+        <span className="text-[11px] text-slate-400">{selectedIds.length} نفر</span>
       </div>
       {selectedUsers.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {selectedUsers.map((user) => (
-            <span key={user.id} className="inline-flex items-center gap-1 bg-teal-50 text-teal-900 border border-teal-200 text-[10px] py-1 px-2 rounded-full">
+            <span key={user.id} className="inline-flex items-center gap-1 bg-teal-50 text-teal-900 border border-teal-200 text-[11px] py-1 px-2 rounded-full">
               {user.fullName}
               <button type="button" onClick={() => toggle(user.id)} className="text-teal-700 hover:text-rose-600" aria-label={`حذف ${user.fullName}`}>
                 <X className="w-3 h-3" />
@@ -64,7 +64,7 @@ export const SearchableUserMultiSelect: React.FC<SearchableUserMultiSelectProps>
           const selected = selectedIds.includes(user.id);
           return (
             <button key={user.id} type="button" onClick={() => toggle(user.id)} className={`p-2 rounded-xl border text-right flex items-center justify-between ${selected ? 'border-teal-500 bg-teal-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-              <span><span className="block text-[11px] font-bold text-slate-800">{user.fullName}</span><span className="block text-[9px] text-slate-500">{user.title}</span></span>
+              <span><span className="block text-[12px] font-bold text-slate-800">{user.fullName}</span><span className="block text-[11px] text-slate-500">{user.title}</span></span>
               {selected && <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />}
             </button>
           );

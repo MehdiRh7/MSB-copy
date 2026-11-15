@@ -108,8 +108,8 @@ export const InfographicsView: React.FC = () => {
                 <span className={`igs-icon igs-icon-sm ${tone}`}><Icon strokeWidth={2.2} /></span>
                 <span className="igs-num igs-num-sm">{toPersianDigits(stage.id)}</span>
                 <span className="min-w-0 flex-1 text-right">
-                  <b className="block text-[14px] font-black text-[#0b2a8a]">{stage.title}</b>
-                  <small className="block text-[12px] leading-6 text-slate-600">{stage.description}</small>
+                  <b className="block text-[14px] font-bold text-[#0b2a8a]">{stage.title}</b>
+                  <small className="block text-[13px] leading-6 text-slate-600">{stage.description}</small>
                 </span>
               </button>
             </li>

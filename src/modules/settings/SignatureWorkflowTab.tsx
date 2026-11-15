@@ -72,14 +72,14 @@ export const SignatureWorkflowTab: React.FC = () => {
           <PenTool className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-xs font-extrabold text-slate-800">تنظیمات گردش امضا</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <h3 className="text-xs font-bold text-slate-800">تنظیمات گردش امضا</h3>
+          <p className="text-[12px] text-slate-500 mt-0.5">
             تعیین امضاکننده هر مرحله. تعداد و ترتیب مراحل تغییر نمی‌کند و مراحل ترتیبی همچنان به‌ترتیب انجام می‌شوند.
           </p>
         </div>
       </div>
 
-      <div className="p-3 rounded-2xl bg-sky-50 border border-sky-200 text-[11px] text-sky-900 flex items-start gap-2">
+      <div className="p-3 rounded-2xl bg-sky-50 border border-sky-200 text-[12px] text-sky-900 flex items-start gap-2">
         <Info className="w-4 h-4 shrink-0 mt-0.5" />
         <span>
           تغییر امضاکننده فقط روی درخواست‌های امضای <strong>جدید</strong> اثر می‌گذارد. پرونده‌هایی که از قبل در گردش هستند،
@@ -90,7 +90,7 @@ export const SignatureWorkflowTab: React.FC = () => {
       {workflows.map(([workflowName, stages]) => (
         <div key={workflowName} className="rounded-2xl border border-slate-200 overflow-hidden">
           <div className="bg-slate-50 px-4 py-2.5 border-b border-slate-200">
-            <h4 className="text-xs font-extrabold text-slate-800">{workflowName}</h4>
+            <h4 className="text-xs font-bold text-slate-800">{workflowName}</h4>
           </div>
 
           <div className="p-4 space-y-3">
@@ -107,16 +107,16 @@ export const SignatureWorkflowTab: React.FC = () => {
                   <div className={`p-3.5 rounded-2xl border ${isDirty ? 'border-teal-300 bg-teal-50/40' : 'border-slate-200 bg-white'}`}>
                     <div className="flex flex-wrap items-start justify-between gap-2 mb-2.5">
                       <div>
-                        <div className="text-xs font-extrabold text-slate-800">{stage.title}</div>
-                        <p className="text-[10px] text-slate-500 mt-0.5 max-w-xl leading-5">{stage.description}</p>
+                        <div className="text-xs font-bold text-slate-800">{stage.title}</div>
+                        <p className="text-[11px] text-slate-500 mt-0.5 max-w-xl leading-5">{stage.description}</p>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {stage.sequential && stage.order && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                             ترتیب: {toPersianDigits(stage.order)}
                           </span>
                         )}
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {stage.sequential ? 'ترتیبی' : 'مستقل'}
                         </span>
                       </div>
@@ -124,7 +124,7 @@ export const SignatureWorkflowTab: React.FC = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
                       <div className="sm:col-span-4">
-                        <label className="block text-[10px] font-bold text-slate-600 mb-1">نوع تخصیص امضاکننده</label>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">نوع تخصیص امضاکننده</label>
                         <select
                           value={assignment.mode}
                           onChange={(event) => {
@@ -144,7 +144,7 @@ export const SignatureWorkflowTab: React.FC = () => {
                       </div>
 
                       <div className="sm:col-span-5">
-                        <label className="block text-[10px] font-bold text-slate-600 mb-1">امضاکننده</label>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">امضاکننده</label>
                         {assignment.mode === 'ROLE' && (
                           <select
                             value={assignment.role || ''}
@@ -186,7 +186,7 @@ export const SignatureWorkflowTab: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="text-[10px] text-slate-500 mt-2">
+                    <div className="text-[11px] text-slate-500 mt-2">
                       امضاکننده فعلی: <strong className="text-slate-700">{describeAssignment(settings.stages[stage.id], availableUsers)}</strong>
                       {resolved && assignment.mode !== 'MEETING_SECRETARY' && (
                         <span className="text-slate-400"> — در حال حاضر: {resolved.name}</span>

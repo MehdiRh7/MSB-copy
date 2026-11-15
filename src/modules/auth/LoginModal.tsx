@@ -67,9 +67,9 @@ export const LoginModal: React.FC = () => {
             <OrganizationLogo size={44} src={organization.logoUrl} className="rounded-xl" />
           </div>
           <div className="flex items-center justify-center gap-1.5 mb-0.5">
-            <span className="text-sm font-black text-[#ff5260]">{organization.name || organization.systemTitle}</span>
+            <span className="text-sm font-bold text-[#ff5260]">{organization.name || organization.systemTitle}</span>
           </div>
-          <h2 className="text-base font-extrabold text-white">ورود و مدیریت نشست کاربری</h2>
+          <h2 className="text-base font-bold text-white">ورود و مدیریت نشست کاربری</h2>
           <p className="text-xs text-teal-200 mt-0.5">سامانه جامع جلسات، پیگیری مصوبات و صحه‌گذاری</p>
         </div>
 
@@ -104,7 +104,7 @@ export const LoginModal: React.FC = () => {
           <div className="p-5 overflow-y-auto space-y-3 flex-1">
             <div className="text-xs font-bold text-slate-700 flex items-center justify-between">
               <span>هویت سازمانی مورد نظر را انتخاب نمایید:</span>
-              <span className="text-[11px] text-slate-400">تغییر بلادرنگ سطح دسترسی</span>
+              <span className="text-[12px] text-slate-400">تغییر بلادرنگ سطح دسترسی</span>
             </div>
 
             <div className="space-y-2">
@@ -131,9 +131,9 @@ export const LoginModal: React.FC = () => {
                       </div>
                       <div>
                         <div className="text-xs font-bold text-slate-800">{user.fullName}</div>
-                        <div className="text-[11px] text-slate-500">{user.title}</div>
+                        <div className="text-[12px] text-slate-500">{user.title}</div>
                         <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${badge.bg}`}>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md border ${badge.bg}`}>
                             {badge.label}
                           </span>
                         </div>

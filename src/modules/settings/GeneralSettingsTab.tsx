@@ -129,7 +129,7 @@ export const GeneralSettingsTab: React.FC = () => {
 
       {subTab === 'ORG' && (
         <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 space-y-4">
-          <h3 className="text-xs font-extrabold text-slate-800 border-b border-slate-100 pb-2">اطلاعات سازمان</h3>
+          <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-2">اطلاعات سازمان</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">نام سازمان</label>
@@ -143,7 +143,7 @@ export const GeneralSettingsTab: React.FC = () => {
               <label className="block text-xs font-bold text-slate-700 mb-1">نشان سازمان</label>
               <div className="flex items-center gap-3">
                 <img src={orgInfo.logoUrl} alt="پیش‌نمایش نشان سازمان" className="h-10 w-10 rounded-lg border border-slate-200 object-contain" />
-                <input type="file" accept="image/*" onChange={handleLogoUpload} className="block w-full text-[11px] text-slate-500 file:ml-3 file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-teal-800" />
+                <input type="file" accept="image/*" onChange={handleLogoUpload} className="block w-full text-[12px] text-slate-500 file:ml-3 file:rounded-lg file:border-0 file:bg-teal-50 file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-teal-800" />
               </div>
             </div>
             <div>
@@ -177,7 +177,7 @@ export const GeneralSettingsTab: React.FC = () => {
               <span>ذخیره تنظیمات</span>
             </button>
           </div>
-          <p className="text-[10px] leading-5 text-slate-500">نام، عنوان و لوگو پس از ذخیره در سربرگ و صفحه ورود نمایش داده می‌شوند. لوگو فقط در مرورگر این نصب ذخیره می‌شود.</p>
+          <p className="text-[11px] leading-5 text-slate-500">نام، عنوان و لوگو پس از ذخیره در سربرگ و صفحه ورود نمایش داده می‌شوند. لوگو فقط در مرورگر این نصب ذخیره می‌شود.</p>
         </div>
       )}
 
@@ -185,10 +185,10 @@ export const GeneralSettingsTab: React.FC = () => {
         <div className="space-y-4">
           <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 className="text-xs font-extrabold text-slate-800">تنظیمات پنل پیامکی</h3>
+              <h3 className="text-xs font-bold text-slate-800">تنظیمات پنل پیامکی</h3>
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input type="checkbox" checked={smsSettings.isEnabled} onChange={(e) => setSmsSettings({ ...smsSettings, isEnabled: e.target.checked })} className="w-4 h-4 text-teal-700 rounded-md cursor-pointer" />
-                <span className="text-[11px] font-bold text-slate-700">فعال‌سازی ارسال پیامک</span>
+                <span className="text-[12px] font-bold text-slate-700">فعال‌سازی ارسال پیامک</span>
               </label>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -220,7 +220,7 @@ export const GeneralSettingsTab: React.FC = () => {
             </div>
 
             <div className="space-y-3 pt-2 border-t border-slate-100">
-              <h4 className="text-[11px] font-extrabold text-slate-600">متن‌های پیامک</h4>
+              <h4 className="text-[12px] font-bold text-slate-600">متن‌های پیامک</h4>
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">متن پیامک نامه</label>
                 <textarea rows={2} value={smsSettings.letterTemplate} onChange={(e) => setSmsSettings({ ...smsSettings, letterTemplate: e.target.value })} className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none" />
@@ -232,12 +232,12 @@ export const GeneralSettingsTab: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">پیامک اطلاع‌رسانی جلسه</label>
                 <textarea rows={2} value={smsSettings.meetingTemplate} onChange={(e) => setSmsSettings({ ...smsSettings, meetingTemplate: e.target.value })} className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none" />
-                <p className="text-[10px] text-slate-400 mt-1" dir="ltr">{'{meetingTitle} {meetingDate} {meetingTime} {departmentName}'}</p>
+                <p className="text-[11px] text-slate-400 mt-1" dir="ltr">{'{meetingTitle} {meetingDate} {meetingTime} {departmentName}'}</p>
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">پیامک رد پیشنهاد</label>
                 <textarea rows={2} value={smsSettings.proposalRejectionTemplate} onChange={(e) => setSmsSettings({ ...smsSettings, proposalRejectionTemplate: e.target.value })} className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none" />
-                <p className="text-[10px] text-slate-400 mt-1" dir="ltr">{'{proposalTitle} {organizationName}'}</p>
+                <p className="text-[11px] text-slate-400 mt-1" dir="ltr">{'{proposalTitle} {organizationName}'}</p>
               </div>
             </div>
 
@@ -250,8 +250,8 @@ export const GeneralSettingsTab: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 space-y-3">
-            <h3 className="text-xs font-extrabold text-slate-800 border-b border-slate-100 pb-2">ارسال آزمایشی</h3>
-            <p className="text-[11px] text-slate-400">این بخش صرفاً یک شبیه‌سازی (Mock) است و به هیچ سرویس پیامکی واقعی متصل نیست.</p>
+            <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-2">ارسال آزمایشی</h3>
+            <p className="text-[12px] text-slate-400">این بخش صرفاً یک شبیه‌سازی (Mock) است و به هیچ سرویس پیامکی واقعی متصل نیست.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">شماره تلفن آزمایشی</label>
@@ -275,7 +275,7 @@ export const GeneralSettingsTab: React.FC = () => {
       {subTab === 'CALENDAR' && (
         <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h3 className="text-xs font-extrabold text-slate-800">مدیریت تقویم‌ها</h3>
+            <h3 className="text-xs font-bold text-slate-800">مدیریت تقویم‌ها</h3>
             <button onClick={openNewCalendarForm} className="flex items-center gap-1.5 bg-teal-800 hover:bg-teal-700 text-white text-xs font-bold py-2 px-3.5 rounded-xl shadow-xs cursor-pointer">
               <Plus className="w-3.5 h-3.5" />
               <span>تقویم جدید</span>
@@ -285,7 +285,7 @@ export const GeneralSettingsTab: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-right text-xs">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[11px]">
+                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[12px]">
                   <th className="py-2.5 px-3 font-semibold">تقویم</th>
                   <th className="py-2.5 px-3 font-semibold">دسترسی</th>
                   <th className="py-2.5 px-3 font-semibold">دسترسی‌های مجاز</th>
@@ -300,7 +300,7 @@ export const GeneralSettingsTab: React.FC = () => {
                     <td className="py-3 px-3 text-slate-600">{cal.accessType === 'PUBLIC' ? 'عمومی' : 'محدود'}</td>
                     <td className="py-3 px-3 text-slate-600">{cal.allowedAccess || '—'}</td>
                     <td className="py-3 px-3">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${cal.isPublic ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${cal.isPublic ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                         {cal.isPublic ? 'بله' : 'خیر'}
                       </span>
                     </td>
@@ -351,7 +351,7 @@ export const GeneralSettingsTab: React.FC = () => {
 
       {subTab === 'THEME' && (
         <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 space-y-4">
-          <h3 className="text-xs font-extrabold text-slate-800 border-b border-slate-100 pb-2">تم سامانه</h3>
+          <h3 className="text-xs font-bold text-slate-800 border-b border-slate-100 pb-2">تم سامانه</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { id: 'brand' as const, label: 'تم سازمانی', icon: Palette },

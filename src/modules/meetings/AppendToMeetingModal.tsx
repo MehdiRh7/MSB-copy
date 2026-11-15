@@ -113,7 +113,7 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">افزودن مدعو / دستور کار به جلسه</h3>
-              <p className="text-[11px] text-teal-200">فقط برای افزودن موارد جدید — اطلاعات فعلی جلسه قابل ویرایش یا حذف نیست</p>
+              <p className="text-[12px] text-teal-200">فقط برای افزودن موارد جدید — اطلاعات فعلی جلسه قابل ویرایش یا حذف نیست</p>
             </div>
           </div>
           <button onClick={onClose} className="text-teal-200 hover:text-white p-1 rounded-lg hover:bg-teal-800 cursor-pointer">
@@ -133,13 +133,13 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
 
           {/* Read-only: existing meeting core info */}
           <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
-            <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
+            <div className="text-[12px] font-bold text-slate-500 flex items-center gap-1.5">
               <Lock className="w-3.5 h-3.5" />
               <span>اطلاعات جلسه (فقط نمایش — غیرقابل ویرایش از این مسیر)</span>
             </div>
-            <p className="text-sm font-extrabold text-slate-800">{meeting.title}</p>
-            <p className="text-[11px] text-slate-500">شماره جلسه: {meeting.meetingNumber}</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-600 font-bold">
+            <p className="text-sm font-bold text-slate-800">{meeting.title}</p>
+            <p className="text-[12px] text-slate-500">شماره جلسه: {meeting.meetingNumber}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-slate-600 font-bold">
               <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{meeting.dateJalali}</span>
               <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{meeting.startTime} - {meeting.endTime}</span>
               <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{meeting.location}</span>
@@ -151,7 +151,7 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
             <p className="text-xs font-bold text-slate-700">مدعوین فعلی ({toPersianDigits(meeting.members.length)}) — فقط نمایش</p>
             <div className="flex flex-wrap gap-1.5">
               {meeting.members.map((member) => (
-                <span key={member.userId} className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                <span key={member.userId} className="text-[12px] font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                   {member.fullName}
                 </span>
               ))}
@@ -164,7 +164,7 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
               <UserPlus className="w-4 h-4 text-teal-700" />
               <span>افزودن مدعوین جدید:</span>
             </div>
-            <p className="text-[10px] text-teal-800">افرادی که از قبل مدعو این جلسه هستند در این فهرست نمایش داده نمی‌شوند تا مدعوی تکراری ثبت نشود.</p>
+            <p className="text-[11px] text-teal-800">افرادی که از قبل مدعو این جلسه هستند در این فهرست نمایش داده نمی‌شوند تا مدعوی تکراری ثبت نشود.</p>
             <SearchableUserMultiSelect
               users={selectableUsers}
               selectedIds={newMemberIds}
@@ -179,11 +179,11 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
             <div className="space-y-1.5">
               {meeting.agendaItems.map((agenda, index) => (
                 <div key={agenda.id} className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[10px] font-bold flex items-center justify-center shrink-0">
+                  <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-bold flex items-center justify-center shrink-0">
                     {toPersianDigits(index + 1)}
                   </span>
-                  <span className="text-[11px] font-bold text-slate-700">{agenda.title}</span>
-                  <span className="text-[10px] text-slate-500 mr-auto">{toPersianDigits(formatAgendaTimeRange(agenda))}</span>
+                  <span className="text-[12px] font-bold text-slate-700">{agenda.title}</span>
+                  <span className="text-[11px] text-slate-500 mr-auto">{toPersianDigits(formatAgendaTimeRange(agenda))}</span>
                 </div>
               ))}
             </div>
@@ -196,7 +196,7 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
               <span>افزودن دستور کار جدید:</span>
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">عنوان موضوع دستور جلسه</label>
+              <label className="block text-[12px] font-bold text-slate-700 mb-1">عنوان موضوع دستور جلسه</label>
               <input
                 type="text"
                 placeholder="مثال: بررسی موضوع اضافه‌شده به دستورکار"
@@ -206,7 +206,7 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
               />
             </div>
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">ارائه‌دهنده (اختیاری)</label>
+              <label className="block text-[12px] font-bold text-slate-700 mb-1">ارائه‌دهنده (اختیاری)</label>
               <select
                 value={newAgendaPresenterId}
                 onChange={(e) => setNewAgendaPresenterId(e.target.value)}
@@ -222,13 +222,13 @@ export const AppendToMeetingModal: React.FC<AppendToMeetingModalProps> = ({ meet
               <PersianTimePicker label="از ساعت" value={newAgendaStartTime} onChange={setNewAgendaStartTime} />
               <PersianTimePicker label="تا ساعت" value={newAgendaEndTime} onChange={setNewAgendaEndTime} />
             </div>
-            <p className="text-[10px] text-slate-500">
+            <p className="text-[11px] text-slate-500">
               بازه زمانی باید بین ساعت شروع ({toPersianDigits(meeting.startTime)}) و پایان ({toPersianDigits(meeting.endTime)}) جلسه باشد
               و با بندهای فعلی همپوشانی نداشته باشد.
             </p>
 
             <div>
-              <label className="block text-[11px] font-bold text-slate-700 mb-1">توضیحات (اختیاری)</label>
+              <label className="block text-[12px] font-bold text-slate-700 mb-1">توضیحات (اختیاری)</label>
               <textarea
                 rows={2}
                 value={newAgendaDescription}

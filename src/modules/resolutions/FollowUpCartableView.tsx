@@ -54,7 +54,7 @@ export const FollowUpCartableView: React.FC = () => {
         </div>
         <div>
           <h1 className="text-sm font-bold text-slate-800">کارتابل پیگیری مصوبات</h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-[12px] text-slate-500 mt-0.5">
             مصوباتی که موعد پیگیری آن‌ها رسیده یا تا {toPersianDigits(FOLLOW_UP_NEAR_DUE_DAYS)} روز آینده فرا می‌رسد
           </p>
         </div>
@@ -73,7 +73,7 @@ export const FollowUpCartableView: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-x-auto">
           <table className="w-full min-w-[980px] text-right text-xs">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[11px]">
+              <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[12px]">
                 <th className="py-2.5 px-3 font-semibold">شماره مصوبه</th>
                 <th className="py-2.5 px-3 font-semibold">موضوع مصوبه</th>
                 <th className="py-2.5 px-3 font-semibold">واحد مسئول</th>
@@ -94,25 +94,25 @@ export const FollowUpCartableView: React.FC = () => {
                       <td className="py-3 px-3 font-bold text-teal-700">{toPersianDigits(resolution.resolutionNumber)}</td>
                       <td className="py-3 px-3">
                         <div className="font-bold text-slate-800">{resolution.topicTitle}</div>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{resolution.meetingNumber} — {resolution.meetingTitle}</div>
+                        <div className="text-[11px] text-slate-400 mt-0.5">{resolution.meetingNumber} — {resolution.meetingTitle}</div>
                       </td>
                       <td className="py-3 px-3">{resolution.responsibleDepartmentName || '—'}</td>
                       <td className="py-3 px-3">{FOLLOW_UP_TYPE_LABELS[plan.type]}</td>
                       <td className="py-3 px-3">
                         <div className="font-bold text-slate-800">{toPersianDigits(dueDate)}</div>
-                        <span className={`inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${isDue ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
+                        <span className={`inline-block mt-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${isDue ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                           {isDue ? 'رسیده' : `${toPersianDigits(daysRemaining)} روز تا موعد`}
                         </span>
                       </td>
                       <td className="py-3 px-3">{plan.lastFollowUpDateJalali ? toPersianDigits(plan.lastFollowUpDateJalali) : '—'}</td>
                       <td className="py-3 px-3">
-                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full border whitespace-nowrap ${executionMeta.bg}`}>{executionMeta.label}</span>
+                        <span className={`text-[11px] font-bold px-2 py-1 rounded-full border whitespace-nowrap ${executionMeta.bg}`}>{executionMeta.label}</span>
                       </td>
                       <td className="py-3 px-3">
                         <button
                           type="button"
                           onClick={() => setExpandedId((previous) => (previous === resolution.id ? null : resolution.id))}
-                          className="flex items-center gap-1.5 bg-amber-700 hover:bg-amber-800 text-white text-[11px] font-bold py-1.5 px-3 rounded-full cursor-pointer"
+                          className="flex items-center gap-1.5 bg-amber-700 hover:bg-amber-800 text-white text-[12px] font-bold py-1.5 px-3 rounded-full cursor-pointer"
                         >
                           <ClipboardList className="w-3.5 h-3.5" />
                           <span>پیگیری</span>

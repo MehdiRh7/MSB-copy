@@ -64,7 +64,7 @@ export const ArchiveResolutionAction: React.FC<ArchiveResolutionActionProps> = (
   if (resolution.archive) {
     return (
       <div className="p-3.5 rounded-2xl bg-purple-50/70 border border-purple-200 space-y-2.5">
-        <div className="text-[11px] text-purple-950 leading-6">
+        <div className="text-[12px] text-purple-950 leading-6">
           <strong className="block">این مصوبه بایگانی شده است</strong>
           {resolution.archive.scope === 'ORGANIZATION'
             ? `بایگانی سازمانی — پوشه «${resolution.archive.folderName || '—'}»`
@@ -90,7 +90,7 @@ export const ArchiveResolutionAction: React.FC<ArchiveResolutionActionProps> = (
       <div className="text-xs font-bold text-slate-800">انتقال به بایگانی</div>
       <div className="flex flex-wrap items-end gap-2">
         <div>
-          <label className="block text-[10px] text-slate-500 mb-1">نوع بایگانی</label>
+          <label className="block text-[11px] text-slate-500 mb-1">نوع بایگانی</label>
           <select
             value={scope}
             onChange={(event) => setScope(event.target.value as ArchiveScope)}
@@ -103,7 +103,7 @@ export const ArchiveResolutionAction: React.FC<ArchiveResolutionActionProps> = (
 
         {scope === 'ORGANIZATION' && (
           <div>
-            <label className="block text-[10px] text-slate-500 mb-1">پوشه مقصد</label>
+            <label className="block text-[11px] text-slate-500 mb-1">پوشه مقصد</label>
             <select
               value={folderId}
               onChange={(event) => setFolderId(event.target.value)}

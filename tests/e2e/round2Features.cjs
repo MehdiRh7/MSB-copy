@@ -127,8 +127,8 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   await page.evaluate(() => localStorage.setItem('postbank-mosavabat-v1:currentUserId', JSON.stringify('user-admin')));
   await page.reload({ waitUntil: 'networkidle' });
   await page.waitForTimeout(1500);
-  await page.locator('button', { hasText: 'شخصی‌سازی' }).first().click();
-  await page.locator('[role="dialog"] li', { hasText: 'خلاصه هوشمند امروز' }).locator('button').first().click();
+  await page.locator('button', { hasText: 'چیدمان' }).first().click();
+  await page.locator('[role="dialog"] li', { hasText: 'خلاصه امروز' }).locator('button').first().click();
   await page.keyboard.press('Escape');
   await page.mouse.click(10, 10);
   await page.reload({ waitUntil: 'networkidle' });

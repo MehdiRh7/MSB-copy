@@ -13,14 +13,14 @@ export const ProposalAiInsight: React.FC<{ proposal: Proposal; allProposals: Pro
   const [result, setResult] = useState<AiResult<ProposalAnalysis> | null>(null);
   if (!enabled) return null;
   if (!result) {
-    return <AiButton variant="soft" loading={loading} onClick={async () => { setLoading(true); try { setResult(await analyzeProposal(proposal, allProposals, actorId)); } finally { setLoading(false); } }}>تحلیل هوشمند پیشنهاد</AiButton>;
+    return <AiButton variant="soft" loading={loading} onClick={async () => { setLoading(true); try { setResult(await analyzeProposal(proposal, allProposals, actorId)); } finally { setLoading(false); } }}>تحلیل پیشنهاد</AiButton>;
   }
   const a = result.data;
   const toneClass = { APPROVE: 'bg-emerald-50 border-emerald-200 text-emerald-800', RETURN: 'bg-orange-50 border-orange-200 text-orange-800', CEO_ORDER: 'bg-purple-50 border-purple-200 text-purple-800', NO_BOARD: 'bg-slate-50 border-slate-200 text-slate-800' }[a.recommendation];
   return (
-    <div className="rounded-2xl border border-indigo-200 bg-gradient-to-bl from-indigo-50/80 via-white to-white p-3.5 space-y-3 text-[11px]">
+    <div className="rounded-2xl border border-indigo-200 bg-slate-50 p-3.5 space-y-3 text-[12px]">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="font-extrabold text-indigo-950">تحلیل هوشمند پیشنهاد</span>
+        <span className="font-bold text-indigo-950">تحلیل پیشنهاد</span>
         <div className="flex items-center gap-2">
           <span className="flex items-center gap-1 text-slate-600" title="میزان کامل‌بودن اطلاعات پیشنهاد"><Gauge className="w-3.5 h-3.5" />کامل‌بودن {toPersianDigits(a.completeness)}٪</span>
           
@@ -35,9 +35,9 @@ export const ProposalAiInsight: React.FC<{ proposal: Proposal; allProposals: Pro
       {a.questions.length > 0 && <div className="rounded-xl bg-slate-50 border border-slate-200 p-2.5"><div className="font-bold text-slate-700 mb-1 flex items-center gap-1"><HelpCircle className="w-3.5 h-3.5" />پرسش‌های کلیدی از پیشنهاددهنده</div>{a.questions.map((q) => <div key={q} className="text-slate-600">• {q}</div>)}</div>}
       {a.similar.length > 0 && <div className="rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-amber-900"><b>موارد مشابه قبلی:</b> {a.similar.map((s) => `${s.title} (${toPersianDigits(Math.round(s.score * 100))}٪)`).join('، ')}</div>}
       <div className={`rounded-xl border p-2.5 ${toneClass}`}>
-        <div className="font-extrabold">توصیه: {RECOMMENDATION_LABELS[a.recommendation]}</div>
+        <div className="font-bold">توصیه: {RECOMMENDATION_LABELS[a.recommendation]}</div>
         <div className="text-slate-700 mt-0.5">{a.rationale}</div>
-        <button type="button" onClick={() => onUseNote(a.rationale)} className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 hover:underline"><Copy className="w-3 h-3" />استفاده به‌عنوان توضیح تصمیم</button>
+        <button type="button" onClick={() => onUseNote(a.rationale)} className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-indigo-700 hover:underline"><Copy className="w-3 h-3" />استفاده به‌عنوان توضیح تصمیم</button>
       </div>
       <p className="text-[9.5px] text-slate-400">تحلیل صرفاً کمکی است و تصمیم نهایی با مدیرعامل است.</p>
     </div>

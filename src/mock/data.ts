@@ -35,7 +35,7 @@ const allMockUsers: User[] = [
     id: 'user-admin',
     nationalCode: '0000000000',
     username: 'admin',
-    fullName: 'مدیر کل سیستم (Admin)',
+    fullName: 'مدیر سیستم',
     title: 'راهبر ارشد سامانه مصوبات',
     email: 'admin@org.gov.ir',
     phone: '09120000000',

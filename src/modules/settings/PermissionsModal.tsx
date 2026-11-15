@@ -47,7 +47,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({ user, onClos
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">سطح دسترسی کاربر</h3>
-              <p className="text-[11px] text-teal-200">{user.fullName}</p>
+              <p className="text-[12px] text-teal-200">{user.fullName}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-teal-200 hover:text-white p-1 rounded-lg hover:bg-teal-800">

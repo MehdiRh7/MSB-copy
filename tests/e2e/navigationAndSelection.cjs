@@ -73,7 +73,7 @@ const openSidebar = async (page, label) => {
   check('۱ محتوای راهنمای کاربری حذف نشده و نمایش داده می‌شود', guideText.includes('اسلاید'));
 
   // مدیر سیستم: تب‌های مدیریتی قبلی دست‌نخورده باقی مانده‌اند.
-  await switchUser(page, 'مدیر کل سیستم');
+  await switchUser(page, 'مدیر سیستم');
   await openSidebar(page, 'تنظیمات');
   const adminSettingsText = await page.locator('main').first().innerText();
   check('۱ تب‌های مدیریتی قبلی برای مدیر سیستم حفظ شدند',

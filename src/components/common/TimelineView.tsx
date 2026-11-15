@@ -55,18 +55,18 @@ export const TimelineView: React.FC<TimelineViewProps> = ({ logs, title = 'تا�
                   {getActionIcon(log.action)}
                   <span className="text-xs font-bold text-slate-800">{log.action}</span>
                 </div>
-                <div className="text-[11px] font-medium text-slate-400">
+                <div className="text-[12px] font-medium text-slate-400">
                   {toPersianDigits(log.timestampJalali)} - ساعت {toPersianDigits(log.timeString)}
                 </div>
               </div>
 
-              <div className="text-[11px] text-slate-600 mb-1 flex items-center gap-1.5">
+              <div className="text-[12px] text-slate-600 mb-1 flex items-center gap-1.5">
                 <span className="font-semibold text-slate-700">{log.actorName}</span>
                 <span className="text-slate-400">({log.actorRole})</span>
               </div>
 
               {log.details && (
-                <p className="text-[11px] text-slate-500 bg-white/80 p-2 rounded-xl border border-slate-100 leading-relaxed mt-2">
+                <p className="text-[12px] text-slate-500 bg-white/80 p-2 rounded-xl border border-slate-100 leading-relaxed mt-2">
                   {log.details}
                 </p>
               )}

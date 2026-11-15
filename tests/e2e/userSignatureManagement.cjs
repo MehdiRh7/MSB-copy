@@ -90,7 +90,7 @@ const PNG_SECRETARY = png('mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
   check('CR-G Test4 هیچ امضایی روی کاربر عادی ذخیره نشد', !users || !users.some((u) => u.id === 'user-9' && u.signatureUrl));
 
   // ===================== Test 2/3 — admin manages it in User Management ======
-  await switchUser(page, 'مدیر کل سیستم');
+  await switchUser(page, 'مدیر سیستم');
   await page.locator('aside button:has-text("تنظیمات")').first().click();
   await page.waitForTimeout(900);
   await page.locator('button:has-text("مدیریت کاربران")').first().click();
@@ -176,7 +176,7 @@ const PNG_SECRETARY = png('mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==');
         steps: [
           { id: 'sg1', signerUserId: 'user-17', signerName: 'مسئول دفتر', signerTitle: 'مسئول دفتر مدیرعامل', signerRole: 'OFFICE_MANAGER', order: 1, status: 'PENDING' },
           { id: 'sg2', signerUserId: 'user-16', signerName: 'مدیرعامل', signerTitle: 'مدیرعامل', signerRole: 'CEO', order: 2, status: 'WAITING_TURN' },
-          { id: 'sg3', signerUserId: 'user-admin', signerName: 'مدیر کل سیستم (Admin)', signerTitle: 'راهبر ارشد سامانه مصوبات', signerRole: 'ADMIN', order: 3, status: 'WAITING_TURN' },
+          { id: 'sg3', signerUserId: 'user-admin', signerName: 'مدیر سیستم', signerTitle: 'راهبر ارشد سامانه مصوبات', signerRole: 'ADMIN', order: 3, status: 'WAITING_TURN' },
         ],
       },
     };

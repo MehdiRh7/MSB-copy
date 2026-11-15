@@ -132,14 +132,14 @@ export const ResolutionListView: React.FC = () => {
       </div>
 
       {aiSemantic && (
-        <div className="rounded-2xl border border-violet-200 bg-gradient-to-l from-violet-50 via-white to-white p-3 space-y-2">
+        <div className="rounded-2xl border border-violet-200 bg-slate-50 p-3 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
             <input value={semanticQuery} onChange={(e) => setSemanticQuery(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') void runSemantic(); }} placeholder="جستجوی مفهومی — مثلاً «هر چیزی درباره امنیت داده» یا «هزینه‌های شعب»" className="flex-1 min-w-[220px] text-xs p-2.5 bg-white border border-violet-200 rounded-xl focus:ring-2 focus:ring-violet-400 focus:outline-none" />
             <VoiceInputButton className="p-2 border border-violet-200 bg-white" onText={(text, isFinal) => { setSemanticQuery(text); if (isFinal) void runSemantic(text); }} />
             <AiButton onClick={() => { void runSemantic(); }} loading={semanticBusy} disabled={!semanticQuery.trim()}>جستجوی مفهومی</AiButton>
-            {semantic && <button onClick={() => { setSemantic(null); setSemanticQuery(''); }} className="text-[11px] font-bold text-slate-500 px-2 py-1 rounded-lg hover:bg-slate-100">نمایش همه</button>}
+            {semantic && <button onClick={() => { setSemantic(null); setSemanticQuery(''); }} className="text-[12px] font-bold text-slate-500 px-2 py-1 rounded-lg hover:bg-slate-100">نمایش همه</button>}
           </div>
-          {semantic && <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600"><b>{toPersianDigits(semantic.data.length)}</b> مصوبه مرتبط با مفهوم «{semanticQuery}» (به ترتیب ارتباط) </div>}
+          {semantic && <div className="flex flex-wrap items-center gap-2 text-[12px] text-slate-600"><b>{toPersianDigits(semantic.data.length)}</b> مصوبه مرتبط با مفهوم «{semanticQuery}» (به ترتیب ارتباط) </div>}
         </div>
       )}
 
@@ -199,10 +199,10 @@ export const ResolutionListView: React.FC = () => {
             {mockDepartments.map((department) => <option key={department.id} value={department.name}>{department.name}</option>)}
           </select>
         </div>
-        <label className="text-[10px] text-slate-500">از تاریخ ثبت/ارجاع
+        <label className="text-[11px] text-slate-500">از تاریخ ثبت/ارجاع
           <input value={fromDate} onChange={(e) => setFromDate(e.target.value)} placeholder="۱۴۰۳/۰۱/۰۱" className="block w-full mt-1 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
         </label>
-        <label className="text-[10px] text-slate-500">تا تاریخ ثبت/ارجاع
+        <label className="text-[11px] text-slate-500">تا تاریخ ثبت/ارجاع
           <input value={toDate} onChange={(e) => setToDate(e.target.value)} placeholder="۱۴۰۳/۱۲/۲۹" className="block w-full mt-1 text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
         </label>
       </div>}
@@ -236,11 +236,11 @@ export const ResolutionListView: React.FC = () => {
                     <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                       {res.resolutionNumber}
                     </span>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold border whitespace-nowrap ${sMeta.bg}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap ${sMeta.bg}`}>
                       <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${sMeta.dot}`}></span>
                       <span>{sMeta.label}</span>
                     </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pMeta.bg} ${pMeta.text} border ${pMeta.border}`}>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${pMeta.bg} ${pMeta.text} border ${pMeta.border}`}>
                       {pMeta.label}
                     </span>
                   </div>
@@ -272,12 +272,12 @@ export const ResolutionListView: React.FC = () => {
                     <span>مهلت اقدام: <strong className="text-slate-700">{toPersianDigits(res.deadlineJalali || '—')}</strong></span>
                   </div>
 
-                  <div className="text-[11px] text-slate-400">
+                  <div className="text-[12px] text-slate-400">
                     مرجع: {res.meetingTitle} ({res.meetingNumber})
                   </div>
 
                   {res.verificationConfig?.requiresVerification && (
-                    <div className="mr-auto text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
+                    <div className="mr-auto text-[12px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5" />
                       <span>{toPersianDigits(res.verificationConfig.steps.length)} مرحله صحه‌گذاری</span>
                     </div>
@@ -292,7 +292,7 @@ export const ResolutionListView: React.FC = () => {
           <table className="w-full min-w-[900px] text-xs text-right">
             <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">شماره</th><th className="p-3">عنوان مصوبه</th><th className="p-3">مسئول / واحد</th><th className="p-3">مهلت</th><th className="p-3">مرجع جلسه</th><th className="p-3">وضعیت</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {displayed.map((res) => { const meta = getResolutionExecutionMeta(res.executionStatus); return <tr key={res.id} onClick={() => setActiveModalResId(res.id)} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{res.resolutionNumber}</td><td className="p-3 font-bold text-slate-800">{res.topicTitle}</td><td className="p-3 text-slate-600">{res.mainResponsibleName || 'نامشخص'}<div className="text-[10px] text-slate-400">{res.responsibleDepartmentName}</div></td><td className="p-3">{toPersianDigits(res.deadlineJalali || '—')}</td><td className="p-3 text-slate-600">{res.meetingTitle}</td><td className="p-3"><span className={`px-2 py-1 rounded-full border font-bold whitespace-nowrap ${meta.bg}`}>{meta.label}</span></td></tr>; })}
+              {displayed.map((res) => { const meta = getResolutionExecutionMeta(res.executionStatus); return <tr key={res.id} onClick={() => setActiveModalResId(res.id)} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{res.resolutionNumber}</td><td className="p-3 font-bold text-slate-800">{res.topicTitle}</td><td className="p-3 text-slate-600">{res.mainResponsibleName || 'نامشخص'}<div className="text-[11px] text-slate-400">{res.responsibleDepartmentName}</div></td><td className="p-3">{toPersianDigits(res.deadlineJalali || '—')}</td><td className="p-3 text-slate-600">{res.meetingTitle}</td><td className="p-3"><span className={`px-2 py-1 rounded-full border font-bold whitespace-nowrap ${meta.bg}`}>{meta.label}</span></td></tr>; })}
             </tbody>
           </table>
         </div>

@@ -62,7 +62,7 @@ export const CreateArchiveFolderModal: React.FC<CreateArchiveFolderModalProps> =
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">ایجاد پوشه</h3>
-              <p className="text-[11px] text-teal-200">
+              <p className="text-[12px] text-teal-200">
                 {scope === 'ORGANIZATION' ? 'پوشه جدید در بایگانی سازمانی و تعیین دسترسی آن' : 'پوشه جدید در بایگانی واحد شما'}
               </p>
             </div>
@@ -92,11 +92,11 @@ export const CreateArchiveFolderModal: React.FC<CreateArchiveFolderModalProps> =
           </div>
 
           <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 space-y-3.5">
-            <div className="flex items-center gap-2 text-xs font-extrabold text-slate-800">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
               <Users className="w-4 h-4 text-teal-700" />
               <span>تنظیم دسترسی پوشه</span>
             </div>
-            <p className="text-[10px] text-slate-500 leading-5">
+            <p className="text-[11px] text-slate-500 leading-5">
               اگر هیچ شخص یا سمتی انتخاب نشود، پوشه برای همه کاربران مجاز همین بخش قابل مشاهده است. با انتخاب شخص یا سمت، دسترسی فقط به همان افراد محدود می‌شود.
             </p>
 
@@ -121,7 +121,7 @@ export const CreateArchiveFolderModal: React.FC<CreateArchiveFolderModalProps> =
                       key={position}
                       type="button"
                       onClick={() => togglePosition(position)}
-                      className={`text-[10px] font-bold px-2.5 py-1.5 rounded-full border transition-colors cursor-pointer ${
+                      className={`text-[11px] font-bold px-2.5 py-1.5 rounded-full border transition-colors cursor-pointer ${
                         selected ? 'bg-teal-700 text-white border-teal-700' : 'bg-slate-50 text-slate-600 border-slate-200 hover:border-teal-400'
                       }`}
                     >

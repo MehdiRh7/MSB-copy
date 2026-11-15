@@ -79,8 +79,8 @@ export const ResolutionProgressTracker: React.FC<{ resolution: Resolution }> = (
         })}
       </ol>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        <div className="rounded-xl bg-white/80 px-3 py-2 ring-1 ring-blue-100"><span className="block text-[10px] font-bold text-slate-500">مسئول اقدام بعدی</span><strong className={`text-[12px] ${late ? 'text-red-700' : 'text-slate-900'}`}>{nextResponsible(r)}</strong></div>
-        <div className="rounded-xl bg-white/80 px-3 py-2 ring-1 ring-blue-100"><span className="block text-[10px] font-bold text-slate-500">آخرین تصمیم / اقدام</span><span className="line-clamp-2 text-[12px] text-slate-700">{lastDecision || '—'}</span></div>
+        <div className="rounded-xl bg-white/80 px-3 py-2 ring-1 ring-blue-100"><span className="block text-[11px] font-bold text-slate-500">مسئول اقدام بعدی</span><strong className={`text-[13px] ${late ? 'text-red-700' : 'text-slate-900'}`}>{nextResponsible(r)}</strong></div>
+        <div className="rounded-xl bg-white/80 px-3 py-2 ring-1 ring-blue-100"><span className="block text-[11px] font-bold text-slate-500">آخرین تصمیم / اقدام</span><span className="line-clamp-2 text-[13px] text-slate-700">{lastDecision || '—'}</span></div>
       </div>
     </section>
   );

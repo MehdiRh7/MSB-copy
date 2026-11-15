@@ -153,15 +153,15 @@ export const ArchiveView: React.FC = () => {
           <FileCheck2 className="w-3.5 h-3.5" />
         </div>
         <div className="min-w-0">
-          <div className="text-[11px] font-bold text-slate-800 truncate">{item.resolutionTitle}</div>
-          <div className="text-[10px] text-slate-400 mt-0.5">
+          <div className="text-[12px] font-bold text-slate-800 truncate">{item.resolutionTitle}</div>
+          <div className="text-[11px] text-slate-400 mt-0.5">
             {toPersianDigits(item.resolutionNumber || '—')} — بایگانی توسط {item.movedByName}
           </div>
         </div>
       </button>
       <button
         onClick={() => handleRestoreResolution(item, folderId)}
-        className="flex items-center gap-1.5 shrink-0 text-[10px] font-bold text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg cursor-pointer"
+        className="flex items-center gap-1.5 shrink-0 text-[11px] font-bold text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 px-2.5 py-1.5 rounded-lg cursor-pointer"
         title="خروج از بایگانی و بازگشت به فهرست مصوبات"
       >
         <Undo2 className="w-3.5 h-3.5" />
@@ -216,10 +216,10 @@ export const ArchiveView: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
-              <h2 className="text-xs font-extrabold text-slate-800">مصوبات بایگانی‌شده شخصی من</h2>
-              <p className="text-[10px] text-slate-400 mt-0.5">این فهرست فقط برای شما قابل مشاهده است.</p>
+              <h2 className="text-xs font-bold text-slate-800">مصوبات بایگانی‌شده شخصی من</h2>
+              <p className="text-[11px] text-slate-400 mt-0.5">این فهرست فقط برای شما قابل مشاهده است.</p>
             </div>
-            <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
+            <span className="text-[11px] font-bold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
               {toPersianDigits(visiblePersonalItems.length)} مورد
             </span>
           </div>
@@ -235,7 +235,7 @@ export const ArchiveView: React.FC = () => {
       {/* ——— Folders: organizational archive, and the department's own ——— */}
       <div className="bg-white rounded-2xl shadow-xs border border-slate-100 p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-          <h2 className="text-xs font-extrabold text-slate-800">
+          <h2 className="text-xs font-bold text-slate-800">
             {tab === 'ORGANIZATION' ? 'پوشه‌های بایگانی سازمانی' : 'پوشه‌های بایگانی واحد من'}
           </h2>
           {canManageFolders && (
@@ -276,8 +276,8 @@ export const ArchiveView: React.FC = () => {
                           {folder.name}
                           {restricted && <Lock className="w-3 h-3 text-slate-400" />}
                         </div>
-                        {folder.description && <div className="text-[10px] text-slate-500 truncate mt-0.5">{folder.description}</div>}
-                        <div className="text-[10px] text-slate-400 mt-0.5">ایجادکننده: {folder.createdByName}</div>
+                        {folder.description && <div className="text-[11px] text-slate-500 truncate mt-0.5">{folder.description}</div>}
+                        <div className="text-[11px] text-slate-400 mt-0.5">ایجادکننده: {folder.createdByName}</div>
                       </div>
                       {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400 shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />}
                     </button>
@@ -306,17 +306,17 @@ export const ArchiveView: React.FC = () => {
                       {pickerFolderId === folder.id && (
                         <div className="p-3 bg-teal-50/60 border border-teal-200 rounded-xl space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-[11px] font-bold text-teal-900">انتخاب پیشنهاد برای افزودن به پوشه</span>
+                            <span className="text-[12px] font-bold text-teal-900">انتخاب پیشنهاد برای افزودن به پوشه</span>
                             <button onClick={() => setPickerFolderId(null)} className="text-teal-700 hover:text-teal-900 cursor-pointer"><X className="w-4 h-4" /></button>
                           </div>
                           <div className="max-h-48 overflow-y-auto space-y-1.5">
                             {eligibleProposals.filter((p) => !pickerAlreadyInFolder.has(p.id)).length === 0 ? (
-                              <div className="text-[11px] text-slate-400 py-2 text-center">پیشنهاد قابل افزودنی وجود ندارد.</div>
+                              <div className="text-[12px] text-slate-400 py-2 text-center">پیشنهاد قابل افزودنی وجود ندارد.</div>
                             ) : eligibleProposals.filter((p) => !pickerAlreadyInFolder.has(p.id)).map((p) => (
                               <button
                                 key={p.id}
                                 onClick={() => handleArchiveProposal(folder.id, p)}
-                                className="w-full text-right p-2 bg-white border border-slate-200 rounded-lg text-[11px] hover:border-teal-400 transition-colors cursor-pointer flex items-center justify-between gap-2"
+                                className="w-full text-right p-2 bg-white border border-slate-200 rounded-lg text-[12px] hover:border-teal-400 transition-colors cursor-pointer flex items-center justify-between gap-2"
                               >
                                 <span className="truncate font-bold text-slate-700">{p.title}</span>
                                 <span className="text-slate-400 shrink-0">{p.proposerDepartmentName}</span>
@@ -327,15 +327,15 @@ export const ArchiveView: React.FC = () => {
                       )}
 
                       {items.length === 0 ? (
-                        <div className="text-[11px] text-slate-400 py-3 text-center">هنوز مصوبه‌ای در این پوشه بایگانی نشده است.</div>
+                        <div className="text-[12px] text-slate-400 py-3 text-center">هنوز مصوبه‌ای در این پوشه بایگانی نشده است.</div>
                       ) : (
                         <div className="space-y-1.5">
                           {resolutionItems.map((item) => renderResolutionRow(item, folder.id))}
                           {proposalItems.map((item) => (
                             <div key={item.id} className="flex items-center justify-between p-2.5 bg-white border border-slate-200/90 rounded-xl">
                               <div className="min-w-0">
-                                <div className="text-[11px] font-bold text-slate-800 truncate">{item.proposalTitle}</div>
-                                <div className="text-[10px] text-slate-400 mt-0.5">پیشنهاد — افزوده‌شده توسط {item.movedByName}</div>
+                                <div className="text-[12px] font-bold text-slate-800 truncate">{item.proposalTitle}</div>
+                                <div className="text-[11px] text-slate-400 mt-0.5">پیشنهاد — افزوده‌شده توسط {item.movedByName}</div>
                               </div>
                               <button
                                 onClick={() => handleRemoveProposalItem(folder.id, item)}

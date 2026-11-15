@@ -95,7 +95,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
       return res.data;
     } finally { setCheckingConflicts(false); }
   };
-  // ——— دستیار هوشمند ثبت مصوبه ———
+  // ——— دستیار ثبت مصوبه ———
   const aiResolution = useAiFeature('resolutionDraft');
   const [suggesting, setSuggesting] = useState(false);
   const [suggestion, setSuggestion] = useState<AiResult<ResolutionSuggestion> | null>(null);
@@ -311,7 +311,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">ثبت و صدور مصوبه جدید سازمانی</h3>
-              <p className="text-[11px] text-teal-200">
+              <p className="text-[12px] text-teal-200">
                 {isLockedMeeting ? 'ثبت مستقیم مصوبه از دستور جلسه انتخاب‌شده' : 'تنظیم اطلاعات ارجاع، مسئول اجرا و زنجیره صحه‌گذاری'}
               </p>
             </div>
@@ -344,7 +344,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                 <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
                   <span>جلسه مرجع *</span>
                   {isLockedMeeting && (
-                    <span className="text-[10px] text-teal-800 font-bold flex items-center gap-1">
+                    <span className="text-[11px] text-teal-800 font-bold flex items-center gap-1">
                       <Lock className="w-3 h-3" />
                       قفل شده بر اساس جلسه
                     </span>
@@ -450,12 +450,12 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
               </h4>
 
               {aiResolution && (
-                <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-1.5">
+                <div className="rounded-2xl border border-indigo-200 bg-slate-50 p-3 space-y-1.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-[11px] font-extrabold text-indigo-950">پیشنهاد خودکار متن اجرایی، مسئول، واحد، اولویت و مهلت</span>
-                    <div className="flex items-center gap-2"><AiButton onClick={handleSuggest} loading={suggesting} disabled={!topicTitle.trim() && !requestDescription.trim()}>پیشنهاد هوشمند</AiButton></div>
+                    <span className="text-[12px] font-bold text-indigo-950">پیشنهاد خودکار متن اجرایی، مسئول، واحد، اولویت و مهلت</span>
+                    <div className="flex items-center gap-2"><AiButton onClick={handleSuggest} loading={suggesting} disabled={!topicTitle.trim() && !requestDescription.trim()}>پیشنهاد خودکار</AiButton></div>
                   </div>
-                  {suggestion?.data.rationale && <p className="text-[10.5px] text-slate-600">{suggestion.data.rationale} — همه موارد قابل ویرایش است.</p>}
+                  {suggestion?.data.rationale && <p className="text-[11px] text-slate-600">{suggestion.data.rationale} — همه موارد قابل ویرایش است.</p>}
                 </div>
               )}
 
@@ -473,14 +473,14 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                   {aiConflict && (
                     <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-1.5">
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" />بررسی تکرار و تناقض با مصوبات قبلی</span>
+                        <span className="text-[12px] font-bold text-slate-700 flex items-center gap-1"><AlertTriangle className="w-3.5 h-3.5 text-amber-500" />بررسی تکرار و تناقض با مصوبات قبلی</span>
                         <div className="flex items-center gap-2"><AiButton variant="soft" loading={checkingConflicts} onClick={() => { void runConflictCheck(); }} disabled={!topicTitle.trim() && !executionDescription.trim()}>بررسی کن</AiButton></div>
                       </div>
-                      {conflicts && conflicts.data.length === 0 && <p className="text-[11px] text-emerald-700">✓ مصوبه تکراری یا متناقضی پیدا نشد.</p>}
+                      {conflicts && conflicts.data.length === 0 && <p className="text-[12px] text-emerald-700">مصوبه تکراری یا متناقضی پیدا نشد.</p>}
                       {conflicts?.data.map((f) => (
-                        <div key={f.resolution.id} className={`text-[11px] rounded-lg border p-2 ${f.kind === 'CONFLICT' ? 'bg-rose-50 border-rose-200 text-rose-900' : f.kind === 'DUPLICATE' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-white border-slate-200 text-slate-700'}`}>
+                        <div key={f.resolution.id} className={`text-[12px] rounded-lg border p-2 ${f.kind === 'CONFLICT' ? 'bg-rose-50 border-rose-200 text-rose-900' : f.kind === 'DUPLICATE' ? 'bg-amber-50 border-amber-200 text-amber-900' : 'bg-white border-slate-200 text-slate-700'}`}>
                           <b>{KIND_LABEL[f.kind]}:</b> {f.resolution.resolutionNumber} — {f.resolution.topicTitle}
-                          <div className="text-[10.5px] opacity-80 mt-0.5">{f.reason}</div>
+                          <div className="text-[11px] opacity-80 mt-0.5">{f.reason}</div>
                         </div>
                       ))}
                     </div>
@@ -508,7 +508,7 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
                     <span>واحد سازمانی مجری</span>
-                    <span className="text-[10px] text-teal-800 font-bold flex items-center gap-1">
+                    <span className="text-[11px] text-teal-800 font-bold flex items-center gap-1">
                       <Lock className="w-3 h-3" />
                       تکمیل خودکار بر اساس مسئول
                     </span>
@@ -562,8 +562,8 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                 <div className="flex items-center gap-2">
                   <Repeat className="w-5 h-5 text-sky-700" />
                   <div>
-                    <h4 className="text-xs font-extrabold text-slate-900">برنامه پیگیری مصوبه</h4>
-                    <p className="text-[10px] text-sky-700">
+                    <h4 className="text-xs font-bold text-slate-900">برنامه پیگیری مصوبه</h4>
+                    <p className="text-[11px] text-sky-700">
                       تعیین می‌کند این مصوبه در چه موعدهایی در کارتابل پیگیری نمایش داده شود.
                     </p>
                   </div>
@@ -615,10 +615,10 @@ export const CreateResolutionModal: React.FC<CreateResolutionModalProps> = ({
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-teal-700" />
                   <div>
-                    <h4 className="text-xs font-extrabold text-teal-950">
+                    <h4 className="text-xs font-bold text-teal-950">
                       صحه‌گذاری نهایی (Verification)
                     </h4>
-                    <p className="text-[10px] text-teal-700">
+                    <p className="text-[11px] text-teal-700">
                       پس از اتمام کار توسط مجری، مصوبه در کارتابل صحه‌گذار زیر جهت تایید یا رد قرار می‌گیرد.
                     </p>
                   </div>

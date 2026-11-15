@@ -180,10 +180,10 @@ export const ApprovalsView: React.FC = () => {
                     <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
                       {appr.resolutionNumber}
                     </span>
-                    <span className="text-[11px] font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                    <span className="text-[12px] font-medium text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
                       مرحله {toPersianDigits(appr.stepNumber)} از {toPersianDigits(appr.totalSteps)}
                     </span>
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
                       isPending
                         ? 'bg-amber-50 text-amber-700 border-amber-200'
                         : appr.status === 'APPROVED'
@@ -224,7 +224,7 @@ export const ApprovalsView: React.FC = () => {
                     <div>
                       <strong>مجری:</strong> {appr.responsibleName} ({appr.responsibleDepartment})
                     </div>
-                    <div className="text-[11px] text-slate-400">
+                    <div className="text-[12px] text-slate-400">
                       تاریخ ارسال: {toPersianDigits(appr.submittedForApprovalDateJalali)}
                     </div>
                   </div>
@@ -234,7 +234,7 @@ export const ApprovalsView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="text-[11px] text-slate-400 flex items-center gap-2 pt-1">
+                <div className="text-[12px] text-slate-400 flex items-center gap-2 pt-1">
                   <span>مرجع: {appr.meetingTitle}</span>
                   <span>•</span>
                   <span className="text-blue-600 font-medium">مشاهده پرونده کامل مصوبه و مستندات</span>
@@ -248,7 +248,7 @@ export const ApprovalsView: React.FC = () => {
           <table className="w-full min-w-[900px] text-xs text-right">
             <thead className="bg-slate-100 text-slate-600"><tr><th className="p-3">شماره</th><th className="p-3">عنوان مصوبه</th><th className="p-3">مجری / واحد</th><th className="p-3">تاریخ ارسال</th><th className="p-3">مرحله</th><th className="p-3">وضعیت</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {approvals.map((item) => <tr key={item.id} onClick={() => setSelectedResolutionId(item.resolutionId)} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{item.resolutionNumber}</td><td className="p-3 font-bold text-slate-800">{item.resolutionTitle}</td><td className="p-3 text-slate-600">{item.responsibleName}<div className="text-[10px] text-slate-400">{item.responsibleDepartment}</div></td><td className="p-3">{toPersianDigits(item.submittedForApprovalDateJalali)}</td><td className="p-3">{toPersianDigits(item.stepNumber)} از {toPersianDigits(item.totalSteps)}</td><td className="p-3 font-bold">{getApprovalStatusLabel(item.status)}</td></tr>)}
+              {approvals.map((item) => <tr key={item.id} onClick={() => setSelectedResolutionId(item.resolutionId)} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{item.resolutionNumber}</td><td className="p-3 font-bold text-slate-800">{item.resolutionTitle}</td><td className="p-3 text-slate-600">{item.responsibleName}<div className="text-[11px] text-slate-400">{item.responsibleDepartment}</div></td><td className="p-3">{toPersianDigits(item.submittedForApprovalDateJalali)}</td><td className="p-3">{toPersianDigits(item.stepNumber)} از {toPersianDigits(item.totalSteps)}</td><td className="p-3 font-bold">{getApprovalStatusLabel(item.status)}</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -261,7 +261,7 @@ export const ApprovalsView: React.FC = () => {
             <FormHero icon={actionType === 'APPROVE' ? ShieldCheck : RotateCcw} title={actionType === 'APPROVE' ? 'تأیید مرحله صحه‌گذاری' : 'عدم تأیید و بازگشت به مجری'} subtitle={`مرحله ${toPersianDigits(activeItem.stepNumber)} از ${toPersianDigits(activeItem.totalSteps)} · ${activeItem.stepTitle}`} meta={[activeItem.resolutionNumber, `مجری: ${activeItem.responsibleName}`]} onClose={() => setActiveItem(null)} />
 
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-xs text-slate-700 space-y-1.5">
-              <div className="font-extrabold text-slate-900">{activeItem.resolutionTitle}</div>
+              <div className="font-bold text-slate-900">{activeItem.resolutionTitle}</div>
               <div className="leading-6 text-slate-600">{activeItem.completionReport}</div>
             </div>
 

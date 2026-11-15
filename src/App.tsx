@@ -126,12 +126,12 @@ const AppContent: React.FC = () => {
           onClick={() => window.dispatchEvent(new CustomEvent('msb-open-command-palette'))}
           title="فرمان سریع (Ctrl+K)"
           aria-label="فرمان سریع"
-          className="command-fab-mini group relative flex items-center text-white font-bold text-xs p-1.5 rounded-full border border-teal-800/30 transition-all cursor-pointer hover:brightness-110"
+          className="command-fab-mini group relative flex items-center text-white font-bold text-xs p-1.5 rounded-full border border-white/20 transition-all cursor-pointer hover:brightness-110"
         >
           <div className="command-fab-icon w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
             <Zap className="w-4 h-4" />
           </div>
-          <span className="tracking-tight max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-40 group-hover:px-2 group-focus-visible:max-w-40 group-focus-visible:px-2">فرمان سریع <span className="opacity-70 text-[10px]">Ctrl K</span></span>
+          <span className="tracking-tight max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-40 group-hover:px-2 group-focus-visible:max-w-40 group-focus-visible:px-2">فرمان سریع <span className="opacity-70 text-[11px]">Ctrl K</span></span>
         </button>
       </div>
 
@@ -139,14 +139,14 @@ const AppContent: React.FC = () => {
       <div className="no-print fixed bottom-4 left-4 z-40">
         <button
           onClick={() => setIsAiAssistantOpen(true)}
-          title="دستیار هوشمند (چت)"
-          aria-label="دستیار هوشمند (چت)"
-          className="group relative flex items-center text-white font-bold text-xs p-1.5 rounded-full shadow-lg hover:shadow-xl border border-blue-900/40 transition-all cursor-pointer bg-gradient-to-br from-[#1d5fd1] to-[#0b2a5b]"
+          title="دستیار پرسش و پاسخ"
+          aria-label="دستیار پرسش و پاسخ"
+          className="group relative flex items-center text-white font-bold text-xs p-1.5 rounded-full shadow-lg hover:shadow-xl border border-blue-900/40 transition-all cursor-pointer bg-[var(--app-primary)]"
         >
           <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center font-bold">
             <MessageCircle className="w-4 h-4" />
           </div>
-          <span className="tracking-tight max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-40 group-hover:px-2 group-focus-visible:max-w-40 group-focus-visible:px-2">دستیار هوشمند (چت)</span>
+          <span className="tracking-tight max-w-0 overflow-hidden whitespace-nowrap transition-all duration-200 group-hover:max-w-40 group-hover:px-2 group-focus-visible:max-w-40 group-focus-visible:px-2">دستیار پرسش و پاسخ</span>
         </button>
       </div>
 
@@ -155,7 +155,7 @@ const AppContent: React.FC = () => {
           و پوشه src/modules/workflowMap آن را کاملاً برمی‌دارد. */}
       <WorkflowMapLauncher />
 
-      {/* فرمان سریع هوشمند (Ctrl+K) */}
+      {/* فرمان سریع (Ctrl+K) */}
       <CommandPalette />
 
       {/* Global Modals & Notifications */}

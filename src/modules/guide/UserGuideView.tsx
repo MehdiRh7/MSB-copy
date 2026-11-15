@@ -39,7 +39,7 @@ const roleForUser = (role: string, permissions: string[] = []): RoleId => {
 const WORKFLOW = [
   { icon: Lightbulb, title: '۱. ثبت درخواست / پیشنهاد', who: 'کاربر عادی و سایر کاربران', where: 'مصوبات پیشنهادی ← ثبت پیشنهاد', text: 'برای مطرح‌کردن یک نیاز، مسئله یا پیشنهاد در جلسه. درخواست‌کننده عنوان، شرح، دلیل و پیوست را ثبت می‌کند؛ او فقط پیشنهادهای خودش را پیگیری می‌کند.' },
   { icon: ClipboardCheck, title: '۲. بررسی و تصمیم', who: 'مدیرعامل؛ سپس مسئول دفتر و دبیر جلسه', where: 'مصوبات پیشنهادی ← کارتابل نقش مربوط', text: 'مدیرعامل پیشنهاد را تأیید، رد یا برای اصلاح برمی‌گرداند. پیشنهاد تأییدشده توسط مسئول دفتر و دبیر جلسه برای قرارگرفتن در دستور جلسه آماده می‌شود.' },
-  { icon: CalendarDays, title: '۳. جلسه و دستور جلسه', who: 'مسئول دفتر یا دبیر جلسه', where: 'مدیریت جلسات / تقویم هوشمند', text: 'زمان، مکان، اعضا و بندهای دستور جلسه ثبت می‌شوند. مدیرعامل دستور جلسه را تأیید می‌کند؛ سپس دبیرخانه دعوتنامه و صورت‌جلسه را مدیریت می‌کند.' },
+  { icon: CalendarDays, title: '۳. جلسه و دستور جلسه', who: 'مسئول دفتر یا دبیر جلسه', where: 'مدیریت جلسات / تقویم جلسات', text: 'زمان، مکان، اعضا و بندهای دستور جلسه ثبت می‌شوند. مدیرعامل دستور جلسه را تأیید می‌کند؛ سپس دبیرخانه دعوتنامه و صورت‌جلسه را مدیریت می‌کند.' },
   { icon: FileCheck2, title: '۴. ثبت مصوبه و امضا', who: 'دبیر جلسه و امضاکنندگان تعریف‌شده', where: 'جزئیات جلسه ← ثبت مصوبه / بانک مصوبات', text: 'برای هر بند مصوب، متن، مسئول اجرا، مهلت و صحه‌گذار تعیین می‌شود. سپس مصوبه در ترتیب امضای تعریف‌شده گردش می‌کند.' },
   { icon: Send, title: '۵. ابلاغ و ایجاد تکلیف', who: 'مسئول دفتر و دبیر جلسه', where: 'کارتابل ابلاغ', text: 'پس از تکمیل امضاها، مسئول دفتر ابلاغ را ثبت و دبیر آن را امضا می‌کند. فقط بعد از این مرحله، تکلیف در کارتابل مجری ساخته می‌شود.' },
   { icon: UserCog, title: '۶. اجرا و گزارش پیشرفت', who: 'مجری مصوبه', where: 'وظایف ارجاعی من', text: 'مجری اقدام‌ها، درصد پیشرفت، موانع و مستندات را ثبت می‌کند. با اعلام اتمام، پرونده برای صحه‌گذاری می‌رود.' },
@@ -76,8 +76,8 @@ const TopicCard: React.FC<{ topic: GuideTopic; onGo: (route: AppRoute) => void }
   <details className="hc-topic group">
     <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-2">
       <div className="min-w-0">
-        <h3 className="text-[15px] font-black text-[#0b2a5b]">{topic.title}</h3>
-        <p className="mt-0.5 text-[12.5px] leading-6 text-slate-600">{topic.summary}</p>
+        <h3 className="text-[15px] font-bold text-[#0b2a5b]">{topic.title}</h3>
+        <p className="mt-0.5 text-[13px] leading-6 text-slate-600">{topic.summary}</p>
       </div>
       <ChevronDown className="mt-1 h-5 w-5 shrink-0 text-slate-400 transition group-open:rotate-180" />
     </summary>
@@ -139,8 +139,8 @@ export const UserGuideView: React.FC = () => {
               <button onClick={() => { setRole(id); setQuery(''); }} aria-pressed={!q && role === id} className="hc-role">
                 <span className="hc-role-icon"><Icon className="h-4 w-4" /></span>
                 <span className="min-w-0 flex-1 text-right">
-                  <b className="block truncate text-[12.5px]">{label}{id === myRole && <span className="hc-me">نقش شما</span>}</b>
-                  <small className="block truncate text-[10.5px] opacity-75">{intro}</small>
+                  <b className="block truncate text-[13px]">{label}{id === myRole && <span className="hc-me">نقش شما</span>}</b>
+                  <small className="block truncate text-[11px] opacity-75">{intro}</small>
                 </span>
               </button>
             </li>
@@ -191,9 +191,9 @@ export const UserGuideView: React.FC = () => {
               <div className="mt-3 border-t border-slate-100 pt-3">
               {STATUS_GLOSSARY.map((g) => (
                 <div key={g.group} className="mb-3 last:mb-0">
-                  <p className="mb-1.5 text-[11px] font-extrabold text-slate-500">{g.group}</p>
+                  <p className="mb-1.5 text-[12px] font-bold text-slate-500">{g.group}</p>
                   <ul className="grid gap-1.5 sm:grid-cols-2">
-                    {g.items.map((i) => <li key={i.label} title={i.meaning} className={`rounded-xl px-2.5 py-1.5 text-[11.5px] ring-1 ${TONE[i.tone]}`}><b className="block">{i.label}</b><span className="text-[10.5px] opacity-80">{i.meaning}</span></li>)}
+                    {g.items.map((i) => <li key={i.label} title={i.meaning} className={`rounded-xl px-2.5 py-1.5 text-[12px] ring-1 ${TONE[i.tone]}`}><b className="block">{i.label}</b><span className="text-[11px] opacity-80">{i.meaning}</span></li>)}
                   </ul>
                 </div>
               ))}
@@ -204,8 +204,8 @@ export const UserGuideView: React.FC = () => {
               <div className="mt-3 space-y-2 border-t border-slate-100 pt-3">
                 {COMMON_ERRORS.map((e) => (
                   <details key={e.problem} className="group rounded-xl bg-slate-50 px-3 py-2 open:bg-blue-50">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-[12.5px] font-bold text-slate-800">{e.problem}<ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180" /></summary>
-                    <p className="mt-1 text-[12px] leading-6 text-slate-600">{e.solution}</p>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-[13px] font-bold text-slate-800">{e.problem}<ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition group-open:rotate-180" /></summary>
+                    <p className="mt-1 text-[13px] leading-6 text-slate-600">{e.solution}</p>
                   </details>
                 ))}
               </div>

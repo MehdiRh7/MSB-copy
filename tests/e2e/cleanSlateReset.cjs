@@ -117,7 +117,7 @@ const P = 'postbank-mosavabat-v1:';
   // ============================================================
   // مرحله ۲ و ۳ — کاربران و Login
   // ============================================================
-  await switchUser('مدیر کل سیستم');
+  await switchUser('مدیر سیستم');
   const sidebar = await page.locator('aside').first().innerText();
   check('۲ ورود با Admin کار می‌کند و منو بارگذاری شد', sidebar.includes('پیشخوان') && sidebar.includes('تنظیمات'));
 

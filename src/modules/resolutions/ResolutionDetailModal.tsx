@@ -328,49 +328,49 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
           {/* Formal resolution minutes and sequential signatures */}
           {signatureWorkflow && (
             <section className="rounded-3xl border-2 border-slate-200 bg-white shadow-sm overflow-hidden">
-              <div className="bg-slate-900 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="bg-slate-50 text-slate-900 border-b border-slate-200 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-teal-300" />
+                  <FileText className="w-5 h-5 text-[var(--app-primary)]" />
                   <div>
-                    <h4 className="font-extrabold text-sm">صورت‌جلسه رسمی مصوبه</h4>
-                    <p className="text-[10px] text-slate-300 mt-0.5">سند امضای ترتیبی و ابلاغ جهت اجرا</p>
+                    <h4 className="font-bold text-sm">صورت‌جلسه رسمی مصوبه</h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">سند امضای ترتیبی و ابلاغ جهت اجرا</p>
                   </div>
                 </div>
-                <span className={`text-[11px] font-bold px-3 py-1 rounded-full border ${execMeta.bg}`}>{execMeta.label}</span>
+                <span className={`text-[12px] font-bold px-3 py-1 rounded-full border ${execMeta.bg}`}>{execMeta.label}</span>
               </div>
 
               <div className="p-5 space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[10px] text-slate-400">شماره و عنوان جلسه</span><strong className="text-slate-800">{resolution.meetingNumber}</strong><span className="block text-[10px] text-slate-500 mt-0.5">{resolution.meetingTitle}</span></div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[10px] text-slate-400">شماره مصوبه در جلسه</span><strong className="text-slate-800">{toPersianDigits(resolution.meetingResolutionNumber || '—')}</strong></div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[10px] text-slate-400">شماره نامه</span><strong className="text-slate-800">{toPersianDigits(resolution.letterNumber || '—')}</strong></div>
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[10px] text-slate-400">تاریخ و محل جلسه</span><strong className="text-slate-800">{toPersianDigits(meeting?.dateJalali || resolution.assignedDateJalali || '—')}</strong><span className="block text-[10px] text-slate-500 mt-0.5">{meeting?.location || '—'}</span></div>
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[11px] text-slate-400">شماره و عنوان جلسه</span><strong className="text-slate-800">{resolution.meetingNumber}</strong><span className="block text-[11px] text-slate-500 mt-0.5">{resolution.meetingTitle}</span></div>
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[11px] text-slate-400">شماره مصوبه در جلسه</span><strong className="text-slate-800">{toPersianDigits(resolution.meetingResolutionNumber || '—')}</strong></div>
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[11px] text-slate-400">شماره نامه</span><strong className="text-slate-800">{toPersianDigits(resolution.letterNumber || '—')}</strong></div>
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200"><span className="block text-[11px] text-slate-400">تاریخ و محل جلسه</span><strong className="text-slate-800">{toPersianDigits(meeting?.dateJalali || resolution.assignedDateJalali || '—')}</strong><span className="block text-[11px] text-slate-500 mt-0.5">{meeting?.location || '—'}</span></div>
                 </div>
 
                 <div>
                   <span className="font-bold text-slate-500">موضوع:</span>
-                  <h5 className="font-extrabold text-slate-900 text-sm mt-1">{resolution.topicTitle}</h5>
+                  <h5 className="font-bold text-slate-900 text-sm mt-1">{resolution.topicTitle}</h5>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-teal-50/60 border border-teal-200">
-                  <span className="font-extrabold text-teal-950 block mb-1">متن کامل مصوبه</span>
+                  <span className="font-bold text-teal-950 block mb-1">متن کامل مصوبه</span>
                   <p className="text-slate-700 leading-7">{resolution.executionDescription || resolution.requestDescription}</p>
                 </div>
 
                 <div>
-                  <span className="font-extrabold text-slate-800 block mb-2">مدعوین و مسئولان مرتبط</span>
+                  <span className="font-bold text-slate-800 block mb-2">مدعوین و مسئولان مرتبط</span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {invitees.map((invitee) => (
                       <div key={invitee.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50">
                         <strong className="text-slate-800">{invitee.name}</strong>
-                        <span className="block text-[10px] text-slate-500 mt-0.5">{invitee.title}{invitee.department ? ` — ${invitee.department}` : ''}</span>
+                        <span className="block text-[11px] text-slate-500 mt-0.5">{invitee.title}{invitee.department ? ` — ${invitee.department}` : ''}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex items-center gap-2 mb-3"><PenTool className="w-4 h-4 text-slate-700" /><span className="font-extrabold text-slate-800">{isParallelChain ? 'امضاهای دیجیتال همزمان' : 'امضاهای دیجیتال ترتیبی'}</span>{isCustomChain && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">گردش اختصاصی جلسه</span>}</div>
+                  <div className="flex items-center gap-2 mb-3"><PenTool className="w-4 h-4 text-slate-700" /><span className="font-bold text-slate-800">{isParallelChain ? 'امضاهای دیجیتال همزمان' : 'امضاهای دیجیتال ترتیبی'}</span>{isCustomChain && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">گردش اختصاصی جلسه</span>}</div>
 
                   {/* Infographic: at-a-glance sequential-signature stepper.
                       Purely visual, derived from the same signatureWorkflow
@@ -387,10 +387,10 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                       return (
                         <React.Fragment key={step.id}>
                           <div className="flex flex-col items-center gap-1.5 shrink-0">
-                            <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-extrabold text-xs ${circleClass}`}>
+                            <div className={`w-9 h-9 rounded-full border-2 flex items-center justify-center font-bold text-xs ${circleClass}`}>
                               {isSigned ? <Check className="w-4 h-4" /> : toPersianDigits(step.order)}
                             </div>
-                            <span className="text-[10px] font-bold text-slate-600 whitespace-nowrap">{step.signerRole === 'OFFICE_MANAGER' ? 'مسئول دفتر' : step.signerRole === 'CEO' ? 'مدیرعامل' : step.signerRole === 'CUSTOM' ? (step.signerTitle || step.signerName) : 'ادمین'}</span>
+                            <span className="text-[11px] font-bold text-slate-600 whitespace-nowrap">{step.signerRole === 'OFFICE_MANAGER' ? 'مسئول دفتر' : step.signerRole === 'CEO' ? 'مدیرعامل' : step.signerRole === 'CUSTOM' ? (step.signerTitle || step.signerName) : 'ادمین'}</span>
                           </div>
                           {idx < signatureWorkflow.steps.length - 1 && (
                             <div className={`flex-1 h-0.5 mx-1 mb-4 ${isSigned ? 'bg-emerald-500' : 'bg-slate-200'}`}></div>
@@ -406,19 +406,19 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                       const statusClass = step.status === 'SIGNED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : step.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-slate-50 text-slate-500 border-slate-200';
                       return (
                         <div key={step.id} className={`p-4 rounded-2xl border ${step.status === 'PENDING' ? 'ring-2 ring-amber-200' : ''} ${statusClass}`}>
-                          <span className="text-[10px] font-bold">امضای {toPersianDigits(step.order)}</span>
+                          <span className="text-[11px] font-bold">امضای {toPersianDigits(step.order)}</span>
                           <strong className="block text-slate-900 mt-2">{step.signerName}</strong>
-                          <span className="block text-[10px] text-slate-600 mt-0.5">{step.signerTitle}</span>
-                          <span className={`inline-block mt-3 px-2 py-1 rounded-full border text-[10px] font-bold ${statusClass}`}>{statusLabel}</span>
+                          <span className="block text-[11px] text-slate-600 mt-0.5">{step.signerTitle}</span>
+                          <span className={`inline-block mt-3 px-2 py-1 rounded-full border text-[11px] font-bold ${statusClass}`}>{statusLabel}</span>
                           {/* Audit Trail: امضاکننده تعیین‌شده بالا نمایش داده می‌شود و
                               اگر امضا به جانشینی انجام شده باشد، صریحاً گفته می‌شود
                               چه کسی واقعاً امضا کرده است. */}
                           {step.status === 'SIGNED' && step.signedAsDelegate && step.actualSignerName && (
-                            <span className="block text-[10px] font-bold text-indigo-700 mt-2">
+                            <span className="block text-[11px] font-bold text-indigo-700 mt-2">
                               امضا توسط: {step.actualSignerName} (به جانشینی)
                             </span>
                           )}
-                          {step.status === 'SIGNED' && <span className="block text-[10px] text-slate-500 mt-2">{toPersianDigits(step.signedDateJalali || '—')}، ساعت {toPersianDigits(step.signedTimeString || '—')}</span>}
+                          {step.status === 'SIGNED' && <span className="block text-[11px] text-slate-500 mt-2">{toPersianDigits(step.signedDateJalali || '—')}، ساعت {toPersianDigits(step.signedTimeString || '—')}</span>}
                           {/* The signer's own snapshotted signature image — always
                               resolved from the signature record, never from the
                               user currently viewing the resolution. */}
@@ -440,7 +440,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                           : `در انتظار امضای ${isParallelChain && pendingSignerNames.length ? pendingSignerNames.join('، ') : activeSignature?.signerName || 'امضاکننده بعدی'}`}
                     </span>
                     {canSign && (
-                      <button type="button" onClick={handleSignResolution} disabled={isSigning} className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-extrabold">
+                      <button type="button" onClick={handleSignResolution} disabled={isSigning} className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 text-white px-5 py-2.5 rounded-xl font-bold">
                         <PenTool className="w-4 h-4" />
                         {isSigning ? 'در حال ثبت امضا...' : isSigningAsDelegate ? 'امضا به جانشینی' : 'امضای دیجیتال مصوبه'}
                       </button>
@@ -448,7 +448,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                   </div>
                 )}
                 {signatureWorkflow.status === 'COMPLETED' && resolution.executionStatus === 'WAITING_NOTIFICATION' && (
-                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-extrabold flex items-center gap-2">
+                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4" />
                     {isCustomChain ? 'همه امضاهای تعیین‌شده' : 'هر سه امضای اصلی'} تکمیل شده؛ مصوبه در انتظار ابلاغ رسمی توسط مسئول دفتر است.
                   </div>
@@ -456,11 +456,11 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                 {/* ابلاغ ثبت شده اما ابلاغیه هنوز امضا نشده: مصوبه وارد اجرا نشده است. */}
                 {resolution.executionStatus === 'PENDING_SECRETARY_NOTICE_SIGNATURE' && (
                   <div className="p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-900 space-y-2">
-                    <div className="font-extrabold flex items-center gap-2">
+                    <div className="font-bold flex items-center gap-2">
                       <PenTool className="w-4 h-4" />
                       ابلاغ ثبت شد؛ ابلاغیه در انتظار امضای دبیر جلسه است و مصوبه هنوز وارد فاز اجرا نشده.
                     </div>
-                    <div className="text-[11px] font-bold">
+                    <div className="text-[12px] font-bold">
                       ابلاغ توسط {resolution.notifiedByName || '—'} در تاریخ {toPersianDigits(resolution.notifiedDateJalali || '—')}
                       {resolution.notifiedTimeString ? ` ساعت ${toPersianDigits(resolution.notifiedTimeString)}` : ''}
                       {resolution.notificationLetterNumber ? ` | شماره نامه ابلاغیه: ${toPersianDigits(resolution.notificationLetterNumber)}` : ''}
@@ -470,9 +470,9 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                 )}
                 {signatureWorkflow.status === 'COMPLETED' && !['WAITING_NOTIFICATION', 'PENDING_SECRETARY_NOTICE_SIGNATURE'].includes(resolution.executionStatus) && (
                   <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 space-y-1">
-                    <div className="font-extrabold flex items-center gap-2"><CheckCircle2 className="w-4 h-4" />{isCustomChain ? 'همه امضاها' : 'هر سه امضا'} تکمیل شده و مصوبه ابلاغ و وارد فرآیند اجرا شده است.</div>
+                    <div className="font-bold flex items-center gap-2"><CheckCircle2 className="w-4 h-4" />{isCustomChain ? 'همه امضاها' : 'هر سه امضا'} تکمیل شده و مصوبه ابلاغ و وارد فرآیند اجرا شده است.</div>
                     {resolution.notifiedByName && (
-                      <div className="text-[11px] font-bold">
+                      <div className="text-[12px] font-bold">
                         ابلاغ توسط {resolution.notifiedByName} در تاریخ {toPersianDigits(resolution.notifiedDateJalali || '—')}
                         {resolution.notifiedTimeString ? ` ساعت ${toPersianDigits(resolution.notifiedTimeString)}` : ''}
                       </div>
@@ -489,28 +489,28 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
           {/* Metadata Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-              <div className="text-[10px] font-bold text-slate-400 mb-0.5">جلسه مرجع</div>
-              <div className="font-extrabold text-slate-800 truncate" title={resolution.meetingTitle}>
+              <div className="text-[11px] font-bold text-slate-400 mb-0.5">جلسه مرجع</div>
+              <div className="font-bold text-slate-800 truncate" title={resolution.meetingTitle}>
                 {resolution.meetingTitle}
               </div>
-              <div className="text-[10px] text-slate-500">{resolution.meetingNumber}</div>
+              <div className="text-[11px] text-slate-500">{resolution.meetingNumber}</div>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-              <div className="text-[10px] font-bold text-slate-400 mb-0.5">مسئول اجرا (Assignee)</div>
-              <div className="font-extrabold text-slate-800">{resolution.mainResponsibleName || 'نامشخص'}</div>
-              <div className="text-[10px] text-slate-500">{resolution.responsibleDepartmentName}</div>
+              <div className="text-[11px] font-bold text-slate-400 mb-0.5">مسئول اجرا (Assignee)</div>
+              <div className="font-bold text-slate-800">{resolution.mainResponsibleName || 'نامشخص'}</div>
+              <div className="text-[11px] text-slate-500">{resolution.responsibleDepartmentName}</div>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-              <div className="text-[10px] font-bold text-slate-400 mb-0.5">مهلت اقدام (Deadline)</div>
-              <div className="font-extrabold text-slate-800">{toPersianDigits(resolution.deadlineJalali || '—')}</div>
-              <div className="text-[10px] text-slate-500">ابلاغ: {toPersianDigits(resolution.assignedDateJalali || '—')}</div>
+              <div className="text-[11px] font-bold text-slate-400 mb-0.5">مهلت اقدام (Deadline)</div>
+              <div className="font-bold text-slate-800">{toPersianDigits(resolution.deadlineJalali || '—')}</div>
+              <div className="text-[11px] text-slate-500">ابلاغ: {toPersianDigits(resolution.assignedDateJalali || '—')}</div>
             </div>
 
             <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
-              <div className="text-[10px] font-bold text-slate-400 mb-0.5">اولویت سازمانی</div>
-              <span className={`inline-block font-extrabold px-2 py-0.5 rounded-md ${priorityMeta.bg} ${priorityMeta.text}`}>
+              <div className="text-[11px] font-bold text-slate-400 mb-0.5">اولویت سازمانی</div>
+              <span className={`inline-block font-bold px-2 py-0.5 rounded-md ${priorityMeta.bg} ${priorityMeta.text}`}>
                 {priorityMeta.label}
               </span>
             </div>
@@ -518,24 +518,24 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
 
           {(resolution.progressReports?.length || resolution.progressPercent !== undefined) && (
             <section className="p-5 bg-white border border-slate-200 rounded-3xl space-y-4">
-              <div className="flex items-center justify-between"><h4 className="font-extrabold text-slate-900">پیگیری پیشرفت اجرای مصوبه</h4><span className="text-sm font-black text-teal-700">{toPersianDigits(resolution.progressPercent || 0)}٪</span></div>
+              <div className="flex items-center justify-between"><h4 className="font-bold text-slate-900">پیگیری پیشرفت اجرای مصوبه</h4><span className="text-sm font-bold text-teal-700">{toPersianDigits(resolution.progressPercent || 0)}٪</span></div>
               <div className="h-3 bg-slate-100 rounded-full overflow-hidden"><div className="h-full bg-teal-600 rounded-full transition-all" style={{ width: `${resolution.progressPercent || 0}%` }} /></div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[11px]"><div className="p-3 bg-slate-50 rounded-xl"><span className="text-slate-400 block">تاریخ شروع</span><strong>{toPersianDigits(resolution.executionStartDateJalali || '—')}</strong></div><div className="p-3 bg-slate-50 rounded-xl sm:col-span-2"><span className="text-slate-400 block">آخرین اقدام</span><strong>{resolution.lastAction || '—'}</strong></div></div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12px]"><div className="p-3 bg-slate-50 rounded-xl"><span className="text-slate-400 block">تاریخ شروع</span><strong>{toPersianDigits(resolution.executionStartDateJalali || '—')}</strong></div><div className="p-3 bg-slate-50 rounded-xl sm:col-span-2"><span className="text-slate-400 block">آخرین اقدام</span><strong>{resolution.lastAction || '—'}</strong></div></div>
               {resolution.obstacles && <div className="p-3 bg-orange-50 border border-orange-200 text-orange-800 rounded-xl"><strong>مشکلات و موانع:</strong> {resolution.obstacles}</div>}
               <div className="space-y-2"><div className="font-bold text-slate-700">گزارش‌های ثبت‌شده</div>{[...(resolution.progressReports || [])].reverse().map((report) => <div key={report.id} className="p-3 border border-slate-200 rounded-2xl bg-slate-50"><div className="flex flex-wrap justify-between gap-2"><strong className="text-slate-800">{toPersianDigits(report.progressPercent)}٪ — {report.reporterName}</strong><span className="text-slate-400">{toPersianDigits(report.reportDateJalali)}، {toPersianDigits(report.reportTimeString)}</span></div><p className="mt-1 text-slate-700">{report.actionDescription}</p>{report.obstacles && <p className="mt-1 text-orange-700">موانع: {report.obstacles}</p>}{report.attachments.length > 0 && <span className="block mt-1 text-blue-700">{toPersianDigits(report.attachments.length)} مستند پیوست</span>}</div>)}</div>
             </section>
           )}
 
           <section className="p-5 bg-slate-50 border border-slate-200 rounded-3xl space-y-3">
-            <h4 className="font-extrabold text-slate-900">پرونده و زنجیره سوابق مصوبه</h4>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold"><span className="px-3 py-1.5 bg-white border rounded-xl">پیشنهاد اولیه {meeting?.agendaItems.find((item) => item.id === resolution.agendaItemId)?.sourceProposalId ? `(${meeting.agendaItems.find((item) => item.id === resolution.agendaItemId)?.sourceProposalId})` : ''}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">دستورکار {resolution.agendaItemId || '—'}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{resolution.meetingNumber}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{resolution.resolutionNumber}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{notices.length ? `${toPersianDigits(notices.length)} ابلاغیه` : 'در انتظار ابلاغ'}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{toPersianDigits(resolution.progressPercent || 0)}٪ اجرا</span></div>
-            {notices.length > 0 && <div className="space-y-2">{notices.map((notice) => <div key={notice.id} className="p-3 bg-white border border-blue-200 rounded-xl flex flex-wrap items-center justify-between gap-2"><div><strong className="text-blue-900">{notice.noticeNumber}</strong>{notice.notificationLetterNumber && <span className="mr-2 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">شماره نامه ابلاغیه: {toPersianDigits(notice.notificationLetterNumber)}</span>}<span className="block text-[10px] text-slate-500">{notice.recipientName} — {notice.recipientDepartment} — {toPersianDigits(notice.dateJalali)}</span></div><div className="flex items-center gap-2"><span className={`text-[10px] font-bold px-2 py-1 rounded-full ${notice.status === 'RECEIVED' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{notice.status === 'RECEIVED' ? 'دریافت شده' : 'ارسال شده'}</span>{notice.status === 'SENT' && (currentUser.role === 'ADMIN' || notice.recipientName === currentUser.fullName || notice.recipientDepartment === currentUser.departmentName) && <button onClick={() => handleNoticeReceived(notice.id)} className="text-[10px] bg-teal-700 text-white px-2.5 py-1.5 rounded-lg">ثبت دریافت</button>}</div></div>)}</div>}
+            <h4 className="font-bold text-slate-900">پرونده و زنجیره سوابق مصوبه</h4>
+            <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold"><span className="px-3 py-1.5 bg-white border rounded-xl">پیشنهاد اولیه {meeting?.agendaItems.find((item) => item.id === resolution.agendaItemId)?.sourceProposalId ? `(${meeting.agendaItems.find((item) => item.id === resolution.agendaItemId)?.sourceProposalId})` : ''}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">دستورکار {resolution.agendaItemId || '—'}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{resolution.meetingNumber}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{resolution.resolutionNumber}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{notices.length ? `${toPersianDigits(notices.length)} ابلاغیه` : 'در انتظار ابلاغ'}</span><span>←</span><span className="px-3 py-1.5 bg-white border rounded-xl">{toPersianDigits(resolution.progressPercent || 0)}٪ اجرا</span></div>
+            {notices.length > 0 && <div className="space-y-2">{notices.map((notice) => <div key={notice.id} className="p-3 bg-white border border-blue-200 rounded-xl flex flex-wrap items-center justify-between gap-2"><div><strong className="text-blue-900">{notice.noticeNumber}</strong>{notice.notificationLetterNumber && <span className="mr-2 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">شماره نامه ابلاغیه: {toPersianDigits(notice.notificationLetterNumber)}</span>}<span className="block text-[11px] text-slate-500">{notice.recipientName} — {notice.recipientDepartment} — {toPersianDigits(notice.dateJalali)}</span></div><div className="flex items-center gap-2"><span className={`text-[11px] font-bold px-2 py-1 rounded-full ${notice.status === 'RECEIVED' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}`}>{notice.status === 'RECEIVED' ? 'دریافت شده' : 'ارسال شده'}</span>{notice.status === 'SENT' && (currentUser.role === 'ADMIN' || notice.recipientName === currentUser.fullName || notice.recipientDepartment === currentUser.departmentName) && <button onClick={() => handleNoticeReceived(notice.id)} className="text-[11px] bg-teal-700 text-white px-2.5 py-1.5 rounded-lg">ثبت دریافت</button>}</div></div>)}</div>}
           </section>
 
           {/* Texts & Instructions */}
           <div className="space-y-3">
             <div className="p-4 bg-teal-50/40 border border-teal-200/70 rounded-2xl space-y-1">
-              <span className="font-extrabold text-teal-950 block">متن مصوب و شرح اقدام اجرایی:</span>
+              <span className="font-bold text-teal-950 block">متن مصوب و شرح اقدام اجرایی:</span>
               <p className="text-slate-700 leading-relaxed text-xs">
                 {resolution.executionDescription || resolution.requestDescription}
               </p>
@@ -543,9 +543,9 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
 
             {resolution.completionNotes && (
               <div className="p-4 bg-emerald-50/50 border border-emerald-200 rounded-2xl space-y-1">
-                <div className="flex items-center justify-between text-emerald-900 font-extrabold">
+                <div className="flex items-center justify-between text-emerald-900 font-bold">
                   <span>گزارش ثبت‌شده اتمام کار توسط مجری:</span>
-                  <span className="text-[11px] font-normal">تاریخ تکمیل: {toPersianDigits(resolution.completionDateJalali || '—')}</span>
+                  <span className="text-[12px] font-normal">تاریخ تکمیل: {toPersianDigits(resolution.completionDateJalali || '—')}</span>
                 </div>
                 <p className="text-slate-700 leading-relaxed text-xs">
                   {resolution.completionNotes}
@@ -560,11 +560,11 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-purple-700" />
-                  <h4 className="text-xs font-extrabold text-purple-950">
+                  <h4 className="text-xs font-bold text-purple-950">
                     مراحل زنجیره صحه‌گذاری (Verification Steps)
                   </h4>
                 </div>
-                <span className="text-[11px] font-bold text-purple-700 bg-white px-2.5 py-0.5 rounded-full border border-purple-200">
+                <span className="text-[12px] font-bold text-purple-700 bg-white px-2.5 py-0.5 rounded-full border border-purple-200">
                   نحوه اجرا: {resolution.verificationConfig.mode === 'SEQUENTIAL' ? 'ترتیبی (مرحله‌به‌مرحله)' : 'موازی'}
                 </span>
               </div>
@@ -587,18 +587,18 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-extrabold text-slate-800">
+                        <span className="text-xs font-bold text-slate-800">
                           مرحله {toPersianDigits(step.stepNumber)}: {step.approverName}
                         </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${stepMeta.bg}`}>
+                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${stepMeta.bg}`}>
                           {stepMeta.label}
                         </span>
                       </div>
 
-                      <div className="text-[11px] text-slate-500">{step.approverRole}</div>
+                      <div className="text-[12px] text-slate-500">{step.approverRole}</div>
 
                       {step.comments && (
-                        <div className="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-700">
+                        <div className="mt-2 p-2 bg-slate-50 rounded-xl border border-slate-100 text-[12px] text-slate-700">
                           <strong>نظر صحه‌گذار:</strong> {step.comments}
                         </div>
                       )}
@@ -614,11 +614,11 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
             <div className="p-5 bg-teal-50/60 border border-teal-300 rounded-3xl space-y-3">
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-teal-700" />
-                <h4 className="text-xs font-extrabold text-teal-950">
+                <h4 className="text-xs font-bold text-teal-950">
                   ثبت اتمام اقدام توسط مجری (شما به عنوان مسئول اجرا)
                 </h4>
               </div>
-              <p className="text-[11px] text-teal-800">
+              <p className="text-[12px] text-teal-800">
                 گزارش اقدامات انجام شده و مستندات مربوطه را درج فرمایید تا مصوبه وارد فرآیند صحه‌گذاری شود.
               </p>
 
@@ -639,7 +639,7 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
                 {completionFiles.length > 0 && (
                   <div className="space-y-1.5">
                     {completionFiles.map((file, index) => (
-                      <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 p-2 bg-white border border-teal-200 rounded-xl text-[11px]">
+                      <div key={`${file.name}-${index}`} className="flex items-center justify-between gap-2 p-2 bg-white border border-teal-200 rounded-xl text-[12px]">
                         <span className="font-bold text-slate-700 truncate">{file.name}</span>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-slate-400">{formatFileSize(file.size)}</span>
@@ -672,11 +672,11 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
             <div className="p-5 bg-purple-50/80 border border-purple-300 rounded-3xl space-y-3">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-purple-700" />
-                <h4 className="text-xs font-extrabold text-purple-950">
+                <h4 className="text-xs font-bold text-purple-950">
                   اقدام صحه‌گذاری توسط شما ({currentUser.fullName})
                 </h4>
               </div>
-              <p className="text-[11px] text-purple-800">
+              <p className="text-[12px] text-purple-800">
                 گزارش مجری را بررسی نموده و نسبت به تایید یا رد مرحله اقدام فرمایید:
               </p>
 
@@ -717,8 +717,8 @@ export const ResolutionDetailModal: React.FC<ResolutionDetailModalProps> = ({
               the same single followUpService path the cartable uses. */}
           {resolution.followUp?.enabled && hasPermission('VIEW_RESOLUTION_FOLLOWUP') && (
             <div className="p-3.5 bg-amber-50/50 border border-amber-200/70 rounded-2xl space-y-3">
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-amber-900">
-                <span className="font-extrabold">برنامه پیگیری:</span>
+              <div className="flex flex-wrap items-center gap-2 text-[12px] text-amber-900">
+                <span className="font-bold">برنامه پیگیری:</span>
                 <span>موعد بعدی {nextDueDate(resolution.followUp) ? toPersianDigits(nextDueDate(resolution.followUp)!) : 'تعیین نشده'}</span>
                 {resolution.followUp.lastFollowUpDateJalali && (
                   <span>— آخرین پیگیری {toPersianDigits(resolution.followUp.lastFollowUpDateJalali)}</span>

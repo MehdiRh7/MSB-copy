@@ -150,7 +150,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">ورود پیشنهاد مصوبات از Excel</h3>
-              <p className="text-[11px] text-teal-200">آپلود، بررسی و پیش‌نمایش پیش از ثبت نهایی</p>
+              <p className="text-[12px] text-teal-200">آپلود، بررسی و پیش‌نمایش پیش از ثبت نهایی</p>
             </div>
           </div>
           <button onClick={handleClose} className="text-teal-200 hover:text-white p-1 rounded-lg hover:bg-teal-800 cursor-pointer">
@@ -168,7 +168,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
               >
                 <UploadCloud className="w-9 h-9 text-teal-700 mx-auto mb-3" />
                 <p className="text-xs font-bold text-slate-700 mb-1">یک یا چند فایل Excel تکمیل‌شده را انتخاب یا رها کنید</p>
-                <p className="text-[10px] text-slate-400 mb-4">فقط فرمت xlsx. پذیرفته می‌شود</p>
+                <p className="text-[11px] text-slate-400 mb-4">فقط فرمت xlsx. پذیرفته می‌شود</p>
                 <label className="bg-teal-800 hover:bg-teal-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl cursor-pointer inline-flex items-center gap-1.5">
                   <Plus className="w-3.5 h-3.5" />
                   <span>{selectedFiles.length > 0 ? 'افزودن فایل دیگر' : 'انتخاب فایل'}</span>
@@ -186,7 +186,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-slate-800 truncate" title={entry.file.name}>{entry.file.name}</p>
-                          <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                          <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
                             <span>{formatFileSize(entry.file.size)}</span>
                             <span>•</span>
                             {entry.status === 'PARSING' && (
@@ -227,7 +227,7 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
               </div>
 
               <div className="overflow-x-auto border border-slate-100 rounded-xl">
-                <table className="w-full min-w-[820px] text-right text-[11px]">
+                <table className="w-full min-w-[820px] text-right text-[12px]">
                   <thead>
                     <tr className="bg-slate-50 text-slate-500 border-b border-slate-100">
                       <th className="py-2 px-2.5 font-semibold">ردیف</th>
@@ -252,11 +252,11 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({ isOpen, onCl
                         <td className="py-2 px-2.5 text-slate-600">{toPersianDigits(row.letterDateJalali) || '—'}</td>
                         <td className="py-2 px-2.5">
                           {row.isValid ? (
-                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">معتبر</span>
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-emerald-50 text-emerald-700 border-emerald-200">معتبر</span>
                           ) : (
                             <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full border bg-rose-50 text-rose-700 border-rose-200">خطا</span>
-                              <ul className="text-[10px] text-rose-600 list-disc pr-3">
+                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border bg-rose-50 text-rose-700 border-rose-200">خطا</span>
+                              <ul className="text-[11px] text-rose-600 list-disc pr-3">
                                 {row.errors.map((err, idx) => <li key={idx}>{err}</li>)}
                               </ul>
                             </div>

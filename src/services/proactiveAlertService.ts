@@ -36,7 +36,7 @@ export const buildProactiveRiskAlerts = (user: User, existing: AppNotification[]
     .map(({ r, risk }) => ({
       id: `risk-${r.id}-${user.id}-${today}`,
       recipientUserId: user.id,
-      title: `هشدار ریسک تأخیر (${risk.score.toLocaleString('fa-IR')}٪)`,
+      title: `ریسک تأخیر ${risk.score >= 80 ? 'بسیار زیاد' : 'زیاد'}`,
       message: toPersianDigits(`${r.resolutionNumber} — ${r.topicTitle}: ${risk.factors.slice(0, 2).join('؛ ')}`),
       dateJalali: toPersianDigits(today),
       timeString: time,

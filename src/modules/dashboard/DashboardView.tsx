@@ -26,12 +26,6 @@ import { buildDashboardModel, daysFromToday, DashboardActionItem } from './dashb
 import { AiDailyBrief } from './AiDailyBrief';
 import { DashboardCustomizer, useDashboardLayout } from './dashboardLayout';
 
-const greeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'صبح بخیر';
-  if (hour < 17) return 'روز بخیر';
-  return 'عصر بخیر';
-};
 
 const longToday = () => {
   const now = new Date();
@@ -76,13 +70,13 @@ export const DashboardView: React.FC = () => {
       <div className="flex min-h-[70vh] items-center justify-center">
         <section className="dash-empty">
           <div className="dash-empty-icon"><LayoutDashboard className="h-7 w-7" /></div>
-          <h1 className="text-xl font-black text-slate-900">{greeting()}، {currentUser.fullName}</h1>
+          <h1 className="text-xl font-bold text-slate-900">پیشخوان</h1>
           <p className="mx-auto mt-2 max-w-sm text-[13px] leading-7 text-slate-600">
             {canCreateMeeting ? 'هنوز جلسه‌ای ثبت نشده است. با برنامه‌ریزی اولین جلسه شروع کنید.' : 'هنوز موردی برای شما ثبت نشده است. می‌توانید پیشنهاد خود را ثبت کنید.'}
           </p>
           <div className="mt-6 flex justify-center">{primaryAction}</div>
           {currentUser.role === 'ADMIN' && (
-            <button onClick={() => navigateTo('settings')} className="mt-4 text-[11px] font-bold text-slate-500 hover:text-[var(--app-primary)] hover:underline">نمایش با داده نمونه (تنظیمات ← داده نمایشی)</button>
+            <button onClick={() => navigateTo('settings')} className="mt-4 text-[12px] font-bold text-slate-500 hover:text-[var(--app-primary)] hover:underline">نمایش با داده نمونه (تنظیمات ← داده نمایشی)</button>
           )}
         </section>
       </div>
@@ -96,12 +90,7 @@ export const DashboardView: React.FC = () => {
   const activeTab: ResTab = resTab || (model.overdue.length ? 'overdue' : 'running');
   const shownRes = lists[activeTab].items.slice(0, 5);
 
-  const tiles = [
-    { label: 'کارهای منتظر من', value: model.actionItems.length, icon: CheckCircle2, onClick: () => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth' }), tone: 'blue' },
-    { label: 'جلسات پیش‌رو', value: model.upcomingMeetings.length, icon: CalendarDays, onClick: () => navigateTo('calendar'), tone: 'sky' },
-    { label: 'مصوبات در حال اجرا', value: model.counts.activeResolutions, icon: TrendingUp, onClick: () => navigateTo('resolutions'), tone: 'indigo' },
-    { label: 'مصوبات معوق', value: model.counts.overdue, icon: AlertTriangle, onClick: () => navigateTo('resolutions'), tone: model.counts.overdue ? 'red' : 'slate' },
-  ].filter((tile) => tile.value > 0);
+
 
   // تحلیل واحدها فقط برای ادمین است؛ سایر نقش‌ها فقط اقدام‌ها و پرونده‌های
   // مرتبط با خودشان را روی داشبورد می‌بینند.
@@ -128,84 +117,71 @@ export const DashboardView: React.FC = () => {
   return (
     <div className="flex flex-col gap-4 pb-10">
       {customizerOpen && <DashboardCustomizer api={dash} onClose={() => setCustomizerOpen(false)} />}
-      {/* ——— سلام و اقدام اصلی ——— */}
-      <section className="db-hello" style={{ order: 0 }}>
+      {/* ——— عنوان صفحه و اقدام اصلی ——— */}
+      <header className="page-head" style={{ order: 0 }}>
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl font-black text-slate-900">{greeting()}، {currentUser.fullName}</h1>
-          <p className="mt-0.5 text-[12px] text-slate-500">{longToday()} · {currentUser.title}</p>
+          <h1 className="page-head-title">پیشخوان</h1>
+          <p className="page-head-sub">{longToday()}</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setCustomizerOpen(true)} className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-600 hover:border-indigo-300 hover:text-indigo-700" title="شخصی‌سازی داشبورد"><LayoutGrid className="h-4 w-4" />شخصی‌سازی</button>
+          <button onClick={() => setCustomizerOpen(true)} className="app-btn-secondary" title="انتخاب و ترتیب بخش‌های پیشخوان"><LayoutGrid className="h-4 w-4" />چیدمان</button>
           {primaryAction}
         </div>
-      </section>
+      </header>
 
-      {dash.isVisible('brief') && <div style={ord('brief')}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>}
-
-      {/* این نمودار فقط از مصوبات قابل مشاهده همین کاربر ساخته می‌شود؛ هیچ
-          شمارنده نمونه یا داده خارج از Scope نقش در آن وارد نمی‌شود. */}
-      {dash.isVisible('pulse') && model.statusBreakdown.length > 0 && (
-        <section className="db-insight-card" style={ord('pulse')}>
-          <header className="db-insight-head">
-            <div>
-              <span className="db-insight-eyebrow">نمای مدیریتی لحظه‌ای</span>
-              <h2>نبض مصوبات</h2>
-              <p>بر پایهٔ پرونده‌هایی که به آن‌ها دسترسی دارید</p>
-            </div>
-            <div className="db-insight-kpi"><span>نرخ خاتمه</span><b>{toPersianDigits(completionRate)}٪</b></div>
-          </header>
-          {tiles.length > 0 && (
-            <div className="db-insight-tiles" aria-label="شاخص‌های کلیدی">
-              {tiles.map(({ label, value, icon: Icon, onClick, tone }) => (
-                <button key={label} onClick={onClick} className={`db-insight-tile db-insight-tile-${tone}`}>
-                  <span className="db-insight-tile-icon"><Icon className="h-4 w-4" /></span>
-                  <span className="min-w-0 text-right">
-                    <b>{toPersianDigits(value)}</b>
-                    <span>{label}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="grid items-center gap-5 md:grid-cols-[14rem_1fr]">
-            <div className="db-orbit-wrap" aria-label="نمودار وضعیت مصوبات">
-              <ResponsiveContainer width="100%" height={190}>
-                <PieChart>
-                  <Pie data={model.statusBreakdown} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={63} outerRadius={91} paddingAngle={4} cornerRadius={7} startAngle={90} endAngle={-270} stroke="none">
-                    {model.statusBreakdown.map((item) => <Cell key={item.key} fill={item.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(value) => [`${toPersianDigits(Number(value))} مورد`, 'تعداد']} contentStyle={{ borderRadius: '14px', border: '1px solid rgba(255,255,255,.22)', background: '#102c61', color: '#fff', boxShadow: '0 14px 30px -18px rgba(2, 18, 53, .9)', fontSize: '11px', direction: 'rtl' }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="db-orbit-center"><b>{toPersianDigits(totalStatusItems)}</b><span>مصوبه قابل مشاهده</span></div>
-            </div>
-            <ul className="grid gap-2 sm:grid-cols-2">
-              {model.statusBreakdown.map((item) => (
-                <li key={item.key} className="db-status-row">
-                  <div className="flex items-center gap-2 text-[11px]">
-                    <span className="db-status-dot" style={{ backgroundColor: item.color }} />
-                    <span className="min-w-0 flex-1 font-bold text-slate-700">{item.label}</span>
-                    <b className="text-slate-900">{toPersianDigits(item.value)}</b>
-                    <span className="w-9 text-left font-bold text-slate-400">{toPersianDigits(Math.round((item.value / totalStatusItems) * 100))}٪</span>
-                  </div>
-                  <span className="db-status-track"><i style={{ width: `${(item.value / totalStatusItems) * 100}%`, backgroundColor: item.color }} /></span>
-                </li>
-              ))}
-            </ul>
-          </div>
+      {/* ——— شاخص‌ها: چهار عدد اصلی، همیشه در یک ردیف ——— */}
+      {dash.isVisible('pulse') && (
+        <section className="stat-grid" style={{ order: Math.min(dash.orderOf('brief'), dash.orderOf('pulse')) }} aria-label="شاخص‌های اصلی">
+          {[
+            { label: 'کارهای منتظر من', value: model.actionItems.length, icon: CheckCircle2, onClick: () => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth' }), alert: false },
+            { label: 'جلسات پیش‌رو', value: model.upcomingMeetings.length, icon: CalendarDays, onClick: () => navigateTo('calendar'), alert: false },
+            { label: 'مصوبات در حال اجرا', value: model.counts.activeResolutions, icon: TrendingUp, onClick: () => navigateTo('resolutions'), alert: false },
+            { label: 'مصوبات معوق', value: model.counts.overdue, icon: AlertTriangle, onClick: () => navigateTo('resolutions'), alert: model.counts.overdue > 0 },
+          ].map(({ label, value, icon: Icon, onClick, alert }) => (
+            <button key={label} type="button" onClick={onClick} className={`stat-card ${alert ? 'stat-card-alert' : ''}`}>
+              <span className="stat-card-label"><Icon className="h-4 w-4" />{label}</span>
+              <span className="stat-card-value">{toPersianDigits(value)}</span>
+            </button>
+          ))}
         </section>
       )}
 
-      {/* اگر هنوز هیچ مصوبه‌ای برای نمودار وجود ندارد، شاخص‌های عملیاتی
-          قابل‌کلیک حذف نمی‌شوند و به‌تنهایی نمایش داده می‌شوند. */}
-      {dash.isVisible('pulse') && model.statusBreakdown.length === 0 && tiles.length > 0 && <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" style={ord('pulse')}>
-        {tiles.map(({ label, value, icon: Icon, onClick, tone }) => (
-          <button key={label} onClick={onClick} className={`db-tile db-tile-${tone}`}>
-            <span className="db-tile-icon"><Icon className="h-5 w-5" /></span>
-            <span className="text-right"><span className="block text-[26px] font-black leading-none">{toPersianDigits(value)}</span><span className="mt-1 block text-[12px] font-bold opacity-80">{label}</span></span>
-          </button>
-        ))}
-      </div>}
+      {/* ——— خلاصه امروز و وضعیت مصوبات، کنار هم ——— */}
+      {(dash.isVisible('brief') || (dash.isVisible('pulse') && model.statusBreakdown.length > 0)) && (
+        <div className="grid gap-4 lg:grid-cols-3" style={{ order: Math.min(dash.orderOf('brief'), dash.orderOf('pulse')) }}>
+          {dash.isVisible('brief') && <div className={model.statusBreakdown.length > 0 && dash.isVisible('pulse') ? 'lg:col-span-2' : 'lg:col-span-3'}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => document.getElementById('dash-todo')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} /></div>}
+          {dash.isVisible('pulse') && model.statusBreakdown.length > 0 && (
+            <section className={`db-card ${dash.isVisible('brief') ? '' : 'lg:col-span-3'}`}>
+              <header className="db-card-head">
+                <h2>وضعیت مصوبات</h2>
+                <span className="text-xs text-slate-500">{toPersianDigits(completionRate)}٪ خاتمه‌یافته</span>
+              </header>
+              <div className="flex items-center gap-4">
+                <div className="relative h-32 w-32 shrink-0" aria-label="نمودار وضعیت مصوبات">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={model.statusBreakdown} dataKey="value" nameKey="label" cx="50%" cy="50%" innerRadius={42} outerRadius={60} paddingAngle={2} startAngle={90} endAngle={-270} stroke="none" isAnimationActive={false}>
+                        {model.statusBreakdown.map((item) => <Cell key={item.key} fill={item.color} />)}
+                      </Pie>
+                      <Tooltip formatter={(value) => [`${toPersianDigits(Number(value))} مورد`, 'تعداد']} contentStyle={{ borderRadius: '8px', fontSize: '12px', direction: 'rtl' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center"><b className="text-lg text-slate-900">{toPersianDigits(totalStatusItems)}</b><span className="text-[12px] text-slate-500">مصوبه</span></div>
+                </div>
+                <ul className="min-w-0 flex-1 space-y-1.5">
+                  {model.statusBreakdown.map((item) => (
+                    <li key={item.key} className="flex items-center gap-2 text-xs">
+                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="min-w-0 flex-1 truncate text-slate-700">{item.label}</span>
+                      <b className="text-slate-900">{toPersianDigits(item.value)}</b>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+        </div>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-3" style={{ order: workOrder }}>
         {/* ——— کارهای من ——— */}
@@ -220,9 +196,9 @@ export const DashboardView: React.FC = () => {
                   <button onClick={() => navigateTo(item.route, item.params)} className={`db-todo ${index === 0 ? 'db-todo-first' : ''}`}>
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${TONE_DOT[item.tone]}`} />
                     <span className="min-w-0 flex-1 text-right">
-                      {index === 0 && <span className="mb-0.5 block text-[10.5px] font-extrabold text-blue-700">اقدام بعدی من</span>}
-                      <span className="block truncate text-[13px] font-extrabold text-slate-800">{item.title}</span>
-                      <span className="block truncate text-[11.5px] text-slate-500">{item.kind} · {item.subtitle}</span>
+                      {index === 0 && <span className="mb-0.5 block text-[12px] font-bold text-[var(--app-primary)]">اولویت اول</span>}
+                      <span className="block truncate text-[13px] font-bold text-slate-800">{item.title}</span>
+                      <span className="block truncate text-[12px] text-slate-500">{item.kind} · {item.subtitle}</span>
                     </span>
                     <span className="db-todo-cta">{item.cta}<ArrowLeft className="h-3.5 w-3.5" /></span>
                   </button>
@@ -244,10 +220,10 @@ export const DashboardView: React.FC = () => {
                     <button onClick={() => navigateTo('meeting-details', { meetingId: m.id })} className="db-meeting">
                       <span className="db-date"><b>{day}</b><small>{month}</small></span>
                       <span className="min-w-0 flex-1 text-right">
-                        <span className="block truncate text-[12.5px] font-extrabold text-slate-800">{m.title}</span>
-                        <span className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500"><Clock3 className="h-3 w-3" />{toPersianDigits(m.startTime)} · {relativeDay(daysFromToday(m.dateJalali))}</span>
-                        <span className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-slate-500"><MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{m.location}</span></span>
-                        <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${status.bg} ${status.text}`}>{status.label}</span>
+                        <span className="block truncate text-[13px] font-bold text-slate-800">{m.title}</span>
+                        <span className="mt-0.5 flex items-center gap-1 text-[12px] text-slate-500"><Clock3 className="h-3 w-3" />{toPersianDigits(m.startTime)} · {relativeDay(daysFromToday(m.dateJalali))}</span>
+                        <span className="mt-0.5 flex items-center gap-1 truncate text-[12px] text-slate-500"><MapPin className="h-3 w-3 shrink-0" /><span className="truncate">{m.location}</span></span>
+                        <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[11px] font-bold ${status.bg} ${status.text}`}>{status.label}</span>
                       </span>
                     </button>
                   </li>
@@ -278,14 +254,14 @@ export const DashboardView: React.FC = () => {
                     <li key={r.id}>
                       <button onClick={() => navigateTo('resolutions', { resolutionId: r.id })} className={`db-res ${late ? 'db-res-late' : ''}`}>
                         <span className="min-w-0 flex-1 text-right">
-                          <span className="block truncate text-[13px] font-extrabold text-slate-800">{r.topicTitle}</span>
-                          <span className="block truncate text-[11px] text-slate-500">{r.mainResponsibleName || '—'} · {r.responsibleDepartmentName || ''}</span>
+                          <span className="block truncate text-[13px] font-bold text-slate-800">{r.topicTitle}</span>
+                          <span className="block truncate text-[12px] text-slate-500">{r.mainResponsibleName || '—'} · {r.responsibleDepartmentName || ''}</span>
                         </span>
                         <span className="hidden w-32 sm:block">
                           <span className="dash-progress block"><span style={{ width: `${progress}%` }} className={late ? 'bg-red-500' : ''} /></span>
-                          <span className="mt-1 block text-center text-[10.5px] font-bold text-slate-500">{toPersianDigits(progress)}٪</span>
+                          <span className="mt-1 block text-center text-[11px] font-bold text-slate-500">{toPersianDigits(progress)}٪</span>
                         </span>
-                        <span className={`w-24 shrink-0 text-left text-[11px] font-bold ${late ? 'text-red-600' : 'text-slate-500'}`}>{relativeDay(daysFromToday(r.deadlineJalali))}</span>
+                        <span className={`w-24 shrink-0 text-left text-[12px] font-bold ${late ? 'text-red-600' : 'text-slate-500'}`}>{relativeDay(daysFromToday(r.deadlineJalali))}</span>
                       </button>
                     </li>
                   );
@@ -303,9 +279,9 @@ export const DashboardView: React.FC = () => {
               <ul className="space-y-3">
                 {model.units.slice(0, 5).map((u) => (
                   <li key={u.name}>
-                    <div className="flex items-center justify-between gap-2 text-[11.5px]"><span className="truncate font-bold text-slate-700">{u.name}</span><span className="shrink-0 font-extrabold text-slate-800">{toPersianDigits(u.avgProgress)}٪</span></div>
+                    <div className="flex items-center justify-between gap-2 text-[12px]"><span className="truncate font-bold text-slate-700">{u.name}</span><span className="shrink-0 font-bold text-slate-800">{toPersianDigits(u.avgProgress)}٪</span></div>
                     <div className="dash-progress mt-1"><span style={{ width: `${u.avgProgress}%` }} /></div>
-                    {u.overdue > 0 && <p className="mt-0.5 text-[10.5px] font-bold text-red-600">{toPersianDigits(u.overdue)} مصوبه معوق</p>}
+                    {u.overdue > 0 && <p className="mt-0.5 text-[11px] font-bold text-red-600">{toPersianDigits(u.overdue)} مصوبه معوق</p>}
                   </li>
                 ))}
               </ul>
@@ -317,8 +293,8 @@ export const DashboardView: React.FC = () => {
                 <ul className="space-y-2">
                   {model.myTasks.slice(0, 5).map((t) => (
                     <li key={t.id} className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2">
-                      <span className="truncate text-[12px] font-bold text-slate-700">{t.resolutionTitle}</span>
-                      <span className={`shrink-0 text-[11px] font-bold ${t.daysLeft !== null && t.daysLeft < 0 ? 'text-red-600' : 'text-slate-500'}`}>{relativeDay(t.daysLeft)}</span>
+                      <span className="truncate text-[13px] font-bold text-slate-700">{t.resolutionTitle}</span>
+                      <span className={`shrink-0 text-[12px] font-bold ${t.daysLeft !== null && t.daysLeft < 0 ? 'text-red-600' : 'text-slate-500'}`}>{relativeDay(t.daysLeft)}</span>
                     </li>
                   ))}
                 </ul>
@@ -331,7 +307,7 @@ export const DashboardView: React.FC = () => {
                 {officeItems.map(({ label, value, route, icon: Icon }) => (
                   <li key={label}>
                     <button onClick={() => navigateTo(route)} className="flex w-full items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2.5 hover:bg-blue-50">
-                      <span className="flex items-center gap-2 text-[12px] font-bold text-slate-700"><Icon className="h-4 w-4 text-blue-600" />{label}</span>
+                      <span className="flex items-center gap-2 text-[13px] font-bold text-slate-700"><Icon className="h-4 w-4 text-blue-600" />{label}</span>
                       <b className="text-[15px] text-slate-900">{toPersianDigits(value)}</b>
                     </button>
                   </li>
@@ -342,7 +318,7 @@ export const DashboardView: React.FC = () => {
             <>
               <header className="db-card-head"><h2><Activity className="ml-1 inline h-4 w-4 text-blue-600" />فعالیت‌های اخیر</h2></header>
               {model.activity.length === 0 ? <div className="db-empty"><p>فعالیتی ثبت نشده است.</p></div> : (
-                <ul className="space-y-2">{model.activity.slice(0, 5).map((l) => <li key={l.id} className="text-[12px]"><b className="text-slate-800">{l.action}</b><span className="block text-[10.5px] text-slate-400">{toPersianDigits(l.timestampJalali)}</span></li>)}</ul>
+                <ul className="space-y-2">{model.activity.slice(0, 5).map((l) => <li key={l.id} className="text-[13px]"><b className="text-slate-800">{l.action}</b><span className="block text-[11px] text-slate-400">{toPersianDigits(l.timestampJalali)}</span></li>)}</ul>
               )}
             </>
           )}
@@ -352,13 +328,13 @@ export const DashboardView: React.FC = () => {
       {/* ——— آخرین اتفاقات ——— */}
       {dash.isVisible('activity') && (model.persona === 'ADMIN' || isOffice || model.persona === 'ASSIGNEE') && model.activity.length > 0 && (
         <section className="db-card" style={ord('activity')}>
-          <header className="db-card-head"><h2>آخرین اتفاقات</h2></header>
+          <header className="db-card-head"><h2>آخرین فعالیت‌ها</h2></header>
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {model.activity.slice(0, 6).map((l) => (
               <li key={l.id}>
                 <button onClick={() => (l.targetType === 'MEETING' ? navigateTo('meeting-details', { meetingId: l.targetId }) : navigateTo('resolutions', { resolutionId: l.targetId }))} className="db-activity">
-                  <span className="block truncate text-[12px] font-extrabold text-slate-800">{l.action}</span>
-                  <span className="block truncate text-[10.5px] text-slate-500">{l.actorName} · {toPersianDigits(l.timestampJalali)}</span>
+                  <span className="block truncate text-[13px] font-bold text-slate-800">{l.action}</span>
+                  <span className="block truncate text-[11px] text-slate-500">{l.actorName} · {toPersianDigits(l.timestampJalali)}</span>
                 </button>
               </li>
             ))}

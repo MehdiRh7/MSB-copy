@@ -47,7 +47,7 @@ export const UsersView: React.FC = () => {
       {/* Header */}
       <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-200/80 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+          <h1 className="text-base font-bold text-slate-800 tracking-tight flex items-center gap-2">
             <Users className="w-5 h-5 text-teal-700" />
             <span>مدیریت ساختار سازمانی، واحدها و کاربران</span>
           </h1>
@@ -103,13 +103,13 @@ export const UsersView: React.FC = () => {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-teal-800 text-white font-black text-sm flex items-center justify-center shadow-xs">
+                <div className="w-12 h-12 rounded-2xl bg-teal-800 text-white font-bold text-sm flex items-center justify-center shadow-xs">
                   {user.fullName.split(' ')[0][0]}
                 </div>
                 <div>
-                  <h3 className="text-xs font-extrabold text-slate-800">{user.fullName}</h3>
-                  <p className="text-[11px] text-slate-500">{user.title}</p>
-                  <span className="inline-block text-[10px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md mt-1">
+                  <h3 className="text-xs font-bold text-slate-800">{user.fullName}</h3>
+                  <p className="text-[12px] text-slate-500">{user.title}</p>
+                  <span className="inline-block text-[11px] font-bold text-teal-800 bg-teal-50 px-2 py-0.5 rounded-md mt-1">
                     {user.departmentName}
                   </span>
                 </div>
@@ -117,11 +117,11 @@ export const UsersView: React.FC = () => {
 
               <div>
                 {user.isActive ? (
-                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     فعال
                   </span>
                 ) : (
-                  <span className="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
+                  <span className="text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">
                     غیرفعال
                   </span>
                 )}
@@ -132,14 +132,14 @@ export const UsersView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEditingUser(user)}
-                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 text-[11px] font-bold"
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-teal-200 bg-teal-50 text-teal-800 hover:bg-teal-100 text-[12px] font-bold"
               >
                 <Pencil className="w-3.5 h-3.5" />
                 ویرایش کاربر
               </button>
             )}
 
-            <div className="space-y-1.5 text-[11px] text-slate-600 pt-2 border-t border-slate-100">
+            <div className="space-y-1.5 text-[12px] text-slate-600 pt-2 border-t border-slate-100">
               {user.username && (
                 <div className="flex items-center justify-between text-slate-500">
                   <span>نام کاربری:</span>

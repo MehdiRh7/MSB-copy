@@ -210,7 +210,7 @@ export const Navbar: React.FC = () => {
               {/* عنوان شیشه‌ای متحرک: درخشش مداوم و هرازگاهی چرخش/تکان کوتاه */}
               <span className="glass-title"><span className="glass-title-text">{organization.systemTitle}</span></span>
               {organization.name.trim() && (
-                <span className="hidden sm:block truncate text-[11px] font-bold text-[var(--app-primary)] mt-0.5">{organization.name}</span>
+                <span className="hidden sm:block truncate text-[12px] font-bold text-[var(--app-primary)] mt-0.5">{organization.name}</span>
               )}
             </span>
           </button>
@@ -243,13 +243,13 @@ export const Navbar: React.FC = () => {
               className="flex items-center gap-2 max-w-[56px] sm:max-w-[260px] bg-white/80 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs py-1 pr-1 pl-1 sm:pl-3 rounded-full border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shadow-2xs"
               aria-label={`کاربر: ${currentUser.fullName}`}
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-blue-500 to-blue-900 text-[10px] font-black text-white">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--app-primary)] text-[11px] font-bold text-white">
                 {currentUser.avatarUrl ? <img src={currentUser.avatarUrl} alt="" className="h-full w-full object-cover" /> : currentUser.fullName.replace(/^(مهندس|دکتر|خانم|آقای)\s+/, '').slice(0, 2)}
               </span>
               <span className="hidden sm:flex min-w-0 flex-col text-right leading-tight">
                 <span className="sr-only">کاربر:</span>
-                <span className="truncate font-extrabold text-[11.5px]">{currentUser.fullName}</span>
-                <span className="truncate text-[10px] text-slate-500 dark:text-slate-400">{currentUser.title}</span>
+                <span className="truncate font-bold text-[12px]">{currentUser.fullName}</span>
+                <span className="truncate text-[11px] text-slate-500 dark:text-slate-400">{currentUser.title}</span>
               </span>
               <ChevronDown className="hidden sm:block w-3 h-3 shrink-0 text-slate-400" />
             </button>
@@ -258,8 +258,8 @@ export const Navbar: React.FC = () => {
             {showUserMenu && (
               <div className="absolute left-0 mt-2 w-80 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-2 z-50 animate-in fade-in slide-in-from-top-2">
                 <div className="p-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">تغییر کاربر فعال (شبیه‌سازی)</p>
-                  <p className="text-[10px] text-slate-400 dark:text-slate-400">بررسی سطح دسترسی‌ها و کارتابل‌ها با هویت‌های مختلف</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">تغییر کاربر</p>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-400">بررسی سطح دسترسی‌ها و کارتابل‌ها با هویت‌های مختلف</p>
                 </div>
                 <div className="max-h-64 overflow-y-auto space-y-1">
                   {availableUsers.map((user) => (
@@ -278,7 +278,7 @@ export const Navbar: React.FC = () => {
                     >
                       <div>
                         <div className="font-bold">{user.fullName}</div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-400">{user.title}</div>
+                        <div className="text-[11px] text-slate-400 dark:text-slate-400">{user.title}</div>
                       </div>
                       {currentUser.id === user.id && <CheckCircle2 className="w-4 h-4 text-teal-700 dark:text-teal-400 shrink-0" />}
                     </button>
@@ -318,7 +318,7 @@ export const Navbar: React.FC = () => {
               {globalSearch && (
                 <button
                   onClick={() => { setGlobalSearch(''); setShowSearchResults(false); }}
-                  className="absolute left-2 top-5 -translate-y-1/2 text-[10px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600"
+                  className="absolute left-2 top-5 -translate-y-1/2 text-[11px] bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 px-1.5 py-0.5 rounded-full hover:bg-slate-300 dark:hover:bg-slate-600"
                 >
                   پاک کردن
                 </button>
@@ -332,13 +332,13 @@ export const Navbar: React.FC = () => {
                     <div className="space-y-2">
                       {searchResults.resolutions.length > 0 && (
                         <div>
-                          <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">مصوبات</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400">مصوبات</div>
                           {searchResults.resolutions.map((r) => (
                             <button key={r.id} onClick={() => handleSelectResolution(r)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
                               <FileText className="w-3.5 h-3.5 text-teal-700 shrink-0" />
                               <div className="min-w-0">
                                 <div className="text-xs font-bold truncate">{r.topicTitle}</div>
-                                <div className="text-[10px] text-slate-400">{r.resolutionNumber}</div>
+                                <div className="text-[11px] text-slate-400">{r.resolutionNumber}</div>
                               </div>
                             </button>
                           ))}
@@ -346,13 +346,13 @@ export const Navbar: React.FC = () => {
                       )}
                       {searchResults.meetings.length > 0 && (
                         <div>
-                          <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">جلسات</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400">جلسات</div>
                           {searchResults.meetings.map((m) => (
                             <button key={m.id} onClick={() => handleSelectMeeting(m)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
                               <Calendar className="w-3.5 h-3.5 text-blue-700 shrink-0" />
                               <div className="min-w-0">
                                 <div className="text-xs font-bold truncate">{m.title}</div>
-                                <div className="text-[10px] text-slate-400">{m.meetingNumber}</div>
+                                <div className="text-[11px] text-slate-400">{m.meetingNumber}</div>
                               </div>
                             </button>
                           ))}
@@ -360,13 +360,13 @@ export const Navbar: React.FC = () => {
                       )}
                       {searchResults.tasks.length > 0 && (
                         <div>
-                          <div className="px-2 py-1 text-[10px] font-extrabold text-slate-400">وظایف</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400">وظایف</div>
                           {searchResults.tasks.map((t) => (
                             <button key={t.id} onClick={() => handleSelectTask(t)} className="w-full text-right px-2.5 py-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer flex items-center gap-2">
                               <CheckCircle2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                               <div className="min-w-0">
                                 <div className="text-xs font-bold truncate">{t.resolutionTitle}</div>
-                                <div className="text-[10px] text-slate-400">{t.resolutionNumber}</div>
+                                <div className="text-[11px] text-slate-400">{t.resolutionNumber}</div>
                               </div>
                             </button>
                           ))}
@@ -392,7 +392,7 @@ export const Navbar: React.FC = () => {
             >
               <Bell className="w-4 h-4" />
               {unreadNotificationsCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center px-1 border-2 border-white dark:border-slate-900">
+                <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-rose-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white dark:border-slate-900">
                   {toPersianDigits(unreadNotificationsCount)}
                 </span>
               )}
@@ -407,8 +407,8 @@ export const Navbar: React.FC = () => {
                       <Bell className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="font-extrabold text-xs text-slate-900 dark:text-slate-100">اعلان‌های سامانه</h4>
-                      <p className="text-[10px] text-slate-400">پیام‌ها و ارجاعات جدید شما</p>
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100">اعلان‌های سامانه</h4>
+                      <p className="text-[11px] text-slate-400">پیام‌ها و ارجاعات جدید شما</p>
                     </div>
                   </div>
 
@@ -416,16 +416,16 @@ export const Navbar: React.FC = () => {
                     {typeof Notification !== 'undefined' && Notification.permission === 'default' && (
                       <button
                         onClick={async () => { const result = await requestDesktopNotifications(); showToast('اعلان دسکتاپ', result === 'granted' ? 'اعلان‌های فوری حتی وقتی سامانه در پس‌زمینه است نمایش داده می‌شوند.' : 'اجازه اعلان دسکتاپ داده نشد.', result === 'granted' ? 'success' : 'info'); }}
-                        className="text-[10px] text-indigo-700 font-bold px-2 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer"
+                        className="text-[11px] text-indigo-700 font-bold px-2 py-1 rounded-lg hover:bg-indigo-50 cursor-pointer"
                         title="دریافت اعلان فوری روی دسکتاپ"
                       >
-                        🔔 اعلان دسکتاپ
+                        اعلان دسکتاپ
                       </button>
                     )}
                     {unreadNotificationsCount > 0 && (
                       <button
                         onClick={markAllNotificationsAsRead}
-                        className="text-[10px] text-teal-800 dark:text-teal-300 hover:underline font-bold px-2 py-1 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-950 cursor-pointer flex items-center gap-1"
+                        className="text-[11px] text-teal-800 dark:text-teal-300 hover:underline font-bold px-2 py-1 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-950 cursor-pointer flex items-center gap-1"
                         title="علامت‌گذاری همه به عنوان خوانده‌شده"
                       >
                         <Check className="w-3 h-3" />
@@ -435,7 +435,7 @@ export const Navbar: React.FC = () => {
                     {notifications.length > 0 && (
                       <button
                         onClick={clearAllNotifications}
-                        className="text-[10px] text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
+                        className="text-[11px] text-slate-400 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 cursor-pointer"
                         title="پاکسازی اعلان‌ها"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -469,13 +469,13 @@ export const Navbar: React.FC = () => {
                             {!notif.isRead && (
                               <span className="w-1.5 h-1.5 rounded-full bg-teal-600 shrink-0"></span>
                             )}
-                            <span className="font-extrabold text-slate-800 dark:text-slate-200">{notif.title}</span>
+                            <span className="font-bold text-slate-800 dark:text-slate-200">{notif.title}</span>
                           </div>
-                          <span className="text-[9px] text-slate-400 font-mono whitespace-nowrap">
+                          <span className="text-[11px] text-slate-400 font-mono whitespace-nowrap">
                             {toPersianDigits(notif.dateJalali)} {toPersianDigits(notif.timeString)}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">{notif.message}</p>
+                        <p className="text-[12px] text-slate-600 dark:text-slate-400 leading-relaxed">{notif.message}</p>
                       </div>
                     ))
                   )}

@@ -32,7 +32,7 @@ export const ToastContainer: React.FC = () => {
             {icons[toast.type]}
             <div className="flex-1">
               <div className="text-xs font-bold text-slate-800">{toast.title}</div>
-              <div className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">{toast.message}</div>
+              <div className="text-[12px] text-slate-600 mt-0.5 leading-relaxed">{toast.message}</div>
             </div>
             <button
               onClick={() => removeToast(toast.id)}

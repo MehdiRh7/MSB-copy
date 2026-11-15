@@ -41,7 +41,7 @@ const isDemoRecord = (item: unknown) => Boolean(item && typeof item === 'object'
 
 // ——— کاربران نمایشی (همان کاربران پایه سامانه؛ نام‌ها ساختگی‌اند) ———
 const U = {
-  admin: { id: 'user-admin', name: 'مدیر کل سیستم (Admin)', title: 'راهبر ارشد سامانه مصوبات' },
+  admin: { id: 'user-admin', name: 'مدیر سیستم', title: 'راهبر ارشد سامانه مصوبات' },
   ceo: { id: 'user-16', name: 'مدیرعامل', title: 'مدیرعامل' },
   office: { id: 'user-17', name: 'مسئول دفتر', title: 'مسئول دفتر مدیرعامل' },
   secretary: { id: 'user-8', name: 'مهندس جواد صادقی', title: 'دبیر شورای راهبری و مدیر PMO' },

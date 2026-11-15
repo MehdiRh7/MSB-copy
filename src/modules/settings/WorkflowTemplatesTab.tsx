@@ -85,8 +85,8 @@ export const WorkflowTemplatesTab: React.FC = () => {
     <section className="bg-white rounded-3xl border border-slate-200 p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5"><GitBranch className="w-4 h-4 text-violet-600" />گردش مصوبات پیشنهادی</h3>
-          <p className="text-[10.5px] text-slate-500 mt-0.5">بدون تنظیم، رفتار فعلی حفظ می‌شود: بررسی توسط مدیرعامل و تأیید نهایی توسط دارنده مجوز «دبیر جلسه».</p>
+          <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5"><GitBranch className="w-4 h-4 text-violet-600" />گردش مصوبات پیشنهادی</h3>
+          <p className="text-[11px] text-slate-500 mt-0.5">بدون تنظیم، رفتار فعلی حفظ می‌شود: بررسی توسط مدیرعامل و تأیید نهایی توسط دارنده مجوز «دبیر جلسه».</p>
         </div>
         <button onClick={() => { try { setProposalWf(saveProposalWorkflowSettings(proposalWf, currentUser)); showToast('گردش پیشنهادها', 'تنظیمات گردش پیشنهادها ذخیره شد.', 'success'); } catch (error) { showToast('خطا', error instanceof Error ? error.message : 'ذخیره انجام نشد.', 'error'); } }} className="flex items-center gap-1.5 text-xs font-bold px-4 py-2 rounded-xl bg-violet-700 text-white"><Save className="w-3.5 h-3.5" />ذخیره گردش پیشنهادها</button>
       </div>
@@ -98,36 +98,36 @@ export const WorkflowTemplatesTab: React.FC = () => {
     <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
       <aside className="bg-white rounded-3xl border border-slate-200 p-3 space-y-2 h-fit">
         <div className="flex items-center justify-between px-1">
-          <h3 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5"><GitBranch className="w-4 h-4 text-indigo-600" />قالب‌های گردش کار</h3>
+          <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5"><GitBranch className="w-4 h-4 text-indigo-600" />قالب‌های گردش کار</h3>
           <button onClick={() => addTemplate()} className="p-1.5 rounded-lg bg-indigo-600 text-white" aria-label="افزودن قالب"><Plus className="w-3.5 h-3.5" /></button>
         </div>
         {templates.map((template) => (
           <button key={template.id} onClick={() => select(template)} className={`w-full text-right p-3 rounded-2xl border transition ${selectedId === template.id ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 hover:bg-slate-50'}`}>
-            <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-slate-800">
+            <div className="flex items-center gap-1.5 text-[12px] font-bold text-slate-800">
               {template.isDefault && <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />}
               {template.name}
             </div>
-            <div className="text-[10px] text-slate-500 mt-1 line-clamp-2">دستورکار: {describePolicy(template.agendaApproval)}</div>
-            {template.meetingTypes.length > 0 && <div className="flex flex-wrap gap-1 mt-1.5">{template.meetingTypes.map((type) => <span key={type} className="text-[9px] px-1.5 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">{MEETING_TYPE_OPTIONS.find((o) => o.value === type)?.label || type}</span>)}</div>}
+            <div className="text-[11px] text-slate-500 mt-1 line-clamp-2">دستورکار: {describePolicy(template.agendaApproval)}</div>
+            {template.meetingTypes.length > 0 && <div className="flex flex-wrap gap-1 mt-1.5">{template.meetingTypes.map((type) => <span key={type} className="text-[11px] px-1.5 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">{MEETING_TYPE_OPTIONS.find((o) => o.value === type)?.label || type}</span>)}</div>}
           </button>
         ))}
-        <p className="text-[10px] leading-5 text-slate-400 px-1">هر نوع جلسه به قالب مخصوص خودش وصل می‌شود؛ انواع بدون قالب از قالب پیش‌فرض (⭐) پیروی می‌کنند.</p>
+        <p className="text-[11px] leading-5 text-slate-400 px-1">هر نوع جلسه به قالب مخصوص خودش وصل می‌شود؛ انواع بدون قالب از قالب پیش‌فرض (⭐) پیروی می‌کنند.</p>
       </aside>
 
       {draft && (
         <section className="bg-white rounded-3xl border border-slate-200 p-4 space-y-4 min-w-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <label className="block">
-              <span className="block text-[11px] font-bold text-slate-700 mb-1">نام قالب</span>
+              <span className="block text-[12px] font-bold text-slate-700 mb-1">نام قالب</span>
               <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </label>
             <label className="block">
-              <span className="block text-[11px] font-bold text-slate-700 mb-1">توضیح</span>
+              <span className="block text-[12px] font-bold text-slate-700 mb-1">توضیح</span>
               <input value={draft.description || ''} onChange={(e) => setDraft({ ...draft, description: e.target.value })} placeholder="مثلاً: جلسات هیئت مدیره با تأیید دو مرحله‌ای" className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl" />
             </label>
           </div>
           <div>
-            <span className="block text-[11px] font-bold text-slate-700 mb-1.5">برای کدام انواع جلسه؟</span>
+            <span className="block text-[12px] font-bold text-slate-700 mb-1.5">برای کدام انواع جلسه؟</span>
             <div className="flex flex-wrap gap-1.5">
               {MEETING_TYPE_OPTIONS.map((option) => {
                 const active = draft.meetingTypes.includes(option.value);
@@ -138,14 +138,14 @@ export const WorkflowTemplatesTab: React.FC = () => {
                     type="button"
                     title={takenBy && !active ? `در حال حاضر متعلق به «${takenBy}» — با انتخاب، به این قالب منتقل می‌شود` : undefined}
                     onClick={() => setDraft({ ...draft, meetingTypes: active ? draft.meetingTypes.filter((t) => t !== option.value) : [...draft.meetingTypes, option.value] })}
-                    className={`text-[10px] font-bold px-2.5 py-1.5 rounded-full border ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200'}`}
+                    className={`text-[11px] font-bold px-2.5 py-1.5 rounded-full border ${active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200'}`}
                   >
                     {active && <CheckCircle2 className="w-3 h-3 inline ml-1" />}{option.label}{takenBy && !active ? ' •' : ''}
                   </button>
                 );
               })}
             </div>
-            <label className="flex items-center gap-1.5 mt-2 text-[11px] font-bold text-slate-600">
+            <label className="flex items-center gap-1.5 mt-2 text-[12px] font-bold text-slate-600">
               <input type="checkbox" checked={Boolean(draft.isDefault)} onChange={(e) => setDraft({ ...draft, isDefault: e.target.checked })} className="accent-amber-500" />
               قالب پیش‌فرض برای سایر انواع جلسه
             </label>

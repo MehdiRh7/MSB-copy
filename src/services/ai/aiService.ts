@@ -460,7 +460,7 @@ export const dashboardBrief = (user: User, model: DashboardModel, actorId?: stri
     feature: 'dashboardBrief',
     actorId,
     json: true,
-    system: 'وظیفه: «خلاصه هوشمند امروز» برای داشبورد یک کاربر سامانه. خروجی فقط JSON: headline (یک جمله گرم و حرفه‌ای با اشاره به مهم‌ترین موضوع امروز)، bullets (۳ مورد کوتاه و عملی)، focus (یک جمله: اولین کاری که باید همین الان انجام دهد). فقط از داده‌های داده‌شده استفاده کن.',
+    system: 'وظیفه: «خلاصه امروز» برای داشبورد یک کاربر سامانه. خروجی فقط JSON: headline (یک جمله گرم و حرفه‌ای با اشاره به مهم‌ترین موضوع امروز)، bullets (۳ مورد کوتاه و عملی)، focus (یک جمله: اولین کاری که باید همین الان انجام دهد). فقط از داده‌های داده‌شده استفاده کن.',
     messages: [{ role: 'user', content: `کاربر: ${user.fullName} — ${user.title}\n${facts}` }],
     parse: (text) => {
       const d = extractJson<DailyBrief>(text);
@@ -574,6 +574,6 @@ export const interpretCommand = (query: string, commands: CommandOption[], actor
     // به دستیار سپرده می‌شود تا با داده واقعی پاسخ دهد، نه فهرست فیلترنشده.
     return best && best.score >= 1
       ? { commandId: best.c.id, reply: `اجرای «${best.c.title}»` }
-      : { commandId: null, reply: 'این پرسش را از دستیار هوشمند می‌پرسم.' };
+      : { commandId: null, reply: 'این پرسش را از دستیار می‌پرسم.' };
   },
 });

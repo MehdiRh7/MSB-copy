@@ -41,7 +41,7 @@ export const ListViewActions: React.FC<ListViewActionsProps> = ({
       <button
         type="button"
         onClick={() => onViewModeChange('cards')}
-        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${viewMode === 'cards' ? 'app-primary-button text-white' : 'text-slate-600 hover:bg-white'}`}
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold transition-colors ${viewMode === 'cards' ? 'app-primary-button text-white' : 'text-slate-600 hover:bg-white'}`}
         title="نمایش کارتی"
       >
         <LayoutGrid className="w-3.5 h-3.5" />
@@ -50,7 +50,7 @@ export const ListViewActions: React.FC<ListViewActionsProps> = ({
       <button
         type="button"
         onClick={() => onViewModeChange('grid')}
-        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-colors ${viewMode === 'grid' ? 'app-primary-button text-white' : 'text-slate-600 hover:bg-white'}`}
+        className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold transition-colors ${viewMode === 'grid' ? 'app-primary-button text-white' : 'text-slate-600 hover:bg-white'}`}
         title="نمایش جدولی"
       >
         <Table2 className="w-3.5 h-3.5" />

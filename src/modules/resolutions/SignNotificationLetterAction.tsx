@@ -88,7 +88,7 @@ export const SignNotificationLetterAction: React.FC<SignNotificationLetterAction
   return (
     <div className="flex flex-wrap items-center gap-2">
       {delegation && (
-        <span className="w-full text-[10px] font-bold text-indigo-700">
+        <span className="w-full text-[11px] font-bold text-indigo-700">
           امضا به جانشینی از {delegation.ownerName}
         </span>
       )}
@@ -96,7 +96,7 @@ export const SignNotificationLetterAction: React.FC<SignNotificationLetterAction
         <button
           type="button"
           onClick={handlePreview}
-          className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[11px] font-bold py-2 px-3 rounded-xl cursor-pointer"
+          className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-[12px] font-bold py-2 px-3 rounded-xl cursor-pointer"
         >
           <FileDown className="w-3.5 h-3.5" />
           <span>مشاهده پیش‌نویس ابلاغیه</span>

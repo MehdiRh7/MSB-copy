@@ -110,7 +110,7 @@ export const checkResolutionConflicts = async (draft: { topic: string; text: str
     const a = norm(draftText); const b = norm(`${r.topicTitle} ${r.executionDescription || r.requestDescription}`);
     const opposite = OPPOSITES.find(([x, y]) => (a.includes(x) && b.includes(y)) || (a.includes(y) && b.includes(x)));
     if (opposite) return { resolution: r, kind: 'CONFLICT' as const, similarity, reason: `موضوع مشابه است اما یکی «${opposite[0]}» و دیگری «${opposite[1]}» را مقرر کرده است.` };
-    if (similarity >= 0.35) return { resolution: r, kind: 'DUPLICATE' as const, similarity, reason: `${fa(Math.round(similarity * 100))}٪ هم‌پوشانی متنی با این مصوبه قبلی (${getResolutionExecutionMeta(r.executionStatus).label}).` };
+    if (similarity >= 0.35) return { resolution: r, kind: 'DUPLICATE' as const, similarity, reason: `متن آن ${similarity >= 0.7 ? 'تقریباً یکسان' : 'بسیار نزدیک'} به این مصوبه قبلی است (${getResolutionExecutionMeta(r.executionStatus).label}).` };
     return { resolution: r, kind: 'RELATED' as const, similarity, reason: 'موضوع مرتبط؛ برای هماهنگی و جلوگیری از دوباره‌کاری بررسی شود.' };
   }).filter((f) => f.kind !== 'RELATED' || f.similarity >= 0.2);
   if (candidates.length === 0) return { data: [], source: 'LOCAL' };

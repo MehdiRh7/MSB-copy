@@ -194,7 +194,7 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">{user ? 'ویرایش کاربر' : 'کاربر جدید'}</h3>
-              <p className="text-[11px] text-teal-200">{user ? 'اصلاح مشخصات، سمت سازمانی و امضای کاربر' : 'تعریف مشخصات هویتی، سمت سازمانی، حساب کاربری و امضا'}</p>
+              <p className="text-[12px] text-teal-200">{user ? 'اصلاح مشخصات، سمت سازمانی و امضای کاربر' : 'تعریف مشخصات هویتی، سمت سازمانی، حساب کاربری و امضا'}</p>
             </div>
           </div>
           <button onClick={onClose} className="text-teal-200 hover:text-white p-1 rounded-lg hover:bg-teal-800">
@@ -293,13 +293,13 @@ export const CreateUserModal: React.FC<CreateUserModalProps> = ({ isOpen, onClos
                   className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none"
                   dir="ltr"
                 />
-                <p className="text-[10px] text-slate-400 mt-1">در صورت خالی گذاشتن، به‌صورت خودکار تولید می‌شود.</p>
+                <p className="text-[11px] text-slate-400 mt-1">در صورت خالی گذاشتن، به‌صورت خودکار تولید می‌شود.</p>
               </div>
 
               <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-2xl">
                 <div className="text-xs">
                   <span className="font-bold text-slate-800 block">وضعیت حساب کاربری</span>
-                  <span className="text-[11px] text-slate-500">امکان ورود و انتخاب کاربر در فرآیندهای جلسه و مصوبات</span>
+                  <span className="text-[12px] text-slate-500">امکان ورود و انتخاب کاربر در فرآیندهای جلسه و مصوبات</span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input

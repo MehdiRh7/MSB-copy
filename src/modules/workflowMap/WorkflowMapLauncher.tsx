@@ -108,7 +108,7 @@ export const WorkflowMapLauncher: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">نقشه گردش کار</h3>
-                  <p className="text-[11px] text-teal-200">نمای کلی مسیر هر پرونده — فقط نمایشی، هیچ اقدامی از اینجا ثبت نمی‌شود</p>
+                  <p className="text-[12px] text-teal-200">نمای کلی مسیر هر پرونده — فقط نمایشی، هیچ اقدامی از اینجا ثبت نمی‌شود</p>
                 </div>
               </div>
               <button
@@ -124,7 +124,7 @@ export const WorkflowMapLauncher: React.FC = () => {
               {/* انتخاب پرونده */}
               <aside className="sm:w-72 shrink-0 border-l border-slate-100 bg-slate-50/60 flex flex-col max-h-48 sm:max-h-none">
                 <div className="p-3 border-b border-slate-100">
-                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5">انتخاب پرونده</label>
+                  <label className="block text-[12px] font-bold text-slate-600 mb-1.5">انتخاب پرونده</label>
                   <div className="relative">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute top-1/2 -translate-y-1/2 right-2.5" />
                     <input
@@ -136,9 +136,9 @@ export const WorkflowMapLauncher: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-                  {loading && <div className="text-center text-[11px] text-slate-400 py-6">در حال بارگذاری...</div>}
+                  {loading && <div className="text-center text-[12px] text-slate-400 py-6">در حال بارگذاری...</div>}
                   {!loading && filteredCases.length === 0 && (
-                    <div className="text-center text-[11px] text-slate-400 py-6 px-3 leading-6">
+                    <div className="text-center text-[12px] text-slate-400 py-6 px-3 leading-6">
                       هنوز پرونده‌ای در سامانه ثبت نشده است. با ثبت اولین پیشنهاد، نقشه گردش کار آن همین‌جا نمایش داده می‌شود.
                     </div>
                   )}
@@ -153,9 +153,9 @@ export const WorkflowMapLauncher: React.FC = () => {
                           isActive ? 'bg-white border-teal-400 shadow-xs' : 'bg-white/70 border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <div className="text-[11px] font-bold text-slate-800 line-clamp-2">{item.title}</div>
-                        <div className="text-[10px] text-teal-700 font-bold mt-0.5">{toPersianDigits(item.reference)}</div>
-                        <div className="text-[10px] text-slate-500 mt-1">
+                        <div className="text-[12px] font-bold text-slate-800 line-clamp-2">{item.title}</div>
+                        <div className="text-[11px] text-teal-700 font-bold mt-0.5">{toPersianDigits(item.reference)}</div>
+                        <div className="text-[11px] text-slate-500 mt-1">
                           {PHASES.find((phase) => phase.id === item.currentPhase)?.title} — {item.currentStepTitle}
                         </div>
                       </button>
@@ -198,7 +198,7 @@ const PhaseRibbon: React.FC<{ workflowCase: WorkflowCase }> = ({ workflowCase })
           <React.Fragment key={phase.id}>
             {index > 0 && <ArrowLeft className="w-3 h-3 text-slate-300 shrink-0" />}
             <span
-              className={`text-[11px] font-bold px-2.5 py-1 rounded-full border whitespace-nowrap ${
+              className={`text-[12px] font-bold px-2.5 py-1 rounded-full border whitespace-nowrap ${
                 isCurrent
                   ? 'bg-teal-700 text-white border-teal-700'
                   : isPassed
@@ -225,7 +225,7 @@ const StepCard: React.FC<{ step: WorkflowStep; isLast: boolean }> = ({ step, isL
       {/* خط اتصال مراحل */}
       {!isLast && <span className="absolute top-7 right-[11px] bottom-[-14px] w-px bg-slate-200" aria-hidden />}
       <span
-        className={`absolute top-1.5 right-0 w-6 h-6 rounded-full border-2 border-white shadow-xs flex items-center justify-center text-[11px] font-bold text-white ${meta.dot}`}
+        className={`absolute top-1.5 right-0 w-6 h-6 rounded-full border-2 border-white shadow-xs flex items-center justify-center text-[12px] font-bold text-white ${meta.dot}`}
         aria-hidden
       >
         {meta.symbol}
@@ -238,33 +238,33 @@ const StepCard: React.FC<{ step: WorkflowStep; isLast: boolean }> = ({ step, isL
       >
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <div className="text-xs font-extrabold text-slate-800">{step.title}</div>
-            <div className="text-[11px] text-slate-500 mt-0.5">
+            <div className="text-xs font-bold text-slate-800">{step.title}</div>
+            <div className="text-[12px] text-slate-500 mt-0.5">
               {STEP_OWNERS[step.ownerKey]}
               {step.ownerName ? <span className="text-slate-700 font-bold"> — {step.ownerName}</span> : null}
             </div>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {step.dateJalali && (
-              <span className="text-[10px] text-slate-400">{toPersianDigits(step.dateJalali)}</span>
+              <span className="text-[11px] text-slate-400">{toPersianDigits(step.dateJalali)}</span>
             )}
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${meta.chip}`}>
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${meta.chip}`}>
               {meta.symbol} {meta.label}
             </span>
           </div>
         </div>
 
-        {step.note && <div className="text-[11px] text-slate-600 mt-2 leading-6">{step.note}</div>}
+        {step.note && <div className="text-[12px] text-slate-600 mt-2 leading-6">{step.note}</div>}
 
         {branches.length > 0 && (
           <div className="mt-2.5 pt-2.5 border-t border-slate-100 space-y-1">
-            <div className="text-[10px] font-bold text-slate-500">
+            <div className="text-[11px] font-bold text-slate-500">
               {isCurrent ? 'مسیرهای ممکن از این مرحله:' : 'مسیر طی‌شده:'}
             </div>
             {branches.map((branch) => (
               <div
                 key={branch.action}
-                className={`flex items-start gap-1.5 text-[11px] ${
+                className={`flex items-start gap-1.5 text-[12px] ${
                   branch.taken ? 'text-slate-800 font-bold' : 'text-slate-400'
                 }`}
               >
@@ -286,18 +286,18 @@ const CaseMap: React.FC<{ workflowCase: WorkflowCase }> = ({ workflowCase }) => 
   <div className="space-y-4">
     <div className="space-y-2.5 pb-3 border-b border-slate-100">
       <div>
-        <h4 className="text-sm font-extrabold text-slate-900">{workflowCase.title}</h4>
-        <div className="text-[11px] text-slate-500 mt-0.5">شماره پرونده: {toPersianDigits(workflowCase.reference)}</div>
+        <h4 className="text-sm font-bold text-slate-900">{workflowCase.title}</h4>
+        <div className="text-[12px] text-slate-500 mt-0.5">شماره پرونده: {toPersianDigits(workflowCase.reference)}</div>
       </div>
       <PhaseRibbon workflowCase={workflowCase} />
-      <div className="p-2.5 rounded-2xl bg-teal-50/60 border border-teal-200 text-[11px] text-teal-950">
+      <div className="p-2.5 rounded-2xl bg-teal-50/60 border border-teal-200 text-[12px] text-teal-950">
         <strong>وضعیت فعلی:</strong> {workflowCase.currentStepTitle}
         <span className="text-teal-800"> (فاز {PHASES.find((phase) => phase.id === workflowCase.currentPhase)?.title})</span>
       </div>
       {workflowCase.relatedEntities.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
           {workflowCase.relatedEntities.map((entity) => (
-            <span key={entity.label} className="text-[10px] px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600">
+            <span key={entity.label} className="text-[11px] px-2 py-1 rounded-full bg-slate-50 border border-slate-200 text-slate-600">
               <strong className="text-slate-700">{entity.label}:</strong> {toPersianDigits(entity.value)}
             </span>
           ))}

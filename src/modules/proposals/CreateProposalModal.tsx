@@ -28,7 +28,7 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
   const [presenterUserId, setPresenterUserId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showErrors, setShowErrors] = useState(false);
-  // ——— دستیار هوشمند نگارش پیشنهاد ———
+  // ——— دستیار نگارش پیشنهاد ———
   const aiWriter = useAiFeature('writer');
   const [idea, setIdea] = useState('');
   const [drafting, setDrafting] = useState(false);
@@ -116,7 +116,7 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">ثبت مصوبه پیشنهادی جدید</h3>
-              <p className="text-[11px] text-teal-200">
+              <p className="text-[12px] text-teal-200">
                 برای بررسی و تصمیم مستقیماً به کارتابل مدیرعامل ارسال می‌شود
               </p>
             </div>
@@ -128,9 +128,9 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
 
         <form noValidate onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto max-h-[calc(92vh-5.5rem)]">
           {aiWriter && (
-            <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 via-white to-sky-50 p-3.5 space-y-2">
+            <div className="rounded-2xl border border-indigo-200 bg-slate-50 p-3.5 space-y-2">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-extrabold text-indigo-950">ایده‌تان را در یک جمله بگویید؛ سامانه متن کامل پیشنهاد را آماده می‌کند</span>
+                <span className="text-xs font-bold text-indigo-950">ایده‌تان را در یک جمله بگویید؛ سامانه متن کامل پیشنهاد را آماده می‌کند</span>
                 
               </div>
               <div className="flex items-center gap-2">
@@ -138,7 +138,7 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
                 <VoiceInputButton className="p-2 border border-indigo-200 bg-white" onText={(text, isFinal) => { if (isFinal) setIdea((prev) => (prev ? `${prev} ${text}` : text)); }} />
                 <AiButton onClick={handleDraft} loading={drafting} disabled={!idea.trim()}>نوشتن پیشنهاد</AiButton>
               </div>
-              <p className="text-[10px] text-slate-500">عنوان، شرح و ضرورت به‌صورت پیش‌نویس پر می‌شود و قبل از ارسال قابل ویرایش است.</p>
+              <p className="text-[11px] text-slate-500">عنوان، شرح و ضرورت به‌صورت پیش‌نویس پر می‌شود و قبل از ارسال قابل ویرایش است.</p>
             </div>
           )}
           <div className="app-form-card space-y-3.5">
@@ -168,7 +168,7 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
                 <input type="text" value={letterNumber} onChange={(e) => setLetterNumber(e.target.value)} className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl" placeholder="مثال: ۱۴۰۵/۱۲۳۴۵" />
               </div>
             </div>
-            <p className="text-[10.5px] leading-5 text-slate-500">شماره نامه هنگام تبدیل این پیشنهاد به مصوبه، خودکار در فرم مصوبه درج می‌شود.</p>
+            <p className="text-[11px] leading-5 text-slate-500">شماره نامه هنگام تبدیل این پیشنهاد به مصوبه، خودکار در فرم مصوبه درج می‌شود.</p>
           </div>
           <div className="app-form-card space-y-3.5">
             <h4 className="flex items-center gap-2 border-b border-slate-100 pb-2 text-xs font-bold text-slate-800"><span className="h-2 w-2 rounded-full bg-teal-600" />شرح و ضرورت</h4>
@@ -179,9 +179,9 @@ export const CreateProposalModal: React.FC<CreateProposalModalProps> = ({ isOpen
               {showErrors && !description.trim() && <p className="form-field-error">شرح پیشنهاد را وارد کنید.</p>}
             </div>
             {similar.length > 0 && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-900 space-y-1">
-                <div className="font-extrabold">⚠ پیشنهادهای مشابه قبلاً ثبت شده‌اند — از ثبت تکراری اطمینان حاصل کنید:</div>
-                {similar.map(({ p, score }) => <div key={p.id}>• {p.title} <span className="text-amber-700">({Math.round(score * 100).toLocaleString('fa-IR')}٪ مشابهت)</span></div>)}
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-[12px] text-amber-900 space-y-1">
+                <div className="font-bold">پیشنهادهای مشابه قبلاً ثبت شده‌اند — از ثبت تکراری اطمینان حاصل کنید:</div>
+                {similar.map(({ p, score }) => <div key={p.id}>{p.title} <span className="text-amber-700">({score >= 0.8 ? 'تقریباً یکسان' : score >= 0.6 ? 'بسیار مشابه' : 'مشابه'})</span></div>)}
               </div>
             )}
             <div>

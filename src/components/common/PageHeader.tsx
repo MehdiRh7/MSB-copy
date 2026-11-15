@@ -15,8 +15,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ icon: Icon, title, descr
       <div className="flex min-w-0 items-center gap-3">
         <span className="app-page-header-icon"><Icon className="h-5 w-5" /></span>
         <div className="min-w-0">
-          <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">{title}</h1>
-          {description && <p className="mt-0.5 text-[11.5px] leading-6 text-slate-500">{description}</p>}
+          <h1 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">{title}</h1>
+          {description && <p className="mt-0.5 text-[12px] leading-6 text-slate-500">{description}</p>}
         </div>
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

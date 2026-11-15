@@ -33,8 +33,8 @@ const BlockView: React.FC<{ block: ReportBlock; data: ReportDataset; onRemove: (
     <section className={`report-block bg-white rounded-2xl border border-slate-200 p-4 ${wide ? 'lg:col-span-2' : ''}`}>
       <header className="flex items-start justify-between gap-2 mb-3">
         <div>
-          <h3 className="text-sm font-extrabold text-slate-900">{title}</h3>
-          <p className="text-[10px] text-slate-500 mt-0.5">{fa(rows.length)} مورد · {BLOCK_LABELS[block.type]}</p>
+          <h3 className="text-sm font-bold text-slate-900">{title}</h3>
+          <p className="text-[11px] text-slate-500 mt-0.5">{fa(rows.length)} مورد · {BLOCK_LABELS[block.type]}</p>
         </div>
         <button type="button" onClick={onRemove} aria-label="حذف این بخش از گزارش" title="حذف این بخش" className="no-export p-1 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50"><X className="w-4 h-4" /></button>
       </header>
@@ -50,8 +50,8 @@ const BlockView: React.FC<{ block: ReportBlock; data: ReportDataset; onRemove: (
             { label: 'در جریان', value: rows.filter((r) => !r.closed && !r.overdue).length },
           ].map((k) => (
             <div key={k.label} className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-center">
-              <div className="text-2xl font-black text-slate-900">{fa(k.value)}</div>
-              <div className="text-[10px] font-bold text-slate-500 mt-1">{k.label}</div>
+              <div className="text-2xl font-bold text-slate-900">{fa(k.value)}</div>
+              <div className="text-[11px] font-bold text-slate-500 mt-1">{k.label}</div>
             </div>
           ))}
         </div>
@@ -107,7 +107,7 @@ const BlockView: React.FC<{ block: ReportBlock; data: ReportDataset; onRemove: (
 
       {rows.length > 0 && block.type === 'table' && (
         <div className="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-slate-100">
-          <table className="w-full text-[11px]">
+          <table className="w-full text-[12px]">
             <thead className="bg-slate-50 text-slate-500 sticky top-0">
               <tr className="text-right">
                 <th className="p-2">شماره</th><th className="p-2">عنوان</th><th className="p-2">{block.entity === 'meetings' ? 'دبیر' : block.entity === 'proposals' ? 'پیشنهاددهنده' : 'مسئول'}</th><th className="p-2">واحد</th><th className="p-2">{block.entity === 'meetings' ? 'تاریخ' : 'مهلت'}</th><th className="p-2">وضعیت</th>
@@ -173,8 +173,8 @@ export const ReportBuilder: React.FC = () => {
     <section className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5 space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5"><LayoutTemplate className="w-4 h-4 text-teal-700" />گزارش‌ساز: هر گزارشی لازم دارید بنویسید</h2>
-          <p className="text-[11px] text-slate-500 mt-0.5">مثلاً «یک لیست از همه مصوبات معوق و یک نمودار دایره‌ای از وضعیت مصوبات». اعداد همیشه از داده‌های واقعی سامانه و در محدوده دسترسی شما محاسبه می‌شوند.</p>
+          <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><LayoutTemplate className="w-4 h-4 text-teal-700" />گزارش‌ساز</h2>
+          <p className="text-xs text-slate-500 mt-0.5">بنویسید چه جدول یا نموداری لازم دارید؛ گزارش از داده‌های واقعی ساخته می‌شود.</p>
         </div>
       </div>
 
@@ -198,11 +198,11 @@ export const ReportBuilder: React.FC = () => {
 
       <div className="flex flex-wrap gap-1.5">
         {EXAMPLES.map((ex) => (
-          <button key={ex} type="button" onClick={() => { setRequest(ex); void build(ex); }} className="text-[10.5px] font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:border-teal-300 hover:text-teal-800 px-2.5 py-1 rounded-full text-right">{ex}</button>
+          <button key={ex} type="button" onClick={() => { setRequest(ex); void build(ex); }} className="text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:border-teal-300 hover:text-teal-800 px-2.5 py-1 rounded-full text-right">{ex}</button>
         ))}
       </div>
       {history.length > 0 && (
-        <div className="flex flex-wrap items-center gap-1.5 text-[10.5px]">
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
           <span className="flex items-center gap-1 text-slate-400"><History className="w-3.5 h-3.5" />اخیر:</span>
           {history.map((h) => <button key={h} type="button" onClick={() => { setRequest(h); void build(h); }} className="text-teal-800 hover:underline max-w-[320px] truncate">{h}</button>)}
         </div>
@@ -212,19 +212,19 @@ export const ReportBuilder: React.FC = () => {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-teal-50/60 border border-teal-100 p-3">
             <div className="space-y-1.5">
-              <div className="text-xs font-extrabold text-teal-950">{spec.title}</div>
+              <div className="text-xs font-bold text-teal-950">{spec.title}</div>
               <div className="flex flex-wrap gap-1.5">
-                <span className="text-[10px] text-slate-500">برداشت سامانه از درخواست شما:</span>
+                <span className="text-[11px] text-slate-500">برداشت سامانه از درخواست شما:</span>
                 {spec.blocks.map((b, i) => (
-                  <span key={i} className="text-[10px] font-bold bg-white border border-teal-200 text-teal-900 px-2 py-0.5 rounded-full">
+                  <span key={i} className="text-[11px] font-bold bg-white border border-teal-200 text-teal-900 px-2 py-0.5 rounded-full">
                     {BLOCK_LABELS[b.type]} · {ENTITY_LABELS[b.entity]}{b.groupBy ? ` · ${DIMENSION_LABELS[b.groupBy]}` : ''}{b.filter?.state ? ` · ${STATE_LABELS[b.filter.state]}` : ''}{b.filter?.department ? ` · ${b.filter.department}` : ''}{b.filter?.year ? ` · ${fa(b.filter.year)}` : ''}
                   </span>
                 ))}
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="button" onClick={exportPdf} className="flex items-center gap-1 text-[11px] font-bold text-teal-800 bg-white border border-teal-200 hover:bg-teal-50 px-3 py-1.5 rounded-xl"><FileDown className="w-3.5 h-3.5" />خروجی PDF / Word</button>
-              <button type="button" onClick={() => { setSpec(null); setRequest(''); }} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl"><RotateCcw className="w-3.5 h-3.5" />گزارش تازه</button>
+              <button type="button" onClick={exportPdf} className="flex items-center gap-1 text-[12px] font-bold text-teal-800 bg-white border border-teal-200 hover:bg-teal-50 px-3 py-1.5 rounded-xl"><FileDown className="w-3.5 h-3.5" />خروجی PDF / Word</button>
+              <button type="button" onClick={() => { setSpec(null); setRequest(''); }} className="flex items-center gap-1 text-[12px] font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl"><RotateCcw className="w-3.5 h-3.5" />گزارش تازه</button>
             </div>
           </div>
           <div ref={reportRef} className="grid grid-cols-1 lg:grid-cols-2 gap-3">

@@ -28,19 +28,19 @@ export const FollowUpHistory: React.FC<FollowUpHistoryProps> = ({ resolutionId, 
       </h4>
 
       {records.length === 0 ? (
-        <div className="text-[11px] text-slate-400 py-3">هنوز پیگیری‌ای برای این مصوبه ثبت نشده است.</div>
+        <div className="text-[12px] text-slate-400 py-3">هنوز پیگیری‌ای برای این مصوبه ثبت نشده است.</div>
       ) : (
         <div className="space-y-2">
           {records.map((record) => (
             <div key={record.id} className="p-3 bg-white border border-amber-200/80 rounded-xl space-y-1.5">
-              <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-[12px]">
                 <span className="font-bold text-amber-900">{toPersianDigits(record.followUpDateJalali)}</span>
                 <span className="text-slate-500">مسئول پیگیری: {record.createdByName}</span>
               </div>
               <p className="text-xs text-slate-700 leading-6">{record.text}</p>
-              {record.notes && <p className="text-[11px] text-slate-500">{record.notes}</p>}
+              {record.notes && <p className="text-[12px] text-slate-500">{record.notes}</p>}
               {record.nextDeadlineJalali && (
-                <div className="text-[11px] text-slate-600">
+                <div className="text-[12px] text-slate-600">
                   موعد بعدی: <strong>{toPersianDigits(record.nextDeadlineJalali)}</strong>
                 </div>
               )}
@@ -49,7 +49,7 @@ export const FollowUpHistory: React.FC<FollowUpHistoryProps> = ({ resolutionId, 
                   {record.attachments.map((attachment) => (
                     <span
                       key={attachment.id}
-                      className="flex items-center gap-1 text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded-lg"
+                      className="flex items-center gap-1 text-[11px] bg-slate-100 border border-slate-200 text-slate-600 px-2 py-1 rounded-lg"
                     >
                       <FileText className="w-3 h-3" />
                       {attachment.fileName}

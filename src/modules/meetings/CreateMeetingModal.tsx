@@ -375,7 +375,7 @@ export const CreateMeetingModal: React.FC = () => {
             </div>
             <div>
               <h3 className="text-sm font-bold text-white">برنامه‌ریزی و ایجاد جلسه جدید</h3>
-              <p className="text-[11px] text-teal-200">ثبت اطلاعات زمان‌بندی، اعضا، مدعوین و دستور جلسات</p>
+              <p className="text-[12px] text-teal-200">ثبت اطلاعات زمان‌بندی، اعضا، مدعوین و دستور جلسات</p>
             </div>
           </div>
           <button
@@ -504,7 +504,7 @@ export const CreateMeetingModal: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">برگزارکننده جلسه *</label>
+                <label className="block text-[12px] font-bold text-slate-700 mb-1">برگزارکننده جلسه *</label>
                 <select id="mf-organizer" aria-invalid={Boolean(errorOf('mf-organizer'))} value={organizerId} onChange={(e) => setOrganizerId(e.target.value)} required className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
                   <option value="">انتخاب برگزارکننده...</option>
                   {availableUsers.map((user) => <option key={user.id} value={user.id}>{user.fullName} ({user.title})</option>)}
@@ -512,7 +512,7 @@ export const CreateMeetingModal: React.FC = () => {
                 {fieldErrorText('mf-organizer')}
               </div>
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">دبیر جلسه *</label>
+                <label className="block text-[12px] font-bold text-slate-700 mb-1">دبیر جلسه *</label>
                 <select id="mf-secretary" aria-invalid={Boolean(errorOf('mf-secretary'))} value={secretaryId} onChange={(e) => setSecretaryId(e.target.value)} required className="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
                   <option value="">انتخاب دبیر جلسه...</option>
                   {availableUsers.map((user) => <option key={user.id} value={user.id}>{user.fullName} ({user.title})</option>)}
@@ -524,18 +524,18 @@ export const CreateMeetingModal: React.FC = () => {
             <SearchableUserMultiSelect users={availableUsers} selectedIds={selectedMemberIds} onChange={setSelectedMemberIds} label="اعضا و مدعوین" maxHeightClassName="max-h-48" />
 
             {aiScheduler && (selectedMemberIds.length > 0 || organizerId || secretaryId) && (
-              <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-2">
+              <div className="rounded-2xl border border-indigo-200 bg-slate-50 p-3 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] font-extrabold text-indigo-950">پیشنهاد زمان: زمان‌هایی که این افراد جلسه دیگری ندارند (۱۴ روز آینده)</span>
+                  <span className="text-[12px] font-bold text-indigo-950">پیشنهاد زمان: زمان‌هایی که این افراد جلسه دیگری ندارند (۱۴ روز آینده)</span>
                   <AiButton variant="soft" loading={slotsBusy} onClick={handleSuggestSlots}>پیدا کردن زمان مناسب</AiButton>
                 </div>
-                {slots && slots.length === 0 && <p className="text-[11px] text-slate-500">زمان آزاد مشترکی پیدا نشد.</p>}
+                {slots && slots.length === 0 && <p className="text-[12px] text-slate-500">زمان آزاد مشترکی پیدا نشد.</p>}
                 {slots && slots.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                     {slots.map((slot) => (
                       <button key={`${slot.dateJalali}-${slot.startTime}`} type="button" onClick={() => { setDateJalali(toPersianDigitsLocal(slot.dateJalali)); setStartTime(toPersianDigitsLocal(slot.startTime)); setEndTime(toPersianDigitsLocal(slot.endTime)); showToast('زمان جلسه', `${slot.weekday} ${toPersianDigitsLocal(slot.dateJalali)} ساعت ${slot.startTime} تا ${slot.endTime} انتخاب شد.`, 'success'); }} className="text-right p-2.5 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:bg-indigo-50">
-                        <span className="block text-[11.5px] font-extrabold text-slate-800">{slot.weekday} {toPersianDigitsLocal(slot.dateJalali)} — {toPersianDigitsLocal(slot.startTime)} تا {toPersianDigitsLocal(slot.endTime)}</span>
-                        <span className={`block text-[10px] font-bold mt-0.5 ${slot.freeCount === slot.total ? 'text-emerald-700' : 'text-amber-700'}`}>{slot.freeCount === slot.total ? `همه ${toPersianDigitsLocal(String(slot.total))} نفر آزادند` : `${toPersianDigitsLocal(String(slot.freeCount))} از ${toPersianDigitsLocal(String(slot.total))} نفر آزاد — مشغول: ${slot.busyNames.join('، ')}`}</span>
+                        <span className="block text-[12px] font-bold text-slate-800">{slot.weekday} {toPersianDigitsLocal(slot.dateJalali)} — {toPersianDigitsLocal(slot.startTime)} تا {toPersianDigitsLocal(slot.endTime)}</span>
+                        <span className={`block text-[11px] font-bold mt-0.5 ${slot.freeCount === slot.total ? 'text-emerald-700' : 'text-amber-700'}`}>{slot.freeCount === slot.total ? `همه ${toPersianDigitsLocal(String(slot.total))} نفر آزادند` : `${toPersianDigitsLocal(String(slot.freeCount))} از ${toPersianDigitsLocal(String(slot.total))} نفر آزاد — مشغول: ${slot.busyNames.join('، ')}`}</span>
                       </button>
                     ))}
                   </div>
@@ -554,15 +554,15 @@ export const CreateMeetingModal: React.FC = () => {
             </h4>
 
             {aiPlanner && agendas.length > 0 && (
-              <div className="rounded-2xl border border-indigo-200 bg-gradient-to-l from-indigo-50 to-white p-3 space-y-2">
+              <div className="rounded-2xl border border-indigo-200 bg-slate-50 p-3 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-[11px] font-extrabold text-indigo-950">برنامه‌ریز دستورکار: ترتیب و زمان هر بند را بر اساس اهمیت و مدت جلسه پیشنهاد می‌دهد</span>
-                  <div className="flex items-center gap-2"><AiButton onClick={handleSmartPlan} loading={planning}>زمان‌بندی هوشمند</AiButton></div>
+                  <span className="text-[12px] font-bold text-indigo-950">برنامه‌ریز دستورکار: ترتیب و زمان هر بند را بر اساس اهمیت و مدت جلسه پیشنهاد می‌دهد</span>
+                  <div className="flex items-center gap-2"><AiButton onClick={handleSmartPlan} loading={planning}>زمان‌بندی خودکار</AiButton></div>
                 </div>
                 {planResult && (
-                  <ul className="text-[10.5px] text-slate-600 space-y-0.5">
+                  <ul className="text-[11px] text-slate-600 space-y-0.5">
                     {planResult.data.order.filter((o) => o.reason).map((o) => <li key={o.id}>• <b>{agendas.find((a) => a.id === o.id)?.title}</b>: {o.reason}</li>)}
-                    {planResult.data.tips.map((tip) => <li key={tip} className="text-indigo-700">💡 {tip}</li>)}
+                    {planResult.data.tips.map((tip) => <li key={tip} className="text-slate-600 list-disc mr-4">{tip}</li>)}
                   </ul>
                 )}
               </div>
@@ -636,7 +636,7 @@ export const CreateMeetingModal: React.FC = () => {
                       label="افراد مرتبط با این موضوع"
                     />
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">ارائه‌دهندهٔ پیش‌فرض این موضوع</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-1">ارائه‌دهندهٔ پیش‌فرض این موضوع</label>
                       <select
                         value={proposalPresenterId}
                         onChange={(e) => setProposalPresenterId(e.target.value)}
@@ -647,10 +647,10 @@ export const CreateMeetingModal: React.FC = () => {
                           <option key={user.id} value={user.id}>{user.fullName} ({user.title})</option>
                         ))}
                       </select>
-                      <p className="mt-1 text-[10px] text-slate-500">پیشنهاددهنده یا ارائه‌دهندهٔ تأییدشده به‌صورت خودکار انتخاب شده است؛ با افزودن فرد دیگر در فهرست بالا، او هم قابل انتخاب می‌شود.</p>
+                      <p className="mt-1 text-[11px] text-slate-500">پیشنهاددهنده یا ارائه‌دهندهٔ تأییدشده به‌صورت خودکار انتخاب شده است؛ با افزودن فرد دیگر در فهرست بالا، او هم قابل انتخاب می‌شود.</p>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">پیوست‌های این دستور کار</label>
+                      <label className="block text-[12px] font-bold text-slate-700 mb-1">پیوست‌های این دستور کار</label>
                       <AttachmentList
                         attachments={proposalAgendaAttachments}
                         canUpload
@@ -672,7 +672,7 @@ export const CreateMeetingModal: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                 <div className="sm:col-span-5">
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">عنوان موضوع دستور جلسه</label>
+                  <label className="block text-[12px] font-bold text-slate-700 mb-1">عنوان موضوع دستور جلسه</label>
                   <input
                     type="text"
                     placeholder="مثال: بررسی طرح توسعه شبکه و امنیت زیرساخت"
@@ -683,7 +683,7 @@ export const CreateMeetingModal: React.FC = () => {
                 </div>
 
                 <div className="sm:col-span-4">
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">ارائه‌دهندهٔ پیش‌فرض</label>
+                  <label className="block text-[12px] font-bold text-slate-700 mb-1">ارائه‌دهندهٔ پیش‌فرض</label>
                   <select
                     value={newAgendaPresenterId}
                     onChange={(e) => {
@@ -723,11 +723,11 @@ export const CreateMeetingModal: React.FC = () => {
                   }}
                   label="افراد مرتبط با این موضوع"
                 />
-                <p className="mt-2 text-[10px] text-slate-500">اولین فرد انتخاب‌شده به‌صورت پیش‌فرض ارائه‌دهنده است؛ افراد بیشتری را می‌توانید اضافه کنید و سپس ارائه‌دهنده را از همین فهرست تغییر دهید.</p>
+                <p className="mt-2 text-[11px] text-slate-500">اولین فرد انتخاب‌شده به‌صورت پیش‌فرض ارائه‌دهنده است؛ افراد بیشتری را می‌توانید اضافه کنید و سپس ارائه‌دهنده را از همین فهرست تغییر دهید.</p>
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">پیوست‌های این دستور کار</label>
+                <label className="block text-[12px] font-bold text-slate-700 mb-1">پیوست‌های این دستور کار</label>
                 <AttachmentList
                   attachments={newAgendaAttachments}
                   canUpload
@@ -748,7 +748,7 @@ export const CreateMeetingModal: React.FC = () => {
 
             {/* List of Agendas (SECOND) */}
             <div className="space-y-2">
-              <div className="text-[11px] font-bold text-slate-600">فهرست بندهای ثبت‌شده ({agendas.length} بند):</div>
+              <div className="text-[12px] font-bold text-slate-600">فهرست بندهای ثبت‌شده ({agendas.length} بند):</div>
               {agendas.map((ag) => (
                 <div
                   key={ag.id}
@@ -760,14 +760,14 @@ export const CreateMeetingModal: React.FC = () => {
                     </span>
                     <div>
                       <div className="font-bold text-slate-800">{ag.title}</div>
-                      <div className="text-[11px] text-slate-500 mt-0.5">
+                      <div className="text-[12px] text-slate-500 mt-0.5">
                         ارائه‌دهنده: <strong className="text-teal-900">{ag.presenterName || ag.presenter}</strong> ({formatAgendaTimeRange(ag)})
                       </div>
                       {ag.relatedUsers && ag.relatedUsers.length > 0 && (
-                        <div className="text-[10px] text-blue-700 mt-1">افراد مرتبط: {ag.relatedUsers.map((user) => user.fullName).join('، ')}</div>
+                        <div className="text-[11px] text-blue-700 mt-1">افراد مرتبط: {ag.relatedUsers.map((user) => user.fullName).join('، ')}</div>
                       )}
                       {ag.attachments && ag.attachments.length > 0 && (
-                        <div className="text-[10px] text-teal-700 mt-1">پیوست‌ها ({ag.attachments.length}): {ag.attachments.map((a) => a.fileName).join('، ')}</div>
+                        <div className="text-[11px] text-teal-700 mt-1">پیوست‌ها ({ag.attachments.length}): {ag.attachments.map((a) => a.fileName).join('، ')}</div>
                       )}
                     </div>
                   </div>
@@ -787,10 +787,10 @@ export const CreateMeetingModal: React.FC = () => {
 
           {activeStep === 3 && (
             <div id="mf-workflow" tabIndex={-1} className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-gradient-to-l from-indigo-50 to-white border border-indigo-100 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-slate-50 border border-indigo-100 p-3">
                 <div>
-                  <h4 className="text-xs font-extrabold text-indigo-950 flex items-center gap-1.5"><GitBranch className="w-4 h-4" />گردش کار اختصاصی این جلسه</h4>
-                  <p className="text-[10px] text-slate-500 mt-0.5">قالب پیشنهادی بر اساس نوع جلسه انتخاب شده؛ برای همین جلسه هر بخش را آزادانه تغییر دهید.</p>
+                  <h4 className="text-xs font-bold text-indigo-950 flex items-center gap-1.5"><GitBranch className="w-4 h-4" />گردش کار اختصاصی این جلسه</h4>
+                  <p className="text-[11px] text-slate-500 mt-0.5">قالب پیشنهادی بر اساس نوع جلسه انتخاب شده؛ برای همین جلسه هر بخش را آزادانه تغییر دهید.</p>
                 </div>
                 <select
                   aria-label="قالب گردش کار"
@@ -799,7 +799,7 @@ export const CreateMeetingModal: React.FC = () => {
                     const template = getWorkflowTemplates().find((item) => item.id === event.target.value);
                     if (template) { setWorkflow(workflowFromTemplate(template)); setWorkflowTouched(true); }
                   }}
-                  className="text-[11px] p-2 bg-white border border-indigo-200 rounded-xl font-bold text-indigo-900"
+                  className="text-[12px] p-2 bg-white border border-indigo-200 rounded-xl font-bold text-indigo-900"
                 >
                   {getWorkflowTemplates().map((template) => <option key={template.id} value={template.id}>{template.name}</option>)}
                 </select>
@@ -816,7 +816,7 @@ export const CreateMeetingModal: React.FC = () => {
 
           {activeStep === 4 && (
             <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
-              <h4 className="text-sm font-extrabold text-slate-900">بازبینی پیش از ثبت</h4>
+              <h4 className="text-sm font-bold text-slate-900">بازبینی پیش از ثبت</h4>
               <div className="grid grid-cols-1 gap-3 text-xs text-slate-600 sm:grid-cols-2">
                 <div><span className="font-bold text-slate-800">جلسه:</span> {title}</div><div><span className="font-bold text-slate-800">زمان:</span> {dateJalali}، {startTime} تا {endTime}</div>
                 <div><span className="font-bold text-slate-800">مکان:</span> {location}</div><div><span className="font-bold text-slate-800">برگزارکننده:</span> {availableUsers.find((u) => u.id === organizerId)?.fullName || '—'}</div>
@@ -830,7 +830,7 @@ export const CreateMeetingModal: React.FC = () => {
                 <div>امضای مصوبات: {workflow.resolutionSignature ? `${SIGNATURE_MODE_LABELS[workflow.resolutionSignature.mode]} — ${namesOf(workflow.resolutionSignature.signerUserIds).join(' ← ')}` : 'تنظیمات سراسری'}</div>
                 <div>امضای ابلاغیه: {workflow.noticeSignerUserId ? namesOf([workflow.noticeSignerUserId])[0] : 'تنظیم سراسری'}</div>
               </div>
-              <p className="text-[11px] leading-5 text-slate-500">پیش‌نویس این فرم در این نسخه ذخیره نمی‌شود؛ با بستن پنجره اطلاعات واردشده از بین می‌رود.</p>
+              <p className="text-[12px] leading-5 text-slate-500">پیش‌نویس این فرم در این نسخه ذخیره نمی‌شود؛ با بستن پنجره اطلاعات واردشده از بین می‌رود.</p>
             </div>
           )}
 
@@ -850,7 +850,7 @@ export const CreateMeetingModal: React.FC = () => {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">پیوست‌های توضیحات جلسه</label>
-              <p className="text-[10px] text-slate-400 mb-2">
+              <p className="text-[11px] text-slate-400 mb-2">
                 این فایل‌ها به خودِ جلسه پیوست می‌شوند، نه به یک بند دستور جلسه. می‌توانید چند فایل را
                 همزمان یا در چند مرحله اضافه کنید؛ فایل جدید جایگزین فایل‌های قبلی نمی‌شود.
               </p>

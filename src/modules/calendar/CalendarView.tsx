@@ -128,8 +128,8 @@ export const CalendarView: React.FC = () => {
             <CalendarIcon className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-sm font-extrabold text-slate-800 dark:text-slate-100 tracking-tight">تقویم جلسات سازمانی</h1>
-            <p className="text-[11px] text-slate-400 dark:text-slate-400 font-medium">{canCreateMeeting ? 'برای ثبت جلسه جدید، روی روز مورد نظر کلیک کنید.' : 'فقط جلسه‌های مجاز شما نمایش داده می‌شوند.'}</p>
+            <h1 className="text-sm font-bold text-slate-800 dark:text-slate-100 tracking-tight">تقویم جلسات سازمانی</h1>
+            <p className="text-[12px] text-slate-400 dark:text-slate-400 font-medium">{canCreateMeeting ? 'برای ثبت جلسه جدید، روی روز مورد نظر کلیک کنید.' : 'فقط جلسه‌های مجاز شما نمایش داده می‌شوند.'}</p>
           </div>
         </div>
 
@@ -180,7 +180,7 @@ export const CalendarView: React.FC = () => {
             </button>
             <button
               onClick={handleSetToday}
-              className="px-2 text-[11px] font-bold text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-400 cursor-pointer"
+              className="px-2 text-[12px] font-bold text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-400 cursor-pointer"
             >
               امروز
             </button>
@@ -206,7 +206,7 @@ export const CalendarView: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 px-1 text-[11px] font-bold">
+      <div className="flex flex-wrap gap-2 px-1 text-[12px] font-bold">
         {[['MINE', 'جلسات من'], ['DEPARTMENT', 'واحد من'], ...(canViewAllMeetings ? [['PERMITTED', 'همه جلسات مجاز']] : [])].map(([value, label]) => <button key={value} onClick={() => setCalendarScope(value as typeof calendarScope)} className={`rounded-full border px-3 py-1.5 ${calendarScope === value ? 'border-teal-700 bg-teal-700 text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}>{label}</button>)}
         {calendarScope === 'DEPARTMENT' && !canViewAllMeetings && <span className="self-center text-slate-500">نمای واحد برای نقش شما به جلسه‌های مرتبط با خودتان محدود می‌شود.</span>}
       </div>
@@ -214,14 +214,14 @@ export const CalendarView: React.FC = () => {
       {/* Calendar Grid Container (Fixed Fit - No Scroll) */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-xs border border-slate-200 dark:border-slate-800 flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Days of week header in Persian */}
-        <div className="grid grid-cols-7 gap-1.5 text-center text-[11px] font-bold text-slate-500 dark:text-slate-400 pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
+        <div className="grid grid-cols-7 gap-1.5 text-center text-[12px] font-bold text-slate-500 dark:text-slate-400 pb-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
           <div>شنبه</div>
           <div>یکشنبه</div>
           <div>دوشنبه</div>
           <div>سه‌شنبه</div>
           <div>چهارشنبه</div>
           <div>پنجشنبه</div>
-          <div className="text-rose-500 font-extrabold">جمعه</div>
+          <div className="text-rose-500 font-bold">جمعه</div>
         </div>
 
         {/* Days Grid - Flex-1 with autofit rows */}
@@ -258,9 +258,9 @@ export const CalendarView: React.FC = () => {
                 {/* Day Header */}
                 <div className="flex items-center justify-between shrink-0">
                   <span
-                    className={`text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
+                    className={`text-[12px] font-bold w-5 h-5 rounded-full flex items-center justify-center transition-transform group-hover:scale-110 ${
                       isToday
-                        ? 'bg-teal-700 text-white shadow-xs font-black'
+                        ? 'bg-teal-700 text-white shadow-xs font-bold'
                         : isWeekend
                         ? 'text-rose-600 dark:text-rose-400'
                         : 'text-slate-700 dark:text-slate-300'
@@ -270,7 +270,7 @@ export const CalendarView: React.FC = () => {
                   </span>
 
                   {/* Plus icon hint on hover */}
-                  <span className="opacity-0 group-hover:opacity-100 text-[10px] text-teal-800 dark:text-teal-300 font-bold flex items-center gap-0.5 transition-opacity">
+                  <span className="opacity-0 group-hover:opacity-100 text-[11px] text-teal-800 dark:text-teal-300 font-bold flex items-center gap-0.5 transition-opacity">
                     <Plus className="w-3 h-3" />
                   </span>
 
@@ -288,7 +288,7 @@ export const CalendarView: React.FC = () => {
                         e.stopPropagation();
                         navigateTo('meeting-details', { meetingId: m.id });
                       }}
-                      className="p-1 bg-teal-800 hover:bg-teal-700 text-white rounded-lg text-[9px] font-bold truncate cursor-pointer transition-colors shadow-2xs flex items-center justify-between gap-1"
+                      className="p-1 bg-teal-800 hover:bg-teal-700 text-white rounded-lg text-[11px] font-bold truncate cursor-pointer transition-colors shadow-2xs flex items-center justify-between gap-1"
                       title={`${m.title} (ساعت ${m.startTime})`}
                     >
                       <span className="truncate">{m.title}</span>

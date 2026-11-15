@@ -49,7 +49,7 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   check('Floating Button «نقشه گردش کار» وجود دارد', await btn.count() === 1);
   const overlap = await page.evaluate(() => {
     const map = document.querySelector('button[aria-label="نقشه گردش کار"]')?.getBoundingClientRect();
-    const ai = Array.from(document.querySelectorAll('button')).find((b) => b.textContent.includes('دستیار هوشمند'))?.getBoundingClientRect();
+    const ai = Array.from(document.querySelectorAll('button')).find((b) => b.textContent.includes('دستیار'))?.getBoundingClientRect();
     if (!map || !ai) return 'MISSING';
     return !(map.bottom < ai.top || map.top > ai.bottom) ? 'OVERLAP' : 'OK';
   });

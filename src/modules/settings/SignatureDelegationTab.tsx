@@ -71,14 +71,14 @@ export const SignatureDelegationTab: React.FC = () => {
           <UserCheck className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-xs font-extrabold text-slate-800">جانشین امضا</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <h3 className="text-xs font-bold text-slate-800">جانشین امضا</h3>
+          <p className="text-[12px] text-slate-500 mt-0.5">
             اگر مسئول امضای مرحله‌ای هستید، می‌توانید یک کاربر را به‌عنوان جانشین خود تعیین کنید تا در صورت نیاز به‌جای شما امضا کند.
           </p>
         </div>
       </div>
 
-      <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
+      <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-[12px] text-amber-900 flex items-start gap-2">
         <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
         <span>
           جانشینی فقط اجازه <strong>امضا</strong> را منتقل می‌کند و هیچ دسترسی دیگری از شما به جانشین داده نمی‌شود.
@@ -88,7 +88,7 @@ export const SignatureDelegationTab: React.FC = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-[11px] font-bold text-slate-700 mb-1">جانشین من</label>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1">جانشین من</label>
           <select value={delegateUserId} onChange={(event) => setDelegateUserId(event.target.value)} className={field}>
             <option value="">انتخاب کاربر...</option>
             {selectableUsers.map((user) => (
@@ -98,7 +98,7 @@ export const SignatureDelegationTab: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold text-slate-700 mb-1">وضعیت جانشینی</label>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1">وضعیت جانشینی</label>
           <select value={isActive ? 'ACTIVE' : 'INACTIVE'} onChange={(event) => setIsActive(event.target.value === 'ACTIVE')} className={field}>
             <option value="ACTIVE">فعال</option>
             <option value="INACTIVE">غیرفعال</option>
@@ -106,20 +106,20 @@ export const SignatureDelegationTab: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold text-slate-700 mb-1">از تاریخ (اختیاری)</label>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1">از تاریخ (اختیاری)</label>
           <PersianDatePicker value={fromDate} onChange={setFromDate} />
         </div>
         <div>
-          <label className="block text-[11px] font-bold text-slate-700 mb-1">تا تاریخ (اختیاری)</label>
+          <label className="block text-[12px] font-bold text-slate-700 mb-1">تا تاریخ (اختیاری)</label>
           <PersianDatePicker value={toDate} onChange={setToDate} />
         </div>
       </div>
 
       {saved && (
-        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[11px] text-slate-700 space-y-1">
+        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 text-[12px] text-slate-700 space-y-1">
           <div>
             جانشین ثبت‌شده: <strong className="text-slate-900">{saved.delegateName}</strong>
-            <span className={`mr-2 px-2 py-0.5 rounded-full border text-[10px] font-bold ${
+            <span className={`mr-2 px-2 py-0.5 rounded-full border text-[11px] font-bold ${
               saved.isActive ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-500 border-slate-200'
             }`}>
               {saved.isActive ? 'فعال' : 'غیرفعال'}
@@ -157,15 +157,15 @@ export const SignatureDelegationTab: React.FC = () => {
 
       {delegatedToMe.length > 0 && (
         <div className="pt-3 border-t border-slate-100">
-          <div className="text-[11px] font-bold text-slate-700 mb-1.5">شما هم‌اکنون جانشین فعال این افراد هستید:</div>
+          <div className="text-[12px] font-bold text-slate-700 mb-1.5">شما هم‌اکنون جانشین فعال این افراد هستید:</div>
           <div className="flex flex-wrap gap-1.5">
             {delegatedToMe.map((item) => (
-              <span key={item.ownerUserId} className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+              <span key={item.ownerUserId} className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
                 {item.ownerName}
               </span>
             ))}
           </div>
-          <p className="text-[10px] text-slate-400 mt-1.5">
+          <p className="text-[11px] text-slate-400 mt-1.5">
             فقط امضاهای واگذارشده در کارتابل شما نمایش داده می‌شوند؛ هیچ دسترسی دیگری به اطلاعات این افراد ندارید.
           </p>
         </div>

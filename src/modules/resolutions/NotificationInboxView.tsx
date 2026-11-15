@@ -63,7 +63,7 @@ export const NotificationInboxView: React.FC = () => {
         </div>
         <div>
           <h1 className="text-sm font-bold text-slate-800">کارتابل ابلاغ</h1>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-[12px] text-slate-500 mt-0.5">
             {canNotify
               ? 'ثبت ابلاغ رسمی مصوبات و امضای ابلاغیه‌ها — مصوبه تنها پس از امضای دبیر جلسه وارد فاز اجرا می‌شود'
               : 'ابلاغیه‌هایی که در انتظار امضای شما به‌عنوان دبیر جلسه هستند'}
@@ -81,7 +81,7 @@ export const NotificationInboxView: React.FC = () => {
             >
               <Send className="w-3.5 h-3.5" />
               <span>در انتظار ابلاغ</span>
-              {items.length > 0 && <span className={`text-[9px] font-bold px-1.5 rounded-full ${activeTab === 'NOTIFY' ? 'bg-white/20' : 'bg-slate-100'}`}>{toPersianDigits(items.length)}</span>}
+              {items.length > 0 && <span className={`text-[11px] font-bold px-1.5 rounded-full ${activeTab === 'NOTIFY' ? 'bg-white/20' : 'bg-slate-100'}`}>{toPersianDigits(items.length)}</span>}
             </button>
           )}
           <button
@@ -91,7 +91,7 @@ export const NotificationInboxView: React.FC = () => {
           >
             <PenLine className="w-3.5 h-3.5" />
             <span>امضای ابلاغیه (دبیر جلسه)</span>
-            {pendingSignature.length > 0 && <span className={`text-[9px] font-bold px-1.5 rounded-full ${activeTab === 'SIGN' ? 'bg-white/20' : 'bg-slate-100'}`}>{toPersianDigits(pendingSignature.length)}</span>}
+            {pendingSignature.length > 0 && <span className={`text-[11px] font-bold px-1.5 rounded-full ${activeTab === 'SIGN' ? 'bg-white/20' : 'bg-slate-100'}`}>{toPersianDigits(pendingSignature.length)}</span>}
           </button>
         </div>
       )}
@@ -108,7 +108,7 @@ export const NotificationInboxView: React.FC = () => {
           <div className="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-x-auto">
             <table className="w-full min-w-[900px] text-right text-xs">
               <thead>
-                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[11px]">
+                <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[12px]">
                   <th className="py-2.5 px-3 font-semibold">شماره مصوبه</th>
                   <th className="py-2.5 px-3 font-semibold">شماره نامه ابلاغیه</th>
                   <th className="py-2.5 px-3 font-semibold">موضوع مصوبه</th>
@@ -123,11 +123,11 @@ export const NotificationInboxView: React.FC = () => {
                     <td className="py-3 px-3 font-bold text-indigo-700">{toPersianDigits(resolution.notificationLetterNumber || '—')}</td>
                     <td className="py-3 px-3">
                       <div className="font-bold text-slate-800">{resolution.topicTitle}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{resolution.meetingNumber} — {resolution.meetingTitle}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">{resolution.meetingNumber} — {resolution.meetingTitle}</div>
                     </td>
                     <td className="py-3 px-3 text-slate-600">
                       {resolution.notifiedByName || '—'}
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[11px] text-slate-400">
                         {toPersianDigits(resolution.notifiedDateJalali || '—')} {resolution.notifiedTimeString ? `ساعت ${toPersianDigits(resolution.notifiedTimeString)}` : ''}
                       </div>
                     </td>
@@ -151,7 +151,7 @@ export const NotificationInboxView: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-xs border border-slate-100 overflow-x-auto">
           <table className="w-full min-w-[900px] text-right text-xs">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[11px]">
+              <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 text-[12px]">
                 <th className="py-2.5 px-3 font-semibold">شماره مصوبه</th>
                 <th className="py-2.5 px-3 font-semibold">جلسه</th>
                 <th className="py-2.5 px-3 font-semibold">موضوع مصوبه</th>
@@ -168,17 +168,17 @@ export const NotificationInboxView: React.FC = () => {
                     <td className="py-3 px-3">{resolution.meetingNumber} — {resolution.meetingTitle}</td>
                     <td className="py-3 px-3">
                       <div className="font-bold text-slate-800">{resolution.topicTitle}</div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">تاریخ مصوبه: {toPersianDigits(resolution.assignedDateJalali || resolution.createdAt.slice(0, 10))}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">تاریخ مصوبه: {toPersianDigits(resolution.assignedDateJalali || resolution.createdAt.slice(0, 10))}</div>
                     </td>
                     <td className="py-3 px-3">{resolution.responsibleDepartmentName || '—'}</td>
                     <td className="py-3 px-3">
-                      <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200">در انتظار ابلاغ</span>
+                      <span className="text-[11px] font-bold px-2 py-1 rounded-full bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200">در انتظار ابلاغ</span>
                     </td>
                     <td className="py-3 px-3">
                       <button
                         type="button"
                         onClick={() => setExpandedId((prev) => (prev === resolution.id ? null : resolution.id))}
-                        className="flex items-center gap-1.5 bg-fuchsia-700 hover:bg-fuchsia-800 text-white text-[11px] font-bold py-1.5 px-3 rounded-full cursor-pointer"
+                        className="flex items-center gap-1.5 bg-fuchsia-700 hover:bg-fuchsia-800 text-white text-[12px] font-bold py-1.5 px-3 rounded-full cursor-pointer"
                       >
                         <Send className="w-3.5 h-3.5" />
                         <span>ابلاغ</span>

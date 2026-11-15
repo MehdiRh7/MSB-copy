@@ -19,8 +19,8 @@ export const FormHero: React.FC<FormHeroProps> = ({ icon: Icon, title, subtitle,
       <div className="flex min-w-0 items-center gap-3">
         <span className="app-form-hero-icon"><Icon className="h-5 w-5" /></span>
         <div className="min-w-0">
-          <h3 className="text-[15px] font-extrabold leading-6 text-white">{title}</h3>
-          {subtitle && <p className="text-[11px] leading-5 text-blue-100/90">{subtitle}</p>}
+          <h3 className="text-[15px] font-bold leading-6 text-white">{title}</h3>
+          {subtitle && <p className="text-[12px] leading-5 text-blue-100/90">{subtitle}</p>}
         </div>
       </div>
       {onClose && (
@@ -31,7 +31,7 @@ export const FormHero: React.FC<FormHeroProps> = ({ icon: Icon, title, subtitle,
     </div>
     {meta && meta.length > 0 && (
       <div className="mt-3 flex flex-wrap gap-1.5">
-        {meta.map((m) => <span key={m} className="max-w-full truncate rounded-full bg-white/14 px-2.5 py-1 text-[10.5px] font-bold text-white ring-1 ring-white/20">{m}</span>)}
+        {meta.map((m) => <span key={m} className="max-w-full truncate rounded-full bg-white/14 px-2.5 py-1 text-[11px] font-bold text-white ring-1 ring-white/20">{m}</span>)}
       </div>
     )}
   </div>

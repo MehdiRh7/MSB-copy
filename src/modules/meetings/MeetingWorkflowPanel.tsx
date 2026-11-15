@@ -16,7 +16,7 @@ export const ApprovalProgress: React.FC<{ policy: ApprovalPolicy; decisions?: Ap
   const names = namesOf(policy.approverUserIds);
   return (
     <div className="space-y-2">
-      <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-slate-600">
+      <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-slate-600">
         <span className="px-2 py-0.5 rounded-full bg-white border border-slate-200">{APPROVAL_MODE_LABELS[policy.mode]}</span>
         <span>پیشرفت: {toPersianDigits(evaluation.approvedCount)} از {toPersianDigits(evaluation.requiredCount)}</span>
       </div>
@@ -29,7 +29,7 @@ export const ApprovalProgress: React.FC<{ policy: ApprovalPolicy; decisions?: Ap
             <span
               key={id}
               title={decision ? `${decision.decision === 'APPROVED' ? 'تأیید' : 'برگشت'} — ${decision.dateJalali} ${decision.timeString}${decision.notes ? ` — ${decision.notes}` : ''}` : undefined}
-              className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full border ${approved ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : isTurn ? 'bg-amber-50 text-amber-800 border-amber-300 ring-2 ring-amber-100' : 'bg-white text-slate-500 border-slate-200'}`}
+              className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-full border ${approved ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : isTurn ? 'bg-amber-50 text-amber-800 border-amber-300 ring-2 ring-amber-100' : 'bg-white text-slate-500 border-slate-200'}`}
             >
               {policy.mode === 'SEQUENTIAL' && <span className="opacity-70">{toPersianDigits(index + 1)}.</span>}
               {approved ? <CheckCircle2 className="w-3 h-3" /> : <Clock3 className="w-3 h-3" />}
@@ -60,13 +60,13 @@ export const AgendaApprovalPanel: React.FC<{
   return (
     <div className="no-print bg-amber-50 border border-amber-200 rounded-2xl p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="font-extrabold text-amber-900 flex items-center gap-1.5"><ShieldCheck className="w-4 h-4" />بررسی و تأیید دستورکار</div>
-        {meeting.workflow?.templateName && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white border border-amber-200 text-amber-800">گردش: {meeting.workflow.templateName}</span>}
+        <div className="font-bold text-amber-900 flex items-center gap-1.5"><ShieldCheck className="w-4 h-4" />بررسی و تأیید دستورکار</div>
+        {meeting.workflow?.templateName && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-amber-200 text-amber-800">گردش: {meeting.workflow.templateName}</span>}
       </div>
       <ApprovalProgress policy={policy} decisions={meeting.agendaDecisions} />
       {authority.allowed ? (
         <>
-          {authority.onBehalfOf && <p className="text-[10px] font-bold text-indigo-700">شما به‌عنوان مدیر سیستم به نمایندگی از {namesOf([authority.approverUserId!])[0]} اقدام می‌کنید.</p>}
+          {authority.onBehalfOf && <p className="text-[11px] font-bold text-indigo-700">شما به‌عنوان مدیر سیستم به نمایندگی از {namesOf([authority.approverUserId!])[0]} اقدام می‌کنید.</p>}
           <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="توضیحات تأیید یا دلیل بازگشت" className="w-full text-xs p-3 bg-white border border-amber-200 rounded-xl" />
           <div className="flex gap-2">
             <button disabled={busy} onClick={() => decide('APPROVE')} className="bg-emerald-700 disabled:opacity-60 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" />تأیید دستورکار</button>
@@ -74,7 +74,7 @@ export const AgendaApprovalPanel: React.FC<{
           </div>
         </>
       ) : (
-        <p className="text-[11px] text-amber-800">{authority.reason}</p>
+        <p className="text-[12px] text-amber-800">{authority.reason}</p>
       )}
     </div>
   );
@@ -92,12 +92,12 @@ export const MeetingWorkflowSummary: React.FC<{ meeting: Meeting }> = ({ meeting
   ];
   return (
     <details className="no-print rounded-2xl border border-indigo-100 bg-indigo-50/40 p-3 text-xs">
-      <summary className="cursor-pointer font-extrabold text-indigo-950 flex items-center gap-1.5"><GitBranch className="w-4 h-4" />گردش کار این جلسه{wf.templateName ? ` — ${wf.templateName}` : ''}</summary>
+      <summary className="cursor-pointer font-bold text-indigo-950 flex items-center gap-1.5"><GitBranch className="w-4 h-4" />گردش کار این جلسه{wf.templateName ? ` — ${wf.templateName}` : ''}</summary>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
         {rows.map((row) => (
           <div key={row.label} className="bg-white rounded-xl border border-indigo-100 p-2.5">
-            <span className="block text-[10px] text-slate-400">{row.label}</span>
-            <span className="block text-[11px] font-bold text-slate-800 mt-0.5">{row.value}</span>
+            <span className="block text-[11px] text-slate-400">{row.label}</span>
+            <span className="block text-[12px] font-bold text-slate-800 mt-0.5">{row.value}</span>
           </div>
         ))}
       </div>

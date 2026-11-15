@@ -192,7 +192,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
             {value ? toPersianDigits(value) : placeholder}
           </span>
         </div>
-        <span className="text-[10px] text-slate-400 font-medium px-2 py-0.5 bg-slate-200/60 rounded-md">
+        <span className="text-[11px] text-slate-400 font-medium px-2 py-0.5 bg-slate-200/60 rounded-md">
           شمسی
         </span>
       </div>
@@ -248,7 +248,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
           </div>
 
           {/* Quick presets */}
-          <div className="flex items-center gap-1 mb-2.5 overflow-x-auto pb-1 text-[10px]">
+          <div className="flex items-center gap-1 mb-2.5 overflow-x-auto pb-1 text-[11px]">
             <button
               type="button"
               onClick={() => handleQuickSelect(0)}
@@ -280,7 +280,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
           </div>
 
           {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-1">
+          <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-slate-400 mb-1">
             {WEEK_DAYS.map((day, index) => <span key={day} className={index === 6 ? 'text-rose-500' : ''}>{day}</span>)}
           </div>
           <div className="grid grid-cols-7 gap-1 text-center text-xs">
@@ -305,7 +305,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
                   aria-label={holidayTitle ? `${toPersianDigits(day)}، تعطیل: ${holidayTitle}` : toPersianDigits(day)}
                   className={`h-8 rounded-lg font-bold text-xs flex items-center justify-center transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-blue-600 text-white shadow-xs font-black'
+                      ? 'bg-blue-600 text-white shadow-xs font-bold'
                       : holidayTitle
                       ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 ring-1 ring-rose-100'
                       : 'hover:bg-blue-50 hover:text-blue-700 text-slate-700'
@@ -318,7 +318,7 @@ export const PersianDatePicker: React.FC<PersianDatePickerProps> = ({
           </div>
 
           {/* Footer close */}
-          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[12px]">
             <span className="text-slate-400 flex items-center gap-1.5"><i className="w-2 h-2 rounded-full bg-rose-500" /> تعطیلات رسمی و جمعه‌ها</span>
             <button
               type="button"

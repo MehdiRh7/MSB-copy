@@ -46,8 +46,8 @@ export const exportHtmlToPdf = (title: string, bodyHtml: string, options: { word
   const toolbar = options.wordExport ? `
     <div class="doc-toolbar" data-file-name="${escapeHtml(fileBase)}">
       <span>${escapeHtml(title)}</span>
-      <button type="button" onclick="window.print()">🖨️ چاپ / ذخیره PDF</button>
-      <button type="button" onclick="downloadWord()">📄 دانلود Word</button>
+      <button type="button" onclick="window.print()">چاپ / ذخیره PDF</button>
+      <button type="button" onclick="downloadWord()">دانلود Word</button>
     </div>` : '';
   const wordScript = options.wordExport ? `
     <script>

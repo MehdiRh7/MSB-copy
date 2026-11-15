@@ -301,7 +301,7 @@ const P = 'postbank-mosavabat-v1:';
     await page.locator('div.absolute button').filter({ hasText: label }).first().click();
     await page.waitForTimeout(800);
   };
-  await switchUser('مدیر کل سیستم');
+  await switchUser('مدیر سیستم');
   await page.locator('aside button:has-text("تنظیمات")').first().click();
   await page.waitForTimeout(900);
   let settingsText = await page.locator('main').first().innerText();

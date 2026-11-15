@@ -151,7 +151,7 @@ export const ReportsView: React.FC = () => {
     return (
       <section className="db-card db-empty">
         <BarChart3 className="h-8 w-8 text-slate-300" />
-        <h1 className="text-base font-black text-slate-800">گزارش تجمیعی در دسترس نیست</h1>
+        <h1 className="text-base font-bold text-slate-800">گزارش تجمیعی در دسترس نیست</h1>
         <p>گزارش عملکرد سازمانی فقط برای مدیر سامانه نمایش داده می‌شود.</p>
       </section>
     );
@@ -193,8 +193,8 @@ export const ReportsView: React.FC = () => {
       </div>
 
       <div className="bg-white rounded-2xl p-6 shadow-xs border border-slate-100 space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-100 pb-3"><div><h3 className="text-sm font-extrabold text-slate-900">گزارش شش‌ماهه نتایج مصوبات</h3><p className="text-[11px] text-slate-500">بازه شمسی دلخواه را برای دوره شش‌ماهه انتخاب کنید.</p></div><div className="flex flex-wrap items-end gap-2"><label className="text-[10px] text-slate-500">از تاریخ<input value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="block mt-1 text-xs p-2 border rounded-lg" /></label><label className="text-[10px] text-slate-500">تا تاریخ<input value={toDate} onChange={(e) => setToDate(e.target.value)} className="block mt-1 text-xs p-2 border rounded-lg" /></label><button onClick={loadReports} className="bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold">محاسبه گزارش</button></div></div>
-        {semiAnnual && <><div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">{[{ label: 'کل مصوبات', value: semiAnnual.total }, { label: 'اجراشده', value: semiAnnual.completed }, { label: 'در حال اجرا', value: semiAnnual.inProgress }, { label: 'اجرا نشده', value: semiAnnual.notStarted }, { label: 'دارای تأخیر', value: semiAnnual.overdue }, { label: 'درصد تحقق', value: `${semiAnnual.fulfillmentPercent}٪` }].map((item) => <div key={item.label} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl text-center"><div className="text-[10px] text-slate-500">{item.label}</div><strong className="block text-lg text-slate-900 mt-1">{toPersianDigits(item.value)}</strong></div>)}</div><div className="grid grid-cols-1 lg:grid-cols-3 gap-4"><div><h4 className="text-xs font-bold mb-2">تفکیک بر اساس واحد</h4>{semiAnnual.byDepartment.map((item) => <div key={item.name} className="flex justify-between p-2 border-b text-xs"><span>{item.name}</span><span>{toPersianDigits(item.completed)} از {toPersianDigits(item.count)}</span></div>)}</div><div><h4 className="text-xs font-bold mb-2">تفکیک بر اساس جلسه</h4>{semiAnnual.byMeeting.map((item) => <div key={item.id} className="flex justify-between p-2 border-b text-xs"><span>{item.name}</span><span>{toPersianDigits(item.count)} مصوبه</span></div>)}</div><div><h4 className="text-xs font-bold mb-2">مصوبات مهم و معوق</h4>{semiAnnual.importantOrOverdue.length === 0 ? <div className="text-xs text-slate-400">موردی در این بازه نیست.</div> : semiAnnual.importantOrOverdue.map((item) => <button key={item.id} onClick={() => navigateTo('resolutions', { resolutionId: item.id })} className="w-full text-right p-2 border-b text-xs hover:bg-slate-50"><strong>{item.resolutionNumber}</strong> — {item.topicTitle}</button>)}</div></div></>}
+        <div className="flex flex-wrap items-end justify-between gap-3 border-b border-slate-100 pb-3"><div><h3 className="text-sm font-bold text-slate-900">گزارش شش‌ماهه نتایج مصوبات</h3><p className="text-[12px] text-slate-500">بازه شمسی دلخواه را برای دوره شش‌ماهه انتخاب کنید.</p></div><div className="flex flex-wrap items-end gap-2"><label className="text-[11px] text-slate-500">از تاریخ<input value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="block mt-1 text-xs p-2 border rounded-lg" /></label><label className="text-[11px] text-slate-500">تا تاریخ<input value={toDate} onChange={(e) => setToDate(e.target.value)} className="block mt-1 text-xs p-2 border rounded-lg" /></label><button onClick={loadReports} className="bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold">محاسبه گزارش</button></div></div>
+        {semiAnnual && <><div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">{[{ label: 'کل مصوبات', value: semiAnnual.total }, { label: 'اجراشده', value: semiAnnual.completed }, { label: 'در حال اجرا', value: semiAnnual.inProgress }, { label: 'اجرا نشده', value: semiAnnual.notStarted }, { label: 'دارای تأخیر', value: semiAnnual.overdue }, { label: 'درصد تحقق', value: `${semiAnnual.fulfillmentPercent}٪` }].map((item) => <div key={item.label} className="p-3 bg-slate-50 border border-slate-200 rounded-2xl text-center"><div className="text-[11px] text-slate-500">{item.label}</div><strong className="block text-lg text-slate-900 mt-1">{toPersianDigits(item.value)}</strong></div>)}</div><div className="grid grid-cols-1 lg:grid-cols-3 gap-4"><div><h4 className="text-xs font-bold mb-2">تفکیک بر اساس واحد</h4>{semiAnnual.byDepartment.map((item) => <div key={item.name} className="flex justify-between p-2 border-b text-xs"><span>{item.name}</span><span>{toPersianDigits(item.completed)} از {toPersianDigits(item.count)}</span></div>)}</div><div><h4 className="text-xs font-bold mb-2">تفکیک بر اساس جلسه</h4>{semiAnnual.byMeeting.map((item) => <div key={item.id} className="flex justify-between p-2 border-b text-xs"><span>{item.name}</span><span>{toPersianDigits(item.count)} مصوبه</span></div>)}</div><div><h4 className="text-xs font-bold mb-2">مصوبات مهم و معوق</h4>{semiAnnual.importantOrOverdue.length === 0 ? <div className="text-xs text-slate-400">موردی در این بازه نیست.</div> : semiAnnual.importantOrOverdue.map((item) => <button key={item.id} onClick={() => navigateTo('resolutions', { resolutionId: item.id })} className="w-full text-right p-2 border-b text-xs hover:bg-slate-50"><strong>{item.resolutionNumber}</strong> — {item.topicTitle}</button>)}</div></div></>}
       </div>
 
       {/* گزارش ابلاغ مصوبات — one row per issued ابلاغیه, keyed by its own
@@ -204,29 +204,29 @@ export const ReportsView: React.FC = () => {
           <div className="flex items-center gap-2">
             <Send className="w-4 h-4 text-fuchsia-700" />
             <div>
-              <h3 className="text-sm font-extrabold text-slate-900">گزارش ابلاغ مصوبات</h3>
-              <p className="text-[11px] text-slate-500">فهرست ابلاغیه‌های صادرشده به همراه شماره نامه ابلاغیه</p>
+              <h3 className="text-sm font-bold text-slate-900">گزارش ابلاغ مصوبات</h3>
+              <p className="text-[12px] text-slate-500">فهرست ابلاغیه‌های صادرشده به همراه شماره نامه ابلاغیه</p>
             </div>
           </div>
         </div>
 
         <div className="flex flex-wrap items-end gap-2">
-          <label className="text-[10px] text-slate-500">از تاریخ
+          <label className="text-[11px] text-slate-500">از تاریخ
             <input value={noticeFromDate} onChange={(e) => setNoticeFromDate(e.target.value)} placeholder="۱۴۰۵/۰۱/۰۱" className="block mt-1 text-xs p-2 border rounded-lg w-28" />
           </label>
-          <label className="text-[10px] text-slate-500">تا تاریخ
+          <label className="text-[11px] text-slate-500">تا تاریخ
             <input value={noticeToDate} onChange={(e) => setNoticeToDate(e.target.value)} placeholder="۱۴۰۵/۱۲/۲۹" className="block mt-1 text-xs p-2 border rounded-lg w-28" />
           </label>
-          <label className="text-[10px] text-slate-500">واحد پیشنهاددهنده
+          <label className="text-[11px] text-slate-500">واحد پیشنهاددهنده
             <select value={noticeDepartment} onChange={(e) => setNoticeDepartment(e.target.value)} className="block mt-1 text-xs p-2 border rounded-lg">
               <option value="ALL">همه واحدها</option>
               {mockDepartments.map((dept) => <option key={dept.id} value={dept.name}>{dept.name}</option>)}
             </select>
           </label>
-          <label className="text-[10px] text-slate-500">شماره مصوبه
+          <label className="text-[11px] text-slate-500">شماره مصوبه
             <input value={noticeResolutionNumber} onChange={(e) => setNoticeResolutionNumber(e.target.value)} className="block mt-1 text-xs p-2 border rounded-lg w-32" />
           </label>
-          <label className="text-[10px] text-slate-500">شماره نامه ابلاغیه
+          <label className="text-[11px] text-slate-500">شماره نامه ابلاغیه
             <input value={noticeLetterNumber} onChange={(e) => setNoticeLetterNumber(e.target.value)} className="block mt-1 text-xs p-2 border rounded-lg w-28" />
           </label>
           <button onClick={loadNotificationLetters} className="bg-fuchsia-700 hover:bg-fuchsia-800 text-white px-4 py-2 rounded-lg text-xs font-bold cursor-pointer">اعمال فیلتر</button>
@@ -235,7 +235,7 @@ export const ReportsView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px] text-right border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[11px]">
+              <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[12px]">
                 <th className="py-3 px-3 font-bold">موضوع</th>
                 <th className="py-3 px-3 font-bold">شماره نامه ابلاغیه</th>
                 <th className="py-3 px-3 font-bold">شماره مصوبه</th>
@@ -255,7 +255,7 @@ export const ReportsView: React.FC = () => {
                   <td className="py-3 px-3">
                     {toPersianDigits(row.dateJalali)}
                     {row.notifiedByName && (
-                      <div className="text-[10px] text-slate-400 mt-0.5">
+                      <div className="text-[11px] text-slate-400 mt-0.5">
                         ابلاغ توسط {row.notifiedByName}
                         {row.notifiedTimeString ? ` — ساعت ${toPersianDigits(row.notifiedTimeString)}` : ''}
                       </div>
@@ -279,16 +279,16 @@ export const ReportsView: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
-            <h4 className="text-[11px] font-bold text-slate-600 mb-3 text-center">توزیع وضعیت مصوبات پیشنهادی</h4>
+            <h4 className="text-[12px] font-bold text-slate-600 mb-3 text-center">توزیع وضعیت مصوبات پیشنهادی</h4>
             {proposalStatusCounts.length === 0 ? (
               <div className="text-center text-xs text-slate-400 py-10">داده‌ای برای نمایش وجود ندارد.</div>
             ) : (
               <div className="space-y-2">
                   {proposalStatusCounts.map((s) => (
                     <div key={s.status} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                      <div className="flex items-center justify-between text-[11px]">
+                      <div className="flex items-center justify-between text-[12px]">
                         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }}></span>{s.label}</span>
-                        <span className="font-black text-slate-700">{toPersianDigits(s.count)}</span>
+                        <span className="font-bold text-slate-700">{toPersianDigits(s.count)}</span>
                       </div>
                     </div>
                   ))}
@@ -297,16 +297,16 @@ export const ReportsView: React.FC = () => {
           </div>
 
           <div>
-            <h4 className="text-[11px] font-bold text-slate-600 mb-3 text-center">توزیع وضعیت اجرای مصوبات مصوب‌شده</h4>
+            <h4 className="text-[12px] font-bold text-slate-600 mb-3 text-center">توزیع وضعیت اجرای مصوبات مصوب‌شده</h4>
             {resolutionStatusDist.length === 0 ? (
               <div className="text-center text-xs text-slate-400 py-10">داده‌ای برای نمایش وجود ندارد.</div>
             ) : (
               <div className="space-y-2">
                   {resolutionStatusDist.map((s) => (
                     <div key={s.statusKey} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
-                      <div className="flex items-center justify-between text-[11px]">
+                      <div className="flex items-center justify-between text-[12px]">
                         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: s.color }}></span>{s.statusLabel}</span>
-                        <span className="font-black text-slate-700">{toPersianDigits(s.count)} <span className="font-medium text-slate-500">({toPersianDigits(s.percentage)}٪)</span></span>
+                        <span className="font-bold text-slate-700">{toPersianDigits(s.count)} <span className="font-medium text-slate-500">({toPersianDigits(s.percentage)}٪)</span></span>
                       </div>
                     </div>
                   ))}
@@ -351,7 +351,7 @@ export const ReportsView: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-right border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[11px]">
+              <tr className="bg-slate-50 text-slate-500 border-b border-slate-200 text-[12px]">
                 <th className="py-3 px-3 font-bold">واحد سازمانی</th>
                 <th className="py-3 px-3 font-bold text-center">کل تکالیف ارجاع‌شده</th>
                 <th className="py-3 px-3 font-bold text-center">تکمیل و تایید شده</th>
@@ -381,7 +381,7 @@ export const ReportsView: React.FC = () => {
                           }}
                         ></div>
                       </div>
-                      <span className="text-[11px] font-bold text-slate-700 w-9 text-left">
+                      <span className="text-[12px] font-bold text-slate-700 w-9 text-left">
                         {toPersianDigits(dept.completionRatePercent)}٪
                       </span>
                     </div>
@@ -404,7 +404,7 @@ export const ReportsView: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">{detailDept.departmentName}</h3>
-                  <p className="text-[11px] text-teal-200">جزئیات مصوبات و وظایف این واحد سازمانی</p>
+                  <p className="text-[12px] text-teal-200">جزئیات مصوبات و وظایف این واحد سازمانی</p>
                 </div>
               </div>
               <button onClick={() => setDetailDept(null)} className="text-teal-200 hover:text-white p-1 rounded-lg hover:bg-teal-800">
@@ -423,9 +423,9 @@ export const ReportsView: React.FC = () => {
                   <div key={res.id} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="text-xs font-bold text-slate-800">{res.topicTitle}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${meta.bg}`}>{meta.label}</span>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${meta.bg}`}>{meta.label}</span>
                     </div>
-                    <div className="text-[11px] text-slate-500 mt-1">
+                    <div className="text-[12px] text-slate-500 mt-1">
                       مسئول: {res.mainResponsibleName || 'تعیین نشده'} — مهلت: {toPersianDigits(res.deadlineJalali || '—')}
                     </div>
                   </div>

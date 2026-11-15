@@ -97,7 +97,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
             </div>
             <div>
               <div className="text-xs font-bold text-slate-700">افزودن مستندات یا فایل‌های پیوست</div>
-              <div className="text-[10px] text-slate-400">فرمت‌های مجاز: PDF, DOCX, XLSX, JPG (حداکثر ۱۰ مگابایت)</div>
+              <div className="text-[11px] text-slate-400">فرمت‌های مجاز: PDF, DOCX, XLSX, JPG (حداکثر ۱۰ مگابایت)</div>
             </div>
           </div>
           <label className="bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold py-1.5 px-3.5 rounded-xl cursor-pointer transition-colors">
@@ -124,7 +124,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                   <p className="text-xs font-bold text-slate-800 truncate" title={att.fileName}>
                     {att.fileName}
                   </p>
-                  <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
+                  <div className="text-[11px] text-slate-400 flex items-center gap-2 mt-0.5">
                     <span>{formatFileSize(att.fileSizeBytes)}</span>
                     <span>•</span>
                     <span>{toPersianDigits(att.uploadDate)}</span>

@@ -56,12 +56,12 @@ export const FormErrorSummary: React.FC<{ errors: FormFieldError[]; steps: FormS
   if (errors.length === 0) return null;
   return (
     <div className="form-error-summary" role="alert">
-      <p className="flex items-center gap-1.5 text-xs font-extrabold"><AlertCircle className="h-4 w-4" />پیش از ثبت، {errors.length.toLocaleString('fa-IR')} مورد ضروری را کامل کنید:</p>
+      <p className="flex items-center gap-1.5 text-xs font-bold"><AlertCircle className="h-4 w-4" />پیش از ثبت، {errors.length.toLocaleString('fa-IR')} مورد ضروری را کامل کنید:</p>
       <ul className="mt-2 space-y-1">
         {errors.map((error) => (
           <li key={error.fieldId}>
             <button type="button" onClick={() => onJump(error)} className="form-error-link">
-              <span className="rounded-md bg-white/80 px-1.5 py-0.5 text-[10px] font-extrabold text-red-700 ring-1 ring-red-200">{steps[error.step]?.label}</span>
+              <span className="rounded-md bg-white/80 px-1.5 py-0.5 text-[11px] font-bold text-red-700 ring-1 ring-red-200">{steps[error.step]?.label}</span>
               <span>{error.message}</span>
             </button>
           </li>

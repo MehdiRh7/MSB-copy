@@ -388,7 +388,7 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   // تب LDAP فقط برای مدیر سیستم
   await page.locator('button:has-text("کاربر:")').first().click();
   await page.waitForTimeout(300);
-  await page.locator('div.absolute button').filter({ hasText: 'مدیر کل سیستم' }).first().click();
+  await page.locator('div.absolute button').filter({ hasText: 'مدیر سیستم' }).first().click();
   await page.waitForTimeout(800);
   await page.locator('aside button:has-text("تنظیمات")').first().click();
   await page.waitForTimeout(900);

@@ -44,7 +44,7 @@ export const NotifyResolutionAction: React.FC<NotifyResolutionActionProps> = ({ 
         <div className="text-xs font-bold text-fuchsia-950">ثبت ابلاغ رسمی مصوبه</div>
       )}
       {!compact && (
-        <p className="text-[11px] text-fuchsia-900">
+        <p className="text-[12px] text-fuchsia-900">
           تاریخ، ساعت و نام ابلاغ‌کننده به‌صورت خودکار ثبت می‌شود. پس از ثبت، ابلاغیه برای امضا به کارتابل دبیر جلسه می‌رود و مصوبه تنها پس از امضای ایشان وارد فاز اجرا می‌شود.
         </p>
       )}

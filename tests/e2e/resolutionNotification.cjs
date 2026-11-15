@@ -41,7 +41,7 @@ const switchUser = async (page, name) => {
         steps: [
           { id: 'sig-t-1', signerUserId: 'user-17', signerName: 'مسئول دفتر', signerTitle: 'مسئول دفتر مدیرعامل', signerRole: 'OFFICE_MANAGER', order: 1, status: 'SIGNED' },
           { id: 'sig-t-2', signerUserId: 'user-16', signerName: 'مدیرعامل', signerTitle: 'مدیرعامل', signerRole: 'CEO', order: 2, status: 'SIGNED' },
-          { id: 'sig-t-3', signerUserId: 'user-admin', signerName: 'مدیر کل سیستم (Admin)', signerTitle: 'راهبر ارشد سامانه مصوبات', signerRole: 'ADMIN', order: 3, status: 'SIGNED' },
+          { id: 'sig-t-3', signerUserId: 'user-admin', signerName: 'مدیر سیستم', signerTitle: 'راهبر ارشد سامانه مصوبات', signerRole: 'ADMIN', order: 3, status: 'SIGNED' },
         ],
       },
       executionStatus: 'WAITING_NOTIFICATION',

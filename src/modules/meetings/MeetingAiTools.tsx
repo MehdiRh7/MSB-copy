@@ -13,29 +13,29 @@ import { getPriorityMeta, toPersianDigits } from '../../utils/formatters';
 /** فهرست مصوبات استخراج‌شده با دکمه ثبت یک‌کلیکی (فرم پیش‌پر و قابل ویرایش). */
 export const ExtractedResolutionsList: React.FC<{ meeting: Meeting; result: AiResult<ExtractedResolution[]>; existing: Resolution[]; canCreate: boolean }> = ({ meeting, result, existing, canCreate }) => {
   const { openCreateResolutionModal } = useApp();
-  if (result.data.length === 0) return <p className="text-[11px] text-slate-500 bg-white border border-slate-200 rounded-xl p-2.5">تصمیم یا مصوبه مشخصی در متن پیدا نشد.</p>;
+  if (result.data.length === 0) return <p className="text-[12px] text-slate-500 bg-white border border-slate-200 rounded-xl p-2.5">تصمیم یا مصوبه مشخصی در متن پیدا نشد.</p>;
   return (
     <div className="space-y-2">
-      <div className="flex items-center gap-2 text-[11px] font-bold text-slate-700">{toPersianDigits(result.data.length)} مصوبه پیشنهادی از متن </div>
+      <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700">{toPersianDigits(result.data.length)} مصوبه پیشنهادی از متن </div>
       {result.data.map((item, index) => {
         const alreadyRegistered = item.agendaItemId && existing.some((r) => r.agendaItemId === item.agendaItemId);
         const priority = getPriorityMeta(item.priority);
         return (
           <div key={`${item.topic}-${index}`} className="rounded-2xl border border-indigo-100 bg-white p-3 space-y-1.5">
             <div className="flex flex-wrap items-start justify-between gap-2">
-              <div className="text-xs font-extrabold text-slate-900">{toPersianDigits(index + 1)}. {item.topic}</div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${priority.bg}`}>{priority.label}</span>
+              <div className="text-xs font-bold text-slate-900">{toPersianDigits(index + 1)}. {item.topic}</div>
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${priority.bg}`}>{priority.label}</span>
             </div>
-            <p className="text-[11.5px] leading-6 text-slate-700">{item.executionDescription}</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10.5px] text-slate-500">
+            <p className="text-[12px] leading-6 text-slate-700">{item.executionDescription}</p>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
               <span>مسئول: {item.responsibleName || 'تشخیص داده نشد'}</span>
               <span>مهلت پیشنهادی: {toPersianDigits(item.deadlineDays)} روز</span>
               {item.agendaItemId && <span>بند: {meeting.agendaItems.find((a) => a.id === item.agendaItemId)?.title}</span>}
             </div>
-            {item.evidence && <p className="text-[10px] text-slate-400 border-r-2 border-slate-200 pr-2">«{item.evidence.slice(0, 220)}»</p>}
+            {item.evidence && <p className="text-[11px] text-slate-400 border-r-2 border-slate-200 pr-2">«{item.evidence.slice(0, 220)}»</p>}
             {canCreate && (alreadyRegistered
-              ? <span className="text-[10.5px] font-bold text-emerald-700">✓ برای این بند قبلاً مصوبه ثبت شده است.</span>
-              : <button type="button" onClick={() => openCreateResolutionModal({ meetingId: meeting.id, agendaItemId: item.agendaItemId, topicTitle: item.topic, prefill: { executionDescription: item.executionDescription, mainResponsibleUserId: item.responsibleUserId, priority: item.priority, deadlineDays: item.deadlineDays } })} className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-teal-800 hover:bg-teal-700 px-3 py-1.5 rounded-xl"><Gavel className="w-3.5 h-3.5" />ثبت این مصوبه</button>)}
+              ? <span className="text-[11px] font-bold text-emerald-700">برای این بند قبلاً مصوبه ثبت شده است.</span>
+              : <button type="button" onClick={() => openCreateResolutionModal({ meetingId: meeting.id, agendaItemId: item.agendaItemId, topicTitle: item.topic, prefill: { executionDescription: item.executionDescription, mainResponsibleUserId: item.responsibleUserId, priority: item.priority, deadlineDays: item.deadlineDays } })} className="inline-flex items-center gap-1 text-[12px] font-bold text-white bg-teal-800 hover:bg-teal-700 px-3 py-1.5 rounded-xl"><Gavel className="w-3.5 h-3.5" />ثبت این مصوبه</button>)}
           </div>
         );
       })}
@@ -103,7 +103,7 @@ const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaO
   return (
     <div className="space-y-2">
       {audio && <audio ref={audioRef} src={audio.url} preload="auto" className="hidden" onTimeUpdate={(e) => { if (e.currentTarget.currentTime >= stopAtRef.current) { e.currentTarget.pause(); setPlaying(null); } }} onEnded={() => setPlaying(null)} />}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-900">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[12px] text-amber-900">
         <ShieldCheck className="w-4 h-4 shrink-0" />
         <span><b>فقط پیشنهاد است.</b> تا هر بند را بررسی و «تأیید و ثبت» نکنید، هیچ نتیجه‌ای در سامانه ثبت نمی‌شود. نتیجه و شرح را می‌توانید تغییر دهید.</span>
         
@@ -115,15 +115,15 @@ const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaO
         return (
           <div key={s.agendaItemId} className={`rounded-2xl border p-3 space-y-2 ${d.state === 'saved' ? 'border-emerald-200 bg-emerald-50/50' : 'border-slate-200 bg-white'}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-xs font-extrabold text-slate-900">بند {toPersianDigits(agenda?.order || '')}: {s.agendaTitle}</div>
-              {agenda?.outcomeStatus && d.state !== 'saved' && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">نتیجه ثبت‌شده فعلی: {label(agenda.outcomeStatus)}</span>}
-              {d.state === 'saved' && <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700"><CheckCircle2 className="w-4 h-4" />با تأیید شما ثبت شد</span>}
+              <div className="text-xs font-bold text-slate-900">بند {toPersianDigits(agenda?.order || '')}: {s.agendaTitle}</div>
+              {agenda?.outcomeStatus && d.state !== 'saved' && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">نتیجه ثبت‌شده فعلی: {label(agenda.outcomeStatus)}</span>}
+              {d.state === 'saved' && <span className="flex items-center gap-1 text-[12px] font-bold text-emerald-700"><CheckCircle2 className="w-4 h-4" />با تأیید شما ثبت شد</span>}
             </div>
-            {s.outcome === null && d.state !== 'saved' && <p className="text-[11px] text-slate-500">در گفتار درباره این بند تصمیم صریحی شنیده نشد؛ در صورت نیاز نتیجه را خودتان انتخاب کنید.</p>}
+            {s.outcome === null && d.state !== 'saved' && <p className="text-[12px] text-slate-500">در گفتار درباره این بند تصمیم صریحی شنیده نشد؛ در صورت نیاز نتیجه را خودتان انتخاب کنید.</p>}
             {s.evidence && (() => {
               const range = audio ? locateInAudio(s.evidence, audio.segments) : null;
               return (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-1.5 text-[10.5px] text-slate-600">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-1.5 text-[11px] text-slate-600">
                   <div className="font-bold text-slate-700">مرجع این پیشنهاد در گفتار جلسه:</div>
                   <blockquote className="border-r-2 border-teal-400 pr-2 text-slate-800 leading-6">«{s.evidence.slice(0, 420)}»</blockquote>
                   {s.matchedBy && <div><b>ارتباط با این بند:</b> {s.matchedBy}</div>}
@@ -137,15 +137,15 @@ const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaO
             {d.state !== 'saved' && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2">
-                  <select aria-label="نتیجه بند" value={d.outcome} onChange={(e) => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], outcome: e.target.value as AgendaOutcome } }))} className="text-[11px] p-2 bg-white border border-slate-200 rounded-xl">
+                  <select aria-label="نتیجه بند" value={d.outcome} onChange={(e) => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], outcome: e.target.value as AgendaOutcome } }))} className="text-[12px] p-2 bg-white border border-slate-200 rounded-xl">
                     <option value="">انتخاب نتیجه…</option>
                     {AGENDA_OUTCOME_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}{o.value === s.outcome ? ' (پیشنهاد)' : ''}</option>)}
                   </select>
-                  <input aria-label="شرح نتیجه" value={d.notes} onChange={(e) => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], notes: e.target.value } }))} placeholder="شرح نتیجه بررسی (الزامی)" className="text-[11px] p-2 bg-white border border-slate-200 rounded-xl" />
+                  <input aria-label="شرح نتیجه" value={d.notes} onChange={(e) => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], notes: e.target.value } }))} placeholder="شرح نتیجه بررسی (الزامی)" className="text-[12px] p-2 bg-white border border-slate-200 rounded-xl" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button type="button" disabled={busy === s.agendaItemId} onClick={() => confirm(s)} className="flex items-center gap-1 text-[11px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 px-3 py-1.5 rounded-xl"><CheckCircle2 className="w-3.5 h-3.5" />تأیید و ثبت نتیجه</button>
-                  <button type="button" onClick={() => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], state: 'dismissed' } }))} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 border border-slate-200 bg-white px-3 py-1.5 rounded-xl"><XCircle className="w-3.5 h-3.5" />نادیده گرفتن</button>
+                  <button type="button" disabled={busy === s.agendaItemId} onClick={() => confirm(s)} className="flex items-center gap-1 text-[12px] font-bold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 px-3 py-1.5 rounded-xl"><CheckCircle2 className="w-3.5 h-3.5" />تأیید و ثبت نتیجه</button>
+                  <button type="button" onClick={() => setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], state: 'dismissed' } }))} className="flex items-center gap-1 text-[12px] font-bold text-slate-600 border border-slate-200 bg-white px-3 py-1.5 rounded-xl"><XCircle className="w-3.5 h-3.5" />نادیده گرفتن</button>
                 </div>
               </>
             )}
@@ -283,28 +283,28 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
 
   const mmss = `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
   return (
-    <section className="no-print rounded-3xl border border-violet-200 bg-gradient-to-bl from-violet-50 via-white to-white p-4 space-y-3">
+    <section className="no-print rounded-3xl border border-violet-200 bg-slate-50 p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h3 className="text-sm font-extrabold text-violet-950 flex items-center gap-1.5"><Mic className="w-4 h-4" />ضبط جلسه و صورت‌جلسه خودکار</h3>
-          <p className="text-[11px] text-slate-500">گفتار جلسه زنده به متن تبدیل می‌شود؛ سپس صورت‌جلسه رسمی و مصوبات پیشنهادی ساخته می‌شود.</p>
+          <h3 className="text-sm font-bold text-violet-950 flex items-center gap-1.5"><Mic className="w-4 h-4" />ضبط جلسه</h3>
+          <p className="text-xs text-slate-500">گفتار جلسه به متن تبدیل می‌شود و از آن صورت‌جلسه و مصوبات پیشنهادی ساخته می‌شود.</p>
         </div>
         <div className="flex items-center gap-2">
-          {recording && <span className="flex items-center gap-1.5 text-[11px] font-bold text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />در حال ضبط {toPersianDigits(mmss)}</span>}
+          {recording && <span className="flex items-center gap-1.5 text-[12px] font-bold text-rose-600"><span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />در حال ضبط {toPersianDigits(mmss)}</span>}
           {!recording
-            ? <span className="flex items-center gap-1.5"><button type="button" onClick={start} disabled={askingMic} className="flex items-center gap-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-70 px-4 py-2 rounded-xl"><Mic className="w-4 h-4" />{askingMic ? 'در انتظار اجازه میکروفن…' : 'شروع ضبط'}</button>{askingMic && <button type="button" onClick={() => { activeRef.current = false; setAskingMic(false); showToast('ضبط جلسه', 'درخواست ضبط لغو شد. هر وقت آماده بودید دوباره «شروع ضبط» را بزنید.', 'info'); }} className="text-[11px] font-bold px-3 py-2 rounded-xl border border-slate-300 text-slate-600 bg-white hover:bg-slate-50">لغو</button>}</span>
+            ? <span className="flex items-center gap-1.5"><button type="button" onClick={start} disabled={askingMic} className="flex items-center gap-1.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-70 px-4 py-2 rounded-xl"><Mic className="w-4 h-4" />{askingMic ? 'در انتظار اجازه میکروفن…' : 'شروع ضبط'}</button>{askingMic && <button type="button" onClick={() => { activeRef.current = false; setAskingMic(false); showToast('ضبط جلسه', 'درخواست ضبط لغو شد. هر وقت آماده بودید دوباره «شروع ضبط» را بزنید.', 'info'); }} className="text-[12px] font-bold px-3 py-2 rounded-xl border border-slate-300 text-slate-600 bg-white hover:bg-slate-50">لغو</button>}</span>
             : <button type="button" onClick={stop} className="flex items-center gap-1.5 text-xs font-bold text-white bg-slate-800 px-4 py-2 rounded-xl"><Square className="w-4 h-4" />پایان ضبط</button>}
-          <label className="flex items-center gap-1 text-[11px] font-bold text-violet-700 px-3 py-2 rounded-xl border border-violet-200 bg-white cursor-pointer"><FileUp className="w-3.5 h-3.5" />فایل متن<input type="file" accept=".txt,.md" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadTranscript(f); e.target.value = ''; }} /></label>
+          <label className="flex items-center gap-1 text-[12px] font-bold text-violet-700 px-3 py-2 rounded-xl border border-violet-200 bg-white cursor-pointer"><FileUp className="w-3.5 h-3.5" />فایل متن<input type="file" accept=".txt,.md" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) void uploadTranscript(f); e.target.value = ''; }} /></label>
         </div>
       </div>
-      {!isVoiceSupported() && <p className="text-[10.5px] text-amber-700 bg-amber-50 rounded-lg p-2">تبدیل زنده گفتار به متن در این مرورگر پشتیبانی نمی‌شود (Chrome یا Edge را استفاده کنید). صدا همچنان ضبط می‌شود و می‌توانید متن را وارد یا بارگذاری کنید.</p>}
+      {!isVoiceSupported() && <p className="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2">تبدیل زنده گفتار به متن در این مرورگر پشتیبانی نمی‌شود (Chrome یا Edge را استفاده کنید). صدا همچنان ضبط می‌شود و می‌توانید متن را وارد یا بارگذاری کنید.</p>}
       <textarea value={transcript + (interim ? ` ${interim}` : '')} onChange={(e) => setTranscript(e.target.value)} rows={transcript ? 6 : 3} placeholder="متن گفتار جلسه اینجا نوشته می‌شود؛ قابل ویرایش است..." className="w-full text-xs leading-6 p-3 bg-white border border-violet-200 rounded-2xl" />
       <div className="flex flex-wrap items-center gap-2">
         <AiButton disabled={!transcript.trim() || recording} loading={busy === 'minutes'} onClick={async () => { setBusy('minutes'); try { const res = await minutesFromTranscript(meeting, transcript, currentUser.id); setMinutesResult(res); onMinutes(res.data); showToast('صورت‌جلسه', 'پیش‌نویس از گفتار جلسه تهیه شد.', 'success'); } finally { setBusy(null); } }}>تبدیل به صورت‌جلسه</AiButton>
-        {minutesResult && <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-700">✓ متن در تب «پیش‌نمایش چاپ صورتجلسه» قرار گرفت</span>}
+        {minutesResult && <span className="flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">متن در تب «پیش‌نمایش چاپ صورتجلسه» قرار گرفت</span>}
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'extract'} onClick={async () => { setBusy('extract'); try { setExtracted(await extractResolutions({ text: transcript, agendas: meeting.agendaItems.filter((a) => !a.isRemoved), users: availableUsers, departments: mockDepartments }, currentUser.id)); } finally { setBusy(null); } }}>استخراج مصوبات از گفتار</AiButton>
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'outcomes'} onClick={async () => { setBusy('outcomes'); try { setOutcomes(await suggestAgendaOutcomes(meeting, transcript, currentUser.id)); } finally { setBusy(null); } }}>پیشنهاد نتیجه بندها از گفتار</AiButton>
-        {audioUrl && <a href={audioUrl} download={`جلسه-${meeting.meetingNumber}.webm`} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 bg-white"><Download className="w-3.5 h-3.5" />دانلود فایل صوتی</a>}
+        {audioUrl && <a href={audioUrl} download={`جلسه-${meeting.meetingNumber}.webm`} className="flex items-center gap-1 text-[12px] font-bold text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 bg-white"><Download className="w-3.5 h-3.5" />دانلود فایل صوتی</a>}
       </div>
       {outcomes && <AgendaOutcomeReview key={outcomes.data.map((o) => o.agendaItemId + o.outcome).join('|')} meeting={meeting} result={outcomes} audio={audioUrl && segments.length ? { url: audioUrl, segments } : null} />}
       {extracted && <ExtractedResolutionsList meeting={meeting} result={extracted} existing={resolutions} canCreate={canCreateResolution} />}

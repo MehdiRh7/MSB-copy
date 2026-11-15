@@ -78,10 +78,10 @@ export const WorkflowDesigner: React.FC<{
   };
 
   const stages: { id: StageId; title: string; icon: React.ElementType; color: string; empty: string; mode?: string; ordered: boolean }[] = [
-    { id: 'agenda', title: 'تأیید دستورکار', icon: Layers, color: 'from-amber-500 to-orange-500', empty: 'حداقل یک نفر را اینجا بکشید', mode: APPROVAL_MODE_LABELS[value.agendaApproval.mode], ordered: value.agendaApproval.mode === 'SEQUENTIAL' },
-    { id: 'minutes', title: 'تأیید صورت‌جلسه', icon: Users, color: 'from-sky-500 to-indigo-500', empty: 'بدون تأیید — برای فعال‌سازی فرد بکشید', mode: value.minutesApproval ? APPROVAL_MODE_LABELS[value.minutesApproval.mode] : undefined, ordered: value.minutesApproval?.mode === 'SEQUENTIAL' },
-    { id: 'signature', title: 'امضای مصوبات', icon: PenTool, color: 'from-emerald-500 to-teal-600', empty: 'سه امضای سراسری — برای اختصاصی‌کردن فرد بکشید', mode: value.resolutionSignature ? SIGNATURE_MODE_LABELS[value.resolutionSignature.mode] : undefined, ordered: value.resolutionSignature?.mode === 'SEQUENTIAL' },
-    { id: 'notice', title: 'امضای ابلاغیه', icon: Send, color: 'from-fuchsia-500 to-purple-600', empty: 'تنظیم سراسری — یک نفر را بکشید', ordered: false },
+    { id: 'agenda', title: 'تأیید دستورکار', icon: Layers, color: 'bg-amber-600', empty: 'حداقل یک نفر را اینجا بکشید', mode: APPROVAL_MODE_LABELS[value.agendaApproval.mode], ordered: value.agendaApproval.mode === 'SEQUENTIAL' },
+    { id: 'minutes', title: 'تأیید صورت‌جلسه', icon: Users, color: 'bg-sky-700', empty: 'بدون تأیید — برای فعال‌سازی فرد بکشید', mode: value.minutesApproval ? APPROVAL_MODE_LABELS[value.minutesApproval.mode] : undefined, ordered: value.minutesApproval?.mode === 'SEQUENTIAL' },
+    { id: 'signature', title: 'امضای مصوبات', icon: PenTool, color: 'bg-emerald-700', empty: 'سه امضای سراسری — برای اختصاصی‌کردن فرد بکشید', mode: value.resolutionSignature ? SIGNATURE_MODE_LABELS[value.resolutionSignature.mode] : undefined, ordered: value.resolutionSignature?.mode === 'SEQUENTIAL' },
+    { id: 'notice', title: 'امضای ابلاغیه', icon: Send, color: 'bg-[var(--app-primary)]', empty: 'تنظیم سراسری — یک نفر را بکشید', ordered: false },
   ];
 
   // تابع ساده (نه کامپوننت داخلی): در غیر این صورت با هر setHover هنگام کشیدن، کارت‌ها از نو ساخته
@@ -98,13 +98,13 @@ export const WorkflowDesigner: React.FC<{
         title="بکشید و رها کنید"
       >
         <GripVertical className="w-3 h-3 text-slate-300 shrink-0" />
-        {ordered && index !== undefined && <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-extrabold flex items-center justify-center shrink-0">{toPersianDigits(index + 1)}</span>}
+        {ordered && index !== undefined && <span className="w-4 h-4 rounded-full bg-indigo-600 text-white text-[11px] font-bold flex items-center justify-center shrink-0">{toPersianDigits(index + 1)}</span>}
         <span className="min-w-0">
-          <span className="block text-[11px] font-bold text-slate-800 truncate">{user?.fullName || id}</span>
-          <span className="block text-[9px] text-slate-500 truncate">{user?.title}</span>
+          <span className="block text-[12px] font-bold text-slate-800 truncate">{user?.fullName || id}</span>
+          <span className="block text-[11px] text-slate-500 truncate">{user?.title}</span>
         </span>
         {stage && (
-          <button type="button" onClick={() => removeFrom({ userId: id, from: stage })} aria-label={`حذف ${user?.fullName || ''} از این مرحله`} title="حذف از این مرحله" className="mr-auto shrink-0 rounded-md px-1 text-[12px] leading-none text-slate-300 hover:bg-rose-50 hover:text-rose-600">×</button>
+          <button type="button" onClick={() => removeFrom({ userId: id, from: stage })} aria-label={`حذف ${user?.fullName || ''} از این مرحله`} title="حذف از این مرحله" className="mr-auto shrink-0 rounded-md px-1 text-[13px] leading-none text-slate-300 hover:bg-rose-50 hover:text-rose-600">×</button>
         )}
       </div>
     );
@@ -115,9 +115,9 @@ export const WorkflowDesigner: React.FC<{
       {/* فهرست افراد */}
       <aside className="rounded-2xl border border-slate-200 bg-slate-50 p-2.5 space-y-2">
         <div className="flex flex-wrap items-center gap-2">
-          <div className="text-[11px] font-extrabold text-slate-700">افراد سازمان — بکشید و روی مرحله رها کنید</div>
+          <div className="text-[12px] font-bold text-slate-700">افراد سازمان — بکشید و روی مرحله رها کنید</div>
           <div className="relative flex-1 min-w-[140px] max-w-xs">
-            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جستجو..." className="w-full text-[11px] p-1.5 pr-6 bg-white border border-slate-200 rounded-lg" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="جستجو..." className="w-full text-[12px] p-1.5 pr-6 bg-white border border-slate-200 rounded-lg" />
             <Search className="w-3 h-3 text-slate-400 absolute right-2 top-2.5" />
           </div>
         </div>
@@ -128,7 +128,7 @@ export const WorkflowDesigner: React.FC<{
           onDragOver={(e) => { e.preventDefault(); setHover('trash'); }}
           onDragLeave={() => setHover(null)}
           onDrop={(e) => { e.preventDefault(); removeFrom(readPayload(e)); }}
-          className={`flex items-center justify-center gap-1 rounded-xl border-2 border-dashed p-2 text-[10px] font-bold ${hover === 'trash' ? 'border-rose-400 bg-rose-50 text-rose-600' : 'border-slate-300 text-slate-400'}`}
+          className={`flex items-center justify-center gap-1 rounded-xl border-2 border-dashed p-2 text-[11px] font-bold ${hover === 'trash' ? 'border-rose-400 bg-rose-50 text-rose-600' : 'border-slate-300 text-slate-400'}`}
         >
           <Trash2 className="w-3.5 h-3.5" />برای حذف اینجا رها کنید
         </div>
@@ -139,7 +139,7 @@ export const WorkflowDesigner: React.FC<{
         <div className="flex items-stretch gap-2 min-w-[700px]">
           <div className="flex flex-col items-center justify-center gap-1 px-1 text-slate-400">
             <span className="w-9 h-9 rounded-full bg-slate-800 text-white flex items-center justify-center"><Play className="w-4 h-4" /></span>
-            <span className="text-[9px] font-bold">ایجاد جلسه</span>
+            <span className="text-[11px] font-bold">ایجاد جلسه</span>
           </div>
           {stages.map((stage, i) => {
             const ids = idsOf(stage.id);
@@ -151,7 +151,7 @@ export const WorkflowDesigner: React.FC<{
                   <>
                     <div className="flex flex-col items-center justify-center gap-1 px-1 text-slate-400 w-16 text-center">
                       <span className="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center"><Mail className="w-4 h-4" /></span>
-                      <span className="text-[9px] font-bold leading-3">دعوتنامه خودکار و برگزاری</span>
+                      <span className="text-[11px] font-bold leading-3">دعوتنامه خودکار و برگزاری</span>
                     </div>
                     <div className="flex items-center text-slate-300"><ArrowLeft className="w-4 h-4" /></div>
                   </>
@@ -162,27 +162,27 @@ export const WorkflowDesigner: React.FC<{
                   onDrop={(e) => { e.preventDefault(); drop(stage.id, readPayload(e)); }}
                   className={`flex-1 min-w-[112px] rounded-2xl border-2 bg-white overflow-hidden transition ${hover === stage.id ? 'border-indigo-400 shadow-lg shadow-indigo-100 scale-[1.01]' : ids.length ? 'border-slate-200' : 'border-dashed border-slate-300'}`}
                 >
-                  <div className={`bg-gradient-to-l ${stage.color} text-white px-2.5 py-2 flex items-center gap-1.5`}>
+                  <div className={`${stage.color} text-white px-2.5 py-2 flex items-center gap-1.5`}>
                     <Icon className="w-4 h-4" />
-                    <span className="text-[11px] font-extrabold">{stage.title}</span>
+                    <span className="text-[12px] font-bold">{stage.title}</span>
                   </div>
                   <div className="p-2 space-y-1.5 min-h-[120px]">
                     {stage.mode && ids.length > 1 && (
-                      <button type="button" onClick={() => cycleMode(stage.id)} className="w-full text-[10px] font-bold px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100" title="کلیک برای تغییر منطق">
-                        {stage.mode} ⟳
+                      <button type="button" onClick={() => cycleMode(stage.id)} className="w-full text-[11px] font-bold px-2 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100" title="کلیک برای تغییر منطق">
+                        {stage.mode} (تغییر)
                       </button>
                     )}
                     {ids.length === 0
-                      ? <p className="text-[10px] text-slate-400 text-center pt-6 leading-4">{stage.empty}</p>
+                      ? <p className="text-[11px] text-slate-400 text-center pt-6 leading-4">{stage.empty}</p>
                       : ids.map((id, index) => <React.Fragment key={id}>{renderPill({ id: id, stage: stage.id, index: index, ordered: stage.ordered })}</React.Fragment>)}
                     {/* افزودن بدون کشیدن (صفحه لمسی، صفحه‌خوان یا مرورگری که کشیدن و رها کردن ندارد). */}
                     <select
                       aria-label={`افزودن فرد به ${stage.title}`}
                       value=""
                       onChange={(event) => { if (event.target.value) drop(stage.id, { userId: event.target.value }); }}
-                      className="w-full text-[10px] font-bold p-1.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-indigo-300"
+                      className="w-full text-[11px] font-bold p-1.5 rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-500 hover:border-indigo-300"
                     >
-                      <option value="">{stage.id === 'notice' && ids.length ? '↻ تغییر فرد…' : '＋ افزودن فرد…'}</option>
+                      <option value="">{stage.id === 'notice' && ids.length ? 'تغییر فرد…' : 'افزودن فرد…'}</option>
                       {active.filter((u) => !ids.includes(u.id)).map((u) => <option key={u.id} value={u.id}>{u.fullName} — {u.title}</option>)}
                     </select>
                   </div>
@@ -192,11 +192,11 @@ export const WorkflowDesigner: React.FC<{
           })}
           <div className="flex items-center text-slate-300"><ArrowLeft className="w-4 h-4" /></div>
           <div className="flex flex-col items-center justify-center gap-1 px-1 text-slate-400">
-            <span className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black">✓</span>
-            <span className="text-[9px] font-bold">اجرای مصوبه</span>
+            <span className="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold">✓</span>
+            <span className="text-[11px] font-bold">اجرای مصوبه</span>
           </div>
         </div>
-        <p className="text-[10px] text-slate-400 mt-2">افراد را بکشید و روی مراحل رها کنید؛ برای تغییر ترتیب، روی فرد دیگر همان مرحله رها کنید. روی منطق هر مرحله کلیک کنید تا بین «یک نفر کافی / همه / به ترتیب» تغییر کند.</p>
+        <p className="text-[11px] text-slate-400 mt-2">افراد را بکشید و روی مراحل رها کنید؛ برای تغییر ترتیب، روی فرد دیگر همان مرحله رها کنید. روی منطق هر مرحله کلیک کنید تا بین «یک نفر کافی / همه / به ترتیب» تغییر کند.</p>
       </div>
     </div>
   );

@@ -67,7 +67,7 @@ export const CommandPalette: React.FC = () => {
     list.push({ id: 'go-meetings', title: 'مدیریت جلسات', keywords: 'جلسات فهرست جلسه', icon: Calendar, group: 'رفتن به', run: () => go('meetings') });
     list.push({ id: 'go-resolutions', title: 'بانک مصوبات', keywords: 'مصوبات فهرست', icon: FileText, group: 'رفتن به', run: () => go('resolutions') });
     list.push({ id: 'go-proposals', title: 'مصوبات پیشنهادی', keywords: 'پیشنهادها کارتابل پیشنهاد', icon: Lightbulb, group: 'رفتن به', run: () => go('proposals') });
-    list.push({ id: 'go-calendar', title: 'تقویم هوشمند', keywords: 'تقویم برنامه زمان', icon: CalendarDays, group: 'رفتن به', run: () => go('calendar') });
+    list.push({ id: 'go-calendar', title: 'تقویم جلسات', keywords: 'تقویم برنامه زمان', icon: CalendarDays, group: 'رفتن به', run: () => go('calendar') });
     if (currentUser.role !== 'CEO') list.push({ id: 'go-tasks', title: 'وظایف ارجاعی من', keywords: 'وظایف کارهای من تسک', icon: ListTodo, group: 'رفتن به', run: () => go('tasks') });
     if (hasPermission('VIEW_APPROVALS') || ['ADMIN', 'DEPT_MANAGER', 'CEO'].includes(currentUser.role)) list.push({ id: 'go-approvals', title: 'کارتابل صحه‌گذاری', keywords: 'صحه گذاری تایید', icon: ClipboardCheck, group: 'رفتن به', run: () => go('approvals') });
     if (hasPermission('NOTIFY_RESOLUTION') || hasPermission('VIEW_NOTIFICATION_DRAFT') || currentUser.role === 'SECRETARY') list.push({ id: 'go-notify', title: 'کارتابل ابلاغ', keywords: 'ابلاغ ابلاغیه امضا', icon: Send, group: 'رفتن به', run: () => go('notification-inbox') });
@@ -115,7 +115,7 @@ export const CommandPalette: React.FC = () => {
       const res = await interpretCommand(text, commands.map(({ id, title, keywords }) => ({ id, title, keywords })), currentUser.id);
       const command = commands.find((c) => c.id === res.data.commandId);
       if (command) {
-        showToast('فرمان هوشمند', res.data.reply || command.title, 'info');
+        showToast('فرمان سریع', res.data.reply || command.title, 'info');
         command.run();
       } else {
         // پرسش اطلاعاتی است، نه فرمان: به دستیار گفت‌وگو سپرده می‌شود.
@@ -149,7 +149,7 @@ export const CommandPalette: React.FC = () => {
             className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
           />
           <VoiceInputButton className="p-2" onText={(text, isFinal) => { setQuery(text); if (isFinal && aiCommand) runNaturalLanguage(text); }} />
-          <kbd className="hidden sm:inline text-[10px] font-bold text-slate-400 border border-slate-200 rounded-md px-1.5 py-0.5">Esc</kbd>
+          <kbd className="hidden sm:inline text-[11px] font-bold text-slate-400 border border-slate-200 rounded-md px-1.5 py-0.5">Esc</kbd>
         </div>
         <div className="max-h-[60vh] overflow-y-auto p-2 space-y-2">
           {filteredCommands.map((c, i) => {
@@ -157,7 +157,7 @@ export const CommandPalette: React.FC = () => {
             const showHeader = !query.trim() && (i === 0 || filteredCommands[i - 1].group !== c.group);
             return (
               <React.Fragment key={c.id}>
-                {showHeader && <div className="px-3 pt-1 pb-1 text-[10px] font-bold text-slate-400">{c.group}</div>}
+                {showHeader && <div className="px-3 pt-1 pb-1 text-[11px] font-bold text-slate-400">{c.group}</div>}
                 <button className={rowClass(i)} onMouseEnter={() => setActive(i)} onClick={c.run}>
                   <span className="p-1.5 rounded-lg bg-slate-100 text-slate-600"><Icon className="w-4 h-4" /></span>
                   <span className="flex-1 text-[13px] font-bold text-slate-800">{c.title}</span>
@@ -168,20 +168,20 @@ export const CommandPalette: React.FC = () => {
           })}
           {entityHits.length > 0 && (
             <div>
-              <div className="px-3 pt-1 pb-1 text-[10px] font-bold text-slate-400">نتایج جست‌وجو</div>
+              <div className="px-3 pt-1 pb-1 text-[11px] font-bold text-slate-400">نتایج جست‌وجو</div>
               {entityHits.map((hit, j) => {
                 const i = filteredCommands.length + j;
                 return (
                   <button key={hit.id} className={rowClass(i)} onMouseEnter={() => setActive(i)} onClick={hit.run}>
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-lg ${hit.kind === 'جلسه' ? 'bg-teal-50 text-teal-700' : hit.kind === 'مصوبه' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>{hit.kind}</span>
-                    <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-slate-800 truncate">{hit.title}</span><span className="block text-[10.5px] text-slate-500 truncate">{hit.subtitle}</span></span>
+                    <span className={`text-[11px] font-bold px-2 py-1 rounded-lg ${hit.kind === 'جلسه' ? 'bg-teal-50 text-teal-700' : hit.kind === 'مصوبه' ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700'}`}>{hit.kind}</span>
+                    <span className="flex-1 min-w-0"><span className="block text-[13px] font-bold text-slate-800 truncate">{hit.title}</span><span className="block text-[11px] text-slate-500 truncate">{hit.subtitle}</span></span>
                   </button>
                 );
               })}
             </div>
           )}
           {showAiRow && (
-            <button className={`${rowClass(rows.length - 1)} bg-gradient-to-l from-indigo-50 to-white`} onMouseEnter={() => setActive(rows.length - 1)} onClick={() => runNaturalLanguage()}>
+            <button className={`${rowClass(rows.length - 1)} bg-slate-50`} onMouseEnter={() => setActive(rows.length - 1)} onClick={() => runNaturalLanguage()}>
               <span className="p-1.5 rounded-lg bg-teal-700 text-white"><Send className="w-4 h-4" /></span>
               <span className="flex-1 text-[13px] font-bold text-indigo-900">انجام این درخواست: «{query}»</span>
               <Zap className="w-3.5 h-3.5 text-amber-500" />
@@ -189,7 +189,7 @@ export const CommandPalette: React.FC = () => {
           )}
           {rows.length === 0 && <div className="py-10 text-center text-xs text-slate-400">موردی یافت نشد.</div>}
         </div>
-        <div className="flex items-center justify-between gap-2 px-4 py-2 border-t border-slate-100 bg-slate-50 text-[10px] text-slate-500">
+        <div className="flex items-center justify-between gap-2 px-4 py-2 border-t border-slate-100 bg-slate-50 text-[11px] text-slate-500">
           <span className="flex items-center gap-1"><Command className="w-3 h-3" />K برای باز و بسته کردن · ↑↓ برای حرکت · Enter برای اجرا</span>
           
         </div>

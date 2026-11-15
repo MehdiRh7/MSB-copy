@@ -47,7 +47,7 @@ export const LdapSettingsTab: React.FC = () => {
   };
 
   const field = 'w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:outline-none';
-  const label = 'block text-[11px] font-bold text-slate-700 mb-1';
+  const label = 'block text-[12px] font-bold text-slate-700 mb-1';
 
   return (
     <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-100 space-y-5">
@@ -56,14 +56,14 @@ export const LdapSettingsTab: React.FC = () => {
           <Network className="w-5 h-5" />
         </div>
         <div>
-          <h3 className="text-xs font-extrabold text-slate-800">اتصال به دایرکتوری سازمانی (LDAP / Active Directory)</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <h3 className="text-xs font-bold text-slate-800">اتصال به دایرکتوری سازمانی (LDAP / Active Directory)</h3>
+          <p className="text-[12px] text-slate-500 mt-0.5">
             پیکربندی اتصال برای شناسایی و احراز هویت کاربران سازمانی در آینده. ورود فعلی کاربران به سامانه با این تنظیمات تغییر نمی‌کند.
           </p>
         </div>
       </div>
 
-      <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-[11px] text-amber-900 flex items-start gap-2">
+      <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-[12px] text-amber-900 flex items-start gap-2">
         <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" />
         <span>
           در این نسخه فقط پیکربندی ذخیره می‌شود و اتصال واقعی به سرور LDAP برقرار نمی‌گردد. رمز عبور Bind در مرورگر ذخیره نمی‌شود و
@@ -89,7 +89,7 @@ export const LdapSettingsTab: React.FC = () => {
         <div>
           <label className={label}>پورت (Port)</label>
           <input type="number" value={settings.port} onChange={(e) => update('port', Number(e.target.value))} className={field} dir="ltr" />
-          <p className="text-[10px] text-slate-400 mt-1">پیش‌فرض {toPersianDigits('389')} و برای LDAPS معمولاً {toPersianDigits('636')}</p>
+          <p className="text-[11px] text-slate-400 mt-1">پیش‌فرض {toPersianDigits('389')} و برای LDAPS معمولاً {toPersianDigits('636')}</p>
         </div>
         <div>
           <label className={label}>Base DN</label>
@@ -131,7 +131,7 @@ export const LdapSettingsTab: React.FC = () => {
               </button>
             )}
           </div>
-          <p className="text-[10px] text-slate-400 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             {settings.hasBindPassword ? 'رمزی تنظیم شده است. برای تغییر، رمز جدید را وارد و ذخیره کنید.' : 'هنوز رمزی تنظیم نشده است.'}
           </p>
         </div>
@@ -159,7 +159,7 @@ export const LdapSettingsTab: React.FC = () => {
 
       {testResult && (
         <div
-          className={`p-3 rounded-2xl border text-[11px] font-bold ${
+          className={`p-3 rounded-2xl border text-[12px] font-bold ${
             testResult.state === 'NOT_CONFIGURED'
               ? 'bg-rose-50 border-rose-200 text-rose-800'
               : 'bg-sky-50 border-sky-200 text-sky-900'

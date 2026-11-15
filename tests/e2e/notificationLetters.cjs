@@ -27,7 +27,7 @@ const readLS = (page, key) => page.evaluate((k) => JSON.parse(localStorage.getIt
       steps: [
         { id: 's1', signerUserId: 'user-17', signerName: 'مسئول دفتر', signerTitle: 'مسئول دفتر مدیرعامل', signerRole: 'OFFICE_MANAGER', order: 1, status: 'SIGNED' },
         { id: 's2', signerUserId: 'user-16', signerName: 'مدیرعامل', signerTitle: 'مدیرعامل', signerRole: 'CEO', order: 2, status: 'SIGNED' },
-        { id: 's3', signerUserId: 'user-admin', signerName: 'مدیر کل سیستم (Admin)', signerTitle: 'راهبر ارشد', signerRole: 'ADMIN', order: 3, status: 'SIGNED' },
+        { id: 's3', signerUserId: 'user-admin', signerName: 'مدیر سیستم', signerTitle: 'راهبر ارشد', signerRole: 'ADMIN', order: 3, status: 'SIGNED' },
       ],
     };
     const base = {

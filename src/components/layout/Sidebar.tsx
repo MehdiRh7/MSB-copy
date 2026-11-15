@@ -118,7 +118,7 @@ export const Sidebar: React.FC = () => {
         },
         {
           route: 'calendar' as AppRoute,
-          title: 'تقویم هوشمند',
+          title: 'تقویم جلسات',
           icon: Clock,
         },
       ],
@@ -243,10 +243,10 @@ export const Sidebar: React.FC = () => {
       </button>
 
       {/* User Info Box - Placed at the very TOP, above "پیشخوان" (Dashboard) */}
-      <div className="p-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-gradient-to-b from-slate-50/80 to-transparent dark:from-slate-800/40">
+      <div className="p-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50 dark:from-slate-800/40">
         {showLabels ? (
           <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/60 flex items-center gap-2.5 shadow-2xs">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-900 text-white flex items-center justify-center text-[10px] font-bold shrink-0 overflow-hidden shadow-xs ring-2 ring-white dark:ring-slate-800">
+            <div className="w-8 h-8 rounded-lg bg-[var(--app-primary)] text-white flex items-center justify-center text-[11px] font-bold shrink-0 overflow-hidden shadow-xs ring-2 ring-white dark:ring-slate-800">
               {currentUser.avatarUrl ? (
                 <img src={currentUser.avatarUrl} alt={currentUser.fullName} className="w-full h-full object-cover" />
               ) : (
@@ -254,13 +254,13 @@ export const Sidebar: React.FC = () => {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-extrabold text-slate-800 dark:text-slate-100 truncate">{currentUser.fullName}</p>
-              <p className="text-[9px] text-teal-700 dark:text-teal-400 font-semibold truncate">{currentUser.title}</p>
+              <p className="text-[12px] font-bold text-slate-800 dark:text-slate-100 truncate">{currentUser.fullName}</p>
+              <p className="text-[11px] text-teal-700 dark:text-teal-400 font-semibold truncate">{currentUser.title}</p>
             </div>
           </div>
         ) : (
           <div
-            className="w-9 h-9 mx-auto rounded-lg bg-gradient-to-br from-blue-500 to-blue-900 text-white flex items-center justify-center text-[10px] font-bold shadow-xs ring-2 ring-white dark:ring-slate-800 cursor-pointer overflow-hidden"
+            className="w-9 h-9 mx-auto rounded-lg bg-[var(--app-primary)] text-white flex items-center justify-center text-[11px] font-bold shadow-xs ring-2 ring-white dark:ring-slate-800 cursor-pointer overflow-hidden"
             title={`${currentUser.fullName} - ${currentUser.title}`}
             onClick={toggleSidebar}
           >
@@ -281,7 +281,7 @@ export const Sidebar: React.FC = () => {
           <div key={group.id} className="space-y-0.5">
             {/* Group Header */}
             {showLabels ? (
-              <div className="px-2 pt-1 pb-1 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+              <div className="px-2 pt-1 pb-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 {group.title}
               </div>
             ) : (
@@ -310,7 +310,7 @@ export const Sidebar: React.FC = () => {
                     title={item.title}
                     className={`group relative w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs transition-all duration-150 cursor-pointer ${
                       isActive
-                        ? 'app-nav-active text-white font-extrabold shadow-xs'
+                        ? 'app-nav-active text-white font-bold shadow-xs'
                         : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white font-bold hover:translate-x-[-2px]'
                     } ${!showLabels ? 'justify-center px-1 py-2' : ''}`}
                   >
@@ -325,13 +325,13 @@ export const Sidebar: React.FC = () => {
                         }`}
                       />
                       {showLabels && (
-                        <span className="truncate text-[12px] leading-5">{item.title}</span>
+                        <span className="truncate text-[13px] leading-5">{item.title}</span>
                       )}
                     </div>
 
                     {showLabels && item.badge !== undefined && item.badge > 0 && (
                       <span
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-full leading-tight ${
+                        className={`text-[11px] font-bold px-1.5 py-0.2 rounded-full leading-tight ${
                           item.badgeColor || 'bg-teal-700 text-white'
                         }`}
                       >
