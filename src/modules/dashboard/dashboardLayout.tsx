@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDown, ArrowUp, Eye, EyeOff, LayoutGrid, RotateCcw, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, LayoutGrid, RotateCcw, X } from 'lucide-react';
 import { loadLocalValue, saveLocalValue } from '../../services/localStore';
 
 /** بخش‌های قابل شخصی‌سازی داشبورد. */
@@ -54,27 +54,44 @@ export const useDashboardLayout = (userId: string) => {
 
 export const DashboardCustomizer: React.FC<{ api: ReturnType<typeof useDashboardLayout>; onClose: () => void }> = ({ api, onClose }) => (
   <div className="fixed inset-0 z-50 bg-slate-950/30" onMouseDown={onClose} dir="rtl">
-    <div className="layout-drawer fixed left-0 inset-y-0 h-full w-full max-w-sm bg-white shadow-2xl border-r border-slate-200 p-4 space-y-3 overflow-y-auto" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="شخصی‌سازی داشبورد">
-      <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5"><LayoutGrid className="w-4 h-4 text-indigo-600" />چیدمان پیشخوان</h3>
-        <button onClick={onClose} aria-label="بستن" className="p-1 rounded-lg text-slate-400 hover:bg-slate-100"><X className="w-4 h-4" /></button>
+    <div className="layout-drawer fixed left-0 inset-y-0 h-full w-full max-w-sm bg-white shadow-2xl flex flex-col" onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-label="شخصی‌سازی داشبورد">
+      <div className="drawer-head">
+        <div className="flex items-center gap-2.5">
+          <span className="drawer-head-icon"><LayoutGrid className="w-5 h-5" /></span>
+          <div>
+            <h3 className="text-[15px] font-bold">شخصی‌سازی پیشخوان</h3>
+            <p className="text-[12px] text-white/75 mt-0.5">انتخاب کنید چه بخش‌هایی و به چه ترتیبی دیده شوند</p>
+          </div>
+        </div>
+        <button onClick={onClose} aria-label="بستن" className="p-1.5 rounded-lg text-white/80 hover:bg-white/15"><X className="w-4 h-4" /></button>
       </div>
-      <p className="text-[12px] text-slate-500">بخش‌ها را نمایش دهید یا پنهان کنید و ترتیبشان را تغییر دهید. چیدمان فقط برای شما ذخیره می‌شود.</p>
-      <ul className="space-y-1.5">
-        {api.layout.order.map((id, index) => {
-          const section = DASHBOARD_SECTIONS.find((s) => s.id === id)!;
-          const visible = api.isVisible(id);
-          return (
-            <li key={id} className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${visible ? 'border-slate-200 bg-white' : 'border-dashed border-slate-200 bg-slate-50 opacity-60'}`}>
-              <button onClick={() => api.toggle(id)} aria-label={visible ? 'پنهان کردن' : 'نمایش'} className={`p-1 rounded-lg ${visible ? 'text-indigo-600 hover:bg-indigo-50' : 'text-slate-400 hover:bg-slate-100'}`}>{visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}</button>
-              <span className="flex-1 text-[13px] font-bold text-slate-700">{section.label}</span>
-              <button onClick={() => api.move(id, -1)} disabled={index === 0} aria-label="بالا" className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30"><ArrowUp className="w-3.5 h-3.5" /></button>
-              <button onClick={() => api.move(id, 1)} disabled={index === api.layout.order.length - 1} aria-label="پایین" className="p-1 rounded-lg text-slate-500 hover:bg-slate-100 disabled:opacity-30"><ArrowDown className="w-3.5 h-3.5" /></button>
-            </li>
-          );
-        })}
-      </ul>
-      <button onClick={api.reset} className="flex items-center gap-1 text-[12px] font-bold text-slate-500 hover:text-slate-800"><RotateCcw className="w-3.5 h-3.5" />بازگشت به چیدمان پیش‌فرض</button>
+      <div className="flex-1 overflow-y-auto p-4">
+        <div className="mb-2 flex items-center justify-between text-[12px] text-slate-500">
+          <span>بخش‌های پیشخوان</span>
+          <span>{api.layout.order.filter((id) => api.isVisible(id)).length} از {api.layout.order.length} فعال</span>
+        </div>
+        <ul className="space-y-2">
+          {api.layout.order.map((id, index) => {
+            const section = DASHBOARD_SECTIONS.find((s) => s.id === id)!;
+            const visible = api.isVisible(id);
+            return (
+              <li key={id} className={`drawer-row ${visible ? '' : 'drawer-row-off'}`}>
+                <span className="drawer-row-num">{index + 1}</span>
+                <span className="flex-1 text-[13px] font-semibold text-slate-800">{section.label}</span>
+                <span className="flex flex-col">
+                  <button onClick={() => api.move(id, -1)} disabled={index === 0} aria-label="بالا" title="بالاتر" className="drawer-move"><ArrowUp className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => api.move(id, 1)} disabled={index === api.layout.order.length - 1} aria-label="پایین" title="پایین‌تر" className="drawer-move"><ArrowDown className="w-3.5 h-3.5" /></button>
+                </span>
+                <button onClick={() => api.toggle(id)} aria-label={visible ? 'پنهان کردن' : 'نمایش'} title={visible ? 'پنهان کردن' : 'نمایش'} className={`drawer-switch ${visible ? 'is-on' : ''}`} role="switch" aria-checked={visible}><span /></button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+      <div className="border-t border-slate-200 p-3 flex items-center justify-between gap-2 bg-slate-50">
+        <button onClick={api.reset} className="flex items-center gap-1 text-[12px] font-bold text-slate-600 hover:text-slate-900"><RotateCcw className="w-3.5 h-3.5" />بازگشت به پیش‌فرض</button>
+        <button onClick={onClose} className="app-btn-primary">تأیید</button>
+      </div>
     </div>
   </div>
 );

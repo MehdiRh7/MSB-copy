@@ -245,8 +245,8 @@ export const Sidebar: React.FC = () => {
       {/* User Info Box - Placed at the very TOP, above "پیشخوان" (Dashboard) */}
       <div className="p-2.5 border-b border-slate-100 dark:border-slate-800 shrink-0 bg-slate-50 dark:from-slate-800/40">
         {showLabels ? (
-          <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/60 flex items-center gap-2.5 shadow-2xs">
-            <div className="w-8 h-8 rounded-lg bg-[var(--app-primary)] text-white flex items-center justify-center text-[11px] font-bold shrink-0 overflow-hidden shadow-xs ring-2 ring-white dark:ring-slate-800">
+          <div className="profile-card p-2.5 rounded-xl flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-white/15 text-white flex items-center justify-center text-[12px] font-bold shrink-0 overflow-hidden ring-1 ring-white/30">
               {currentUser.avatarUrl ? (
                 <img src={currentUser.avatarUrl} alt={currentUser.fullName} className="w-full h-full object-cover" />
               ) : (
@@ -254,8 +254,8 @@ export const Sidebar: React.FC = () => {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-bold text-slate-800 dark:text-slate-100 truncate">{currentUser.fullName}</p>
-              <p className="text-[11px] text-teal-700 dark:text-teal-400 font-semibold truncate">{currentUser.title}</p>
+              <p className="text-[13px] font-bold text-white truncate">{currentUser.fullName}</p>
+              <p className="text-[11px] text-white/75 font-semibold truncate">{currentUser.title}</p>
             </div>
           </div>
         ) : (

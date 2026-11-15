@@ -117,7 +117,7 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4 pb-10">
-      <button type="button" onClick={() => setCustomizerOpen(true)} className="layout-gear" title="چیدمان پیشخوان" aria-label="چیدمان"><Settings2 className="h-[18px] w-[18px]" /></button>
+      <button type="button" onClick={() => setCustomizerOpen(true)} className="layout-gear" title="چیدمان پیشخوان" aria-label="چیدمان">شخصی‌سازی</button>
       {customizerOpen && <DashboardCustomizer api={dash} onClose={() => setCustomizerOpen(false)} />}
       {/* ——— عنوان صفحه و اقدام اصلی ——— */}
       {!(dash.isVisible('meetings') && model.upcomingMeetings.length > 0) && <div className="flex justify-end" style={{ order: 0 }}>{primaryAction}</div>}
