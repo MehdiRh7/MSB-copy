@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, FileUp, Gavel, Mic, Square, Wand2 } from 'lucide-react';
+import { Download, FileUp, Gavel, Mic, Play, Square, Wand2 } from 'lucide-react';
 import { Meeting, Resolution } from '../../types';
 import { useApp } from '../../context/AppContext';
 import { mockDepartments } from '../../mock/data';
@@ -49,7 +49,37 @@ export const ExtractedResolutionsList: React.FC<{ meeting: Meeting; result: AiRe
  * را بررسی و «تأیید و ثبت» نکند، هیچ نتیجه‌ای در سامانه ثبت نمی‌شود. ثبت
  * از همان مسیر رسمی «ثبت نتیجه» (recordAgendaOutcome) انجام می‌شود.
  */
-const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaOutcomeSuggestion[]> }> = ({ meeting, result }) => {
+/** بخشی از گفتار با زمانش در فایل صوتی (ثانیه از شروع ضبط). */
+export interface SpeechSegment { text: string; start: number; end: number }
+
+const normFa = (t: string) => t.replace(/[ي]/g, 'ی').replace(/[ك]/g, 'ک').replace(/[\u200c\u064B-\u065F.،,؛:!؟?«»"()]/g, ' ').replace(/\s+/g, ' ').trim();
+const wordsOf = (t: string) => new Set(normFa(t).split(' ').filter((w) => w.length > 1));
+/** پیدا کردن بخش صوتی متناظر با نقل‌قول: پرهم‌پوشانی‌ترین بخش و بخش‌های پیوسته‌اش. */
+const locateInAudio = (evidence: string, segments: SpeechSegment[]): { start: number; end: number } | null => {
+  if (!evidence || segments.length === 0) return null;
+  const ev = wordsOf(evidence);
+  const scores = segments.map((seg) => { const w = wordsOf(seg.text); let hit = 0; w.forEach((x) => { if (ev.has(x)) hit += 1; }); return w.size ? hit / w.size : 0; });
+  const best = scores.reduce((bi, v, i) => (v > scores[bi] ? i : bi), 0);
+  if (scores[best] < 0.35) return null;
+  let first = best; let last = best;
+  while (first > 0 && scores[first - 1] >= 0.35) first -= 1;
+  while (last < segments.length - 1 && scores[last + 1] >= 0.35) last += 1;
+  return { start: Math.max(0, segments[first].start - 1), end: segments[last].end + 1 };
+};
+const clock = (sec: number) => toPersianDigits(`${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(Math.floor(sec % 60)).padStart(2, '0')}`);
+
+const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaOutcomeSuggestion[]>; audio?: { url: string; segments: SpeechSegment[] } | null }> = ({ meeting, result, audio }) => {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const stopAtRef = useRef<number>(0);
+  const [playing, setPlaying] = useState<string | null>(null);
+  const playRange = (id: string, range: { start: number; end: number }) => {
+    const el = audioRef.current;
+    if (!el) return;
+    if (playing === id) { el.pause(); setPlaying(null); return; }
+    stopAtRef.current = range.end;
+    el.currentTime = range.start;
+    void el.play().then(() => setPlaying(id)).catch(() => setPlaying(null));
+  };
   const { currentUser, showToast, triggerRefresh } = useApp();
   const [drafts, setDrafts] = useState<Record<string, { outcome: AgendaOutcome | ''; notes: string; state: 'pending' | 'saved' | 'dismissed' }>>(() =>
     Object.fromEntries(result.data.map((s) => [s.agendaItemId, { outcome: s.outcome || '', notes: s.notes, state: 'pending' as const }])));
@@ -61,7 +91,8 @@ const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaO
     if (!d.notes.trim()) { showToast('ثبت نتیجه', 'شرح نتیجه بررسی الزامی است.', 'warning'); return; }
     setBusy(s.agendaItemId);
     try {
-      await meetingService.recordAgendaOutcome(meeting.id, s.agendaItemId, d.outcome, d.notes, currentUser);
+      const range = audio ? locateInAudio(s.evidence, audio.segments) : null;
+      await meetingService.recordAgendaOutcome(meeting.id, s.agendaItemId, d.outcome, d.notes, currentUser, s.evidence && d.outcome === s.outcome ? { quote: s.evidence, matchedBy: s.matchedBy, reason: s.reason, audioRange: range || undefined } : undefined);
       setDrafts((prev) => ({ ...prev, [s.agendaItemId]: { ...prev[s.agendaItemId], state: 'saved' } }));
       showToast('ثبت نتیجه', `نتیجه «${label(d.outcome)}» برای بند «${s.agendaTitle}» با تأیید شما ثبت شد.`, 'success');
       triggerRefresh();
@@ -71,6 +102,7 @@ const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaO
   };
   return (
     <div className="space-y-2">
+      {audio && <audio ref={audioRef} src={audio.url} preload="auto" className="hidden" onTimeUpdate={(e) => { if (e.currentTarget.currentTime >= stopAtRef.current) { e.currentTarget.pause(); setPlaying(null); } }} onEnded={() => setPlaying(null)} />}
       <div className="flex flex-wrap items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 p-2.5 text-[11px] text-amber-900">
         <ShieldCheck className="w-4 h-4 shrink-0" />
         <span><b>فقط پیشنهاد است.</b> تا هر بند را بررسی و «تأیید و ثبت» نکنید، هیچ نتیجه‌ای در سامانه ثبت نمی‌شود. نتیجه و شرح را می‌توانید تغییر دهید.</span>
@@ -88,7 +120,20 @@ const AgendaOutcomeReview: React.FC<{ meeting: Meeting; result: AiResult<AgendaO
               {d.state === 'saved' && <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700"><CheckCircle2 className="w-4 h-4" />با تأیید شما ثبت شد</span>}
             </div>
             {s.outcome === null && d.state !== 'saved' && <p className="text-[11px] text-slate-500">در گفتار درباره این بند تصمیم صریحی شنیده نشد؛ در صورت نیاز نتیجه را خودتان انتخاب کنید.</p>}
-            {s.evidence && <p className="text-[10.5px] text-slate-500 border-r-2 border-violet-300 pr-2">مبنای پیشنهاد در گفتار: «{s.evidence.slice(0, 260)}»</p>}
+            {s.evidence && (() => {
+              const range = audio ? locateInAudio(s.evidence, audio.segments) : null;
+              return (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 space-y-1.5 text-[10.5px] text-slate-600">
+                  <div className="font-bold text-slate-700">مرجع این پیشنهاد در گفتار جلسه:</div>
+                  <blockquote className="border-r-2 border-teal-400 pr-2 text-slate-800 leading-6">«{s.evidence.slice(0, 420)}»</blockquote>
+                  {s.matchedBy && <div><b>ارتباط با این بند:</b> {s.matchedBy}</div>}
+                  {s.reason && <div><b>دلیل این برداشت:</b> {s.reason}</div>}
+                  {range
+                    ? <button type="button" onClick={() => playRange(s.agendaItemId, range)} className="flex items-center gap-1 font-bold text-teal-800 bg-white border border-teal-200 hover:bg-teal-50 px-2.5 py-1 rounded-lg">{playing === s.agendaItemId ? <Square className="w-3 h-3" /> : <Play className="w-3 h-3" />}{playing === s.agendaItemId ? 'توقف' : 'پخش همین بخش از صدای جلسه'} ({clock(range.start)} تا {clock(range.end)})</button>
+                    : audio ? <div className="text-slate-400">بخش صوتی متناظر با این جمله پیدا نشد (ممکن است متن پس از ضبط ویرایش شده باشد).</div> : null}
+                </div>
+              );
+            })()}
             {d.state !== 'saved' && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2">
@@ -133,6 +178,12 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
   const activeRef = useRef(false);
   const [askingMic, setAskingMic] = useState(false);
   const [minutesResult, setMinutesResult] = useState<AiResult<string> | null>(null);
+  // زمان هر جمله در فایل صوتی، برای پخش «مرجع» هر پیشنهاد.
+  const [segments, setSegments] = useState<SpeechSegment[]>([]);
+  const recStartRef = useRef(0);
+  const segStartRef = useRef<number | null>(null);
+  const lastEndRef = useRef(0);
+  const nowSec = () => (performance.now() - recStartRef.current) / 1000;
 
   useEffect(() => {
     if (!recording) return;
@@ -167,6 +218,7 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
       media.onstop = () => { stream.getTracks().forEach((t) => t.stop()); setAudioUrl(URL.createObjectURL(new Blob(chunksRef.current, { type: media.mimeType || 'audio/webm' }))); };
       media.start(1000);
       mediaRef.current = media;
+      recStartRef.current = performance.now(); segStartRef.current = null; lastEndRef.current = 0; setSegments([]);
     } catch (error) {
       window.clearTimeout(slowPrompt);
       setAskingMic(false);
@@ -190,6 +242,13 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const r = event.results[i];
             if (r.isFinal) finalText += `${r[0].transcript} `; else interimText += r[0].transcript;
+          }
+          if (interimText && segStartRef.current === null) segStartRef.current = Math.max(lastEndRef.current, nowSec() - 1);
+          if (finalText) {
+            const end = nowSec();
+            const startAt = segStartRef.current ?? Math.max(lastEndRef.current, end - 4);
+            setSegments((prev) => [...prev, { text: finalText.trim(), start: startAt, end }]);
+            lastEndRef.current = end; segStartRef.current = null;
           }
           if (finalText) setTranscript((prev) => `${prev}${finalText}`);
           setInterim(interimText);
@@ -247,7 +306,7 @@ export const MeetingRecorder: React.FC<{ meeting: Meeting; resolutions: Resoluti
         <AiButton variant="soft" disabled={!transcript.trim() || recording} loading={busy === 'outcomes'} onClick={async () => { setBusy('outcomes'); try { setOutcomes(await suggestAgendaOutcomes(meeting, transcript, currentUser.id)); } finally { setBusy(null); } }}>پیشنهاد نتیجه بندها از گفتار</AiButton>
         {audioUrl && <a href={audioUrl} download={`جلسه-${meeting.meetingNumber}.webm`} className="flex items-center gap-1 text-[11px] font-bold text-slate-600 px-3 py-1.5 rounded-xl border border-slate-200 bg-white"><Download className="w-3.5 h-3.5" />دانلود فایل صوتی</a>}
       </div>
-      {outcomes && <AgendaOutcomeReview key={outcomes.data.map((o) => o.agendaItemId + o.outcome).join('|')} meeting={meeting} result={outcomes} />}
+      {outcomes && <AgendaOutcomeReview key={outcomes.data.map((o) => o.agendaItemId + o.outcome).join('|')} meeting={meeting} result={outcomes} audio={audioUrl && segments.length ? { url: audioUrl, segments } : null} />}
       {extracted && <ExtractedResolutionsList meeting={meeting} result={extracted} existing={resolutions} canCreate={canCreateResolution} />}
     </section>
   );

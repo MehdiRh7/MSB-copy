@@ -63,7 +63,7 @@ export interface IMeetingService {
   addGuest(id: string, guest: Omit<MeetingGuest, 'id' | 'invitationStatus'>, actor: User): Promise<ApiResponse<Meeting>>;
   sendInvitations(id: string, actor: User): Promise<ApiResponse<Meeting>>;
   markInvitationViewed(id: string, recipientId: string, actor: User): Promise<ApiResponse<Meeting>>;
-  recordAgendaOutcome(id: string, agendaItemId: string, outcomeStatus: NonNullable<AgendaItem['outcomeStatus']>, notes: string, actor: User): Promise<ApiResponse<Meeting>>;
+  recordAgendaOutcome(id: string, agendaItemId: string, outcomeStatus: NonNullable<AgendaItem['outcomeStatus']>, notes: string, actor: User, evidence?: AgendaItem['outcomeEvidence']): Promise<ApiResponse<Meeting>>;
   getOutcomeLetters(meetingId: string): Promise<ApiResponse<MeetingOutcomeLetter[]>>;
   // Append-only: adds new invitees (existing platform users) and/or a new
   // agenda item to an already-created meeting, without touching anything
@@ -496,7 +496,7 @@ class MockMeetingService implements IMeetingService {
     return apiClient.simulateNetwork(meeting, 100);
   }
 
-  public async recordAgendaOutcome(id: string, agendaItemId: string, outcomeStatus: NonNullable<AgendaItem['outcomeStatus']>, notes: string, actor: User): Promise<ApiResponse<Meeting>> {
+  public async recordAgendaOutcome(id: string, agendaItemId: string, outcomeStatus: NonNullable<AgendaItem['outcomeStatus']>, notes: string, actor: User, evidence?: AgendaItem['outcomeEvidence']): Promise<ApiResponse<Meeting>> {
     if (!['SECRETARY', 'ADMIN'].includes(actor.role)) throw new Error('فقط دبیرخانه مجاز به ثبت نتیجه جلسه است');
     if (!notes.trim()) throw new Error('شرح نتیجه بررسی الزامی است');
     const meetings = this.getMeetingsData();
@@ -507,6 +507,8 @@ class MockMeetingService implements IMeetingService {
     if (agenda.isRemoved) throw new Error('برای موضوع خارج‌شده از دستورکار نمی‌توان نتیجه ثبت کرد');
     agenda.outcomeStatus = outcomeStatus;
     agenda.outcomeNotes = notes.trim();
+    // ثبت دستی بدون مرجع، مرجع قبلی را پاک می‌کند تا نتیجه و مرجع با هم ناهماهنگ نشوند.
+    agenda.outcomeEvidence = evidence?.quote ? evidence : undefined;
     agenda.isDiscussed = true;
     const previousStatus = meeting.status;
     meeting.status = 'IN_PROGRESS';

@@ -46,6 +46,24 @@ const TRANSCRIPT = 'جلسه با حضور اعضا آغاز شد. درباره 
   check('هر پیشنهاد جمله مبنای خود را از خود گفتار دارد', svc.evidenceOk);
   check('پیشنهاد دادن، هیچ نتیجه‌ای ثبت نمی‌کند', svc.recorded === 0, String(svc.recorded));
 
+  // ===== تطبیق با همه مشخصات بند (ارائه‌دهنده، افراد مرتبط)، نه فقط عنوان =====
+  const people = await page.evaluate(async () => {
+    const { meetingService } = await import('/src/services/meetingService.ts');
+    const ins = await import('/src/services/ai/aiInsights.ts');
+    const users = JSON.parse(localStorage.getItem('postbank-mosavabat-v1:users'));
+    const u = (id) => users.find((x) => x.id === id);
+    const mk = (id, order, title, presenter, related) => ({ id, order, title, presenter, presenterName: presenter, isDiscussed: false, relatedUsers: related });
+    const m = (await meetingService.createMeeting({ title: 'جلسه تست افراد', type: 'COMMISSION', dateJalali: '1405/09/04', startTime: '10:00', endTime: '12:00', location: 'سالن', organizerId: 'user-17', secretaryId: 'user-8', createdByUserId: 'user-17', createdByName: 'مسئول دفتر', departmentId: 'dept-1', members: [],
+      agendaItems: [mk('ag-p1', 1, 'طرح یکپارچه‌سازی سامانه‌های حسابرسی', 'دکتر وحید سلیمانی', []), mk('ag-p2', 2, 'نوسازی تجهیزات شبکه شعب', 'مهندس سارا نیک‌نام', [{ userId: 'user-8', fullName: 'مهندس جواد صادقی' }]), mk('ag-p3', 3, 'برنامه آموزش سالانه', 'مسئول دفتر', [])], attachments: [] })).data;
+    const transcript = 'جلسه آغاز شد. پیشنهاد آقای دکتر وحید سلیمانی نیاز به اصلاح داره و باید دوباره ارائه بشه. درباره کار خانم نیک‌نام صحبت شد و با پیشنهادش موافقت شد. در پایان چند موضوع متفرقه مطرح شد.';
+    const res = await ins.suggestAgendaOutcomes(m, transcript);
+    return Object.fromEntries(res.data.map((s) => [s.agendaItemId, { outcome: s.outcome, matchedBy: s.matchedBy, reason: s.reason, evidence: s.evidence }]));
+  });
+  check('فقط با نام ارائه‌دهنده («پیشنهاد آقای دکتر وحید سلیمانی…») بند درست پیدا شد و «نیاز به اصلاح» تشخیص داده شد', people['ag-p1'].outcome === 'NEEDS_REVISION', JSON.stringify(people['ag-p1']));
+  check('دلیل ارتباط با بند (ارائه‌دهنده) و دلیل برداشت گفته می‌شود', people['ag-p1'].matchedBy.includes('سلیمانی') && people['ag-p1'].reason.length > 5, `${people['ag-p1'].matchedBy} | ${people['ag-p1'].reason}`);
+  check('فقط با نام خانوادگی («خانم نیک‌نام») هم بند درست پیدا شد (تصویب)', people['ag-p2'].outcome === 'APPROVED' && people['ag-p2'].matchedBy.includes('نیک‌نام'), JSON.stringify(people['ag-p2']));
+  check('بندی که درباره‌اش چیزی گفته نشد حدس زده نمی‌شود', people['ag-p3'].outcome === null, JSON.stringify(people['ag-p3']));
+
   // ===== رابط کاربری: ثبت فقط با تأیید =====
   await page.evaluate(() => localStorage.setItem('postbank-mosavabat-v1:currentUserId', JSON.stringify('user-17')));
   await page.reload({ waitUntil: 'networkidle' });
@@ -60,6 +78,7 @@ const TRANSCRIPT = 'جلسه با حضور اعضا آغاز شد. درباره 
   await page.locator('button', { hasText: 'پیشنهاد نتیجه بندها از گفتار' }).click();
   await page.waitForTimeout(900);
   check('پیام «فقط پیشنهاد است» نمایش داده شد', await page.locator('text=فقط پیشنهاد است.').count() > 0);
+  check('مرجع پیشنهاد (نقل‌قول، ارتباط با بند و دلیل برداشت) نمایش داده شد', await page.locator('text=مرجع این پیشنهاد در گفتار جلسه:').count() > 0 && await page.locator('text=ارتباط با این بند:').count() > 0 && await page.locator('text=دلیل این برداشت:').count() > 0);
   const before = await page.evaluate((id) => JSON.parse(localStorage.getItem('postbank-mosavabat-v1:meetings')).find((m) => m.id === id).agendaItems.filter((a) => a.outcomeStatus).length, meetingId);
   check('پیش از تأیید چیزی ثبت نشده', before === 0, String(before));
   await page.locator('button', { hasText: 'تأیید و ثبت نتیجه' }).first().click();
@@ -67,6 +86,8 @@ const TRANSCRIPT = 'جلسه با حضور اعضا آغاز شد. درباره 
   const after = await page.evaluate((id) => JSON.parse(localStorage.getItem('postbank-mosavabat-v1:meetings')).find((m) => m.id === id).agendaItems.map((a) => a.outcomeStatus || null), meetingId);
   check('فقط همان بند تأییدشده ثبت شد', after[0] === 'APPROVED' && after.slice(1).every((x) => x === null), JSON.stringify(after));
   check('بند ثبت‌شده با برچسب «با تأیید شما ثبت شد» نمایش داده شد', await page.locator('span', { hasText: 'با تأیید شما ثبت شد' }).count() > 0);
+  const savedEvidence = await page.evaluate((id) => JSON.parse(localStorage.getItem('postbank-mosavabat-v1:meetings')).find((m) => m.id === id).agendaItems[0].outcomeEvidence, meetingId);
+  check('مرجع (نقل‌قول از گفتار) همراه نتیجه تأییدشده ذخیره شد', Boolean(savedEvidence && savedEvidence.quote.includes('تصویب')), JSON.stringify(savedEvidence));
   // پس از تازه‌سازی صفحه، متن گفتار و بقیه پیشنهادها باید باقی بمانند.
   check('متن گفتار پس از ثبت اولین نتیجه از بین نرفت', (await page.inputValue('textarea[placeholder^="متن گفتار جلسه"]')).includes('تمدید قرارداد'));
   await page.locator('button', { hasText: 'تأیید و ثبت نتیجه' }).first().click();

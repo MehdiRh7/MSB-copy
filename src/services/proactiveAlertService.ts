@@ -59,7 +59,7 @@ export const buildProactiveRiskAlerts = (user: User, existing: AppNotification[]
 export const showDesktopNotification = (title: string, body: string) => {
   try {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted' || document.visibilityState === 'visible') return;
-    new Notification(title, { body, dir: 'rtl', lang: 'fa', icon: '/POSTBANK_PM_LOGO.png' });
+    new Notification(title, { body, dir: 'rtl', lang: 'fa', icon: '/tejarat-emblem.png' });
   } catch { /* ignore */ }
 };
 

@@ -360,6 +360,8 @@ export interface AgendaItem {
   relatedUsers?: RelatedUserRef[];
   outcomeStatus?: 'APPROVED' | 'NOT_APPROVED' | 'NEEDS_REVISION' | 'NEEDS_MORE_REVIEW' | 'DEFERRED' | 'REFERRED' | 'CONDITIONAL' | 'CLOSED';
   outcomeNotes?: string;
+  /** مرجع پیشنهاد خودکار نتیجه: نقل‌قول از گفتار جلسه و دلیل برداشت (پس از تأیید دبیرخانه ذخیره می‌شود). */
+  outcomeEvidence?: { quote: string; matchedBy?: string; reason?: string; audioRange?: { start: number; end: number } };
   isRemoved?: boolean;
   removalReason?: string;
   // Files attached to this specific agenda item only — never the meeting's

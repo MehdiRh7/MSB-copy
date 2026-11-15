@@ -7,7 +7,7 @@ interface OrganizationLogoProps {
 }
 
 /** لوگوی قابل جایگزینی سازمان؛ فایل پیش‌فرض از دارایی عمومی پروژه خوانده می‌شود. */
-export const OrganizationLogo: React.FC<OrganizationLogoProps> = ({ className = '', size = 40, src = '/pars-project.png' }) => (
+export const OrganizationLogo: React.FC<OrganizationLogoProps> = ({ className = '', size = 40, src = '/tejarat-emblem.png' }) => (
   <img
     src={src}
     alt="نشان سامانه مدیریت جلسات و مصوبات"

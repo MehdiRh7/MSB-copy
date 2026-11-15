@@ -3,7 +3,9 @@
  * است؛ هوش مصنوعی فقط می‌فهمد، گسترش می‌دهد یا قضاوت می‌کند و هرگز پرونده
  * یا شخصی را از خودش نمی‌سازد (شناسه‌ها با داده واقعی اعتبارسنجی می‌شوند).
  */
-import { AgendaItem, Department, Meeting, PriorityLevel, Resolution, User } from '../../types';
+import { AgendaItem, Department, Meeting, PriorityLevel, Proposal, Resolution, User } from '../../types';
+import { loadLocalValue } from '../localStore';
+import { mockProposals } from '../../mock/data';
 import { AiResult, extractJson, runAi } from './aiClient';
 import { formalizeLocally, textSimilarity } from './aiService';
 import { getResolutionExecutionMeta } from '../../utils/formatters';
@@ -334,65 +336,149 @@ export interface AgendaOutcomeSuggestion {
   /** null یعنی در گفتار درباره این بند تصمیمی شنیده نشد — حدس زده نمی‌شود. */
   outcome: AgendaOutcome | null;
   notes: string;
-  /** جمله‌ای از خود گفتار که مبنای پیشنهاد است. */
+  /** نقل‌قول دقیق از خود گفتار که مبنای پیشنهاد است (یک یا چند جمله پشت سر هم). */
   evidence: string;
+  /** چرا این بخش از گفتار به همین بند نسبت داده شد (مثلاً «ارائه‌دهنده بند: دکتر وحید سلیمانی»). */
+  matchedBy: string;
+  /** استدلال کوتاه: چرا از این جمله چنین نتیجه‌ای برداشت شده است. */
+  reason: string;
 }
 
 /** ترتیب مهم است: «تصویب نشد» نباید به‌عنوان «تصویب شد» تشخیص داده شود. */
-const OUTCOME_PATTERNS: { outcome: AgendaOutcome; re: RegExp }[] = [
-  { outcome: 'NOT_APPROVED', re: /(تصویب نشد|رد شد|رد گردید|مخالفت شد|موافقت نشد|تأیید نشد|تایید نشد)/ },
-  { outcome: 'CONDITIONAL', re: /(مشروط|به شرط|منوط به|مشروط بر)/ },
-  { outcome: 'DEFERRED', re: /(موکول|جلسه بعد|جلسه آینده|به تعویق|تعویق)/ },
-  { outcome: 'REFERRED', re: /(ارجاع|واگذار شد|به کمیته|به واحد .{1,30} سپرده)/ },
-  { outcome: 'NEEDS_MORE_REVIEW', re: /(بررسی بیشتر|بررسی تکمیلی|مطالعه بیشتر|نیاز به بررسی)/ },
-  { outcome: 'NEEDS_REVISION', re: /(اصلاح شود|نیاز به اصلاح|بازنگری شود|اصلاح و دوباره)/ },
-  { outcome: 'CLOSED', re: /(مختومه|منتفی شد|موضوعیت ندارد)/ },
-  { outcome: 'APPROVED', re: /(تصویب شد|مصوب شد|تصویب گردید|موافقت شد|تأیید شد|تایید شد|مقرر شد|مقرر گردید)/ },
+const OUTCOME_PATTERNS: { outcome: AgendaOutcome; re: RegExp; why: string }[] = [
+  { outcome: 'NOT_APPROVED', re: /(تصویب نشد|رد شد|رد گردید|مخالفت شد|موافقت نشد|تأیید نشد|تایید نشد|پذیرفته نشد|قبول نشد)/, why: 'در گفتار صریحاً رد یا عدم موافقت آمده است' },
+  { outcome: 'NEEDS_REVISION', re: /(اصلاح شود|نیاز به اصلاح|نیازمند اصلاح|باید اصلاح|اصلاح گردد|بازنگری شود|نیاز به بازنگری|اصلاح و دوباره|اصلاحات لازم|ایراد دارد|اشکال دارد)/, why: 'در گفتار گفته شده که پیشنهاد باید اصلاح یا بازنگری شود' },
+  { outcome: 'CONDITIONAL', re: /(مشروط|به شرط|منوط به|مشروط بر)/, why: 'تصویب با یک شرط مشخص بیان شده است' },
+  { outcome: 'DEFERRED', re: /(موکول|جلسه بعد|جلسه آینده|به تعویق|تعویق)/, why: 'بررسی به جلسه بعد یا زمان دیگری موکول شده است' },
+  { outcome: 'REFERRED', re: /(ارجاع|واگذار شد|به کمیته|به واحد .{1,30} سپرده)/, why: 'موضوع به واحد یا کمیته دیگری ارجاع شده است' },
+  { outcome: 'NEEDS_MORE_REVIEW', re: /(بررسی بیشتر|بررسی تکمیلی|مطالعه بیشتر|نیاز به بررسی|کارشناسی بیشتر)/, why: 'گفته شده موضوع نیاز به بررسی بیشتر دارد' },
+  { outcome: 'CLOSED', re: /(مختومه|منتفی شد|موضوعیت ندارد)/, why: 'موضوع مختومه یا منتفی اعلام شده است' },
+  { outcome: 'APPROVED', re: /(تصویب شد|مصوب شد|تصویب گردید|موافقت شد|تأیید شد|تایید شد|مقرر شد|مقرر گردید|پذیرفته شد)/, why: 'در گفتار صریحاً تصویب یا موافقت آمده است' },
 ];
 
 const sentencesOf = (text: string) => text.split(/(?<=[.؟!\n])\s+|\s*[-•]\s+/).map((s) => s.trim()).filter((s) => s.length > 8);
 
+const HONORIFICS = /^(جناب|سرکار|آقای|آقا|خانم|دکتر|مهندس|استاد|حاج|حاجی)$/;
+/** نام فرد بدون عنوان‌ها؛ و نام خانوادگی برای تطبیق با گفتار («آقای سلیمانی»). */
+const personKeys = (fullName?: string): string[] => {
+  const parts = norm(fullName || '').split(/\s+/).filter((t) => t && !HONORIFICS.test(t));
+  if (parts.length === 0) return [];
+  const keys = [parts.join(' ')];
+  const last = parts[parts.length - 1];
+  if (last.length >= 3) keys.push(last);
+  return keys;
+};
+
+interface AgendaProfile {
+  agenda: AgendaItem;
+  /** همه چیزهایی که بند را معرفی می‌کند: عنوان، شرح، پیشنهاد مرتبط. */
+  topics: string[];
+  /** افراد بند با نقششان: ارائه‌دهنده، پیشنهاددهنده، افراد مرتبط. */
+  people: { role: string; name: string; keys: string[] }[];
+}
+
+const buildProfile = (agenda: AgendaItem): AgendaProfile => {
+  const proposals = loadLocalValue<Proposal[]>('proposals', mockProposals);
+  const proposal = agenda.sourceProposalId ? proposals.find((p) => p.id === agenda.sourceProposalId) : undefined;
+  const people: AgendaProfile['people'] = [];
+  const addPerson = (role: string, name?: string) => {
+    if (!name || people.some((p) => norm(p.name) === norm(name))) return;
+    const keys = personKeys(name);
+    if (keys.length) people.push({ role, name, keys });
+  };
+  addPerson('ارائه‌دهنده بند', agenda.presenterName || agenda.presenter);
+  addPerson('پیشنهاددهنده', proposal?.proposerName);
+  addPerson('ارائه‌دهنده پیشنهاد', proposal?.presenterName);
+  (agenda.relatedUsers || []).forEach((u) => addPerson('فرد مرتبط با بند', u.fullName));
+  const topics = [agenda.title, agenda.description, agenda.proposedResolutionDraft, proposal?.title, proposal?.description?.slice(0, 300)].filter((t): t is string => Boolean(t && t.trim()));
+  return { agenda, topics, people };
+};
+
+/** میزان ارتباط یک جمله با یک بند + توضیح اینکه از کجا فهمیدیم. */
+const relevance = (sentence: string, profile: AgendaProfile): { score: number; matchedBy: string } => {
+  const ns = ` ${norm(sentence)} `;
+  let best = 0; let matchedBy = '';
+  profile.topics.forEach((topic, index) => {
+    const sim = textSimilarity(sentence, topic);
+    const exact = ns.includes(` ${norm(topic).slice(0, 40)}`) && norm(topic).length > 6;
+    const score = exact ? 1 : sim;
+    if (score > best) { best = score; matchedBy = index === 0 ? `عنوان بند: «${profile.agenda.title}»` : `موضوع بند/پیشنهاد مرتبط: «${topic.slice(0, 60)}»`; }
+  });
+  for (const person of profile.people) {
+    const full = person.keys[0];
+    const hit = ns.includes(` ${full} `) ? 0.95 : person.keys.slice(1).some((k) => ns.includes(` ${k} `)) ? 0.75 : 0;
+    if (hit > best) { best = hit; matchedBy = `${person.role}: ${person.name}`; }
+  }
+  return { score: best, matchedBy };
+};
+
 export const suggestAgendaOutcomes = (meeting: Meeting, transcript: string, actorId?: string): Promise<AiResult<AgendaOutcomeSuggestion[]>> => {
   const agendas = meeting.agendaItems.filter((a) => !a.isRemoved);
+  const profiles = agendas.map(buildProfile);
   const sentences = sentencesOf(transcript);
   const normTranscript = norm(transcript);
+  const empty = (agenda: AgendaItem): AgendaOutcomeSuggestion => ({ agendaItemId: agenda.id, agendaTitle: agenda.title, outcome: null, notes: '', evidence: '', matchedBy: '', reason: '' });
 
-  const local = (): AgendaOutcomeSuggestion[] => agendas.map((agenda) => {
-    // جملاتی که به همین بند مربوط‌اند؛ اگر جلسه یک بند دارد، همه جملات.
-    const related = sentences
-      .map((s) => ({ s, score: textSimilarity(s, agenda.title) }))
-      .filter((x) => agendas.length === 1 || x.score >= 0.12)
-      .sort((a, b) => b.score - a.score)
-      .map((x) => x.s);
-    for (const sentence of related) {
-      const hit = OUTCOME_PATTERNS.find((p) => p.re.test(sentence));
-      if (hit) {
-        const condition = hit.outcome === 'CONDITIONAL' ? sentence.match(/(به شرط|منوط به|مشروط بر)(.+)/)?.[0] : undefined;
-        return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome: hit.outcome, notes: formalizeLocally(condition || sentence), evidence: sentence };
+  const local = (): AgendaOutcomeSuggestion[] => {
+    // هر جمله فقط به مرتبط‌ترین بند نسبت داده می‌شود؛ اگر دو بند هم‌امتیاز باشند (مبهم)، به هیچ‌کدام.
+    const assigned = new Map<string, { sentence: string; index: number; score: number; matchedBy: string }[]>();
+    sentences.forEach((sentence, index) => {
+      const scored = profiles.map((profile) => ({ profile, ...relevance(sentence, profile) })).sort((a, b) => b.score - a.score);
+      const top = scored[0];
+      if (!top) return;
+      const threshold = profiles.length === 1 ? 0 : 0.12;
+      if (top.score < threshold) return;
+      if (scored[1] && scored[1].score >= top.score - 0.02 && top.score < 0.95) return;
+      const list = assigned.get(top.profile.agenda.id) || [];
+      list.push({ sentence, index, score: top.score, matchedBy: top.matchedBy });
+      assigned.set(top.profile.agenda.id, list);
+    });
+    return agendas.map((agenda) => {
+      const related = (assigned.get(agenda.id) || []).sort((a, b) => b.score - a.score);
+      for (const item of related) {
+        // اگر جمله تصمیم ندارد، جمله بعدی (ادامه همان بحث) هم بررسی می‌شود.
+        const window = [item.sentence, sentences[item.index + 1]].filter(Boolean) as string[];
+        for (let w = 0; w < window.length; w++) {
+          const hit = OUTCOME_PATTERNS.find((p) => p.re.test(window[w]));
+          if (!hit) continue;
+          const decisive = window[w];
+          const evidence = w === 0 ? decisive : `${item.sentence} ${decisive}`;
+          const condition = hit.outcome === 'CONDITIONAL' ? decisive.match(/(به شرط|منوط به|مشروط بر)(.+)/)?.[0] : undefined;
+          return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome: hit.outcome, notes: formalizeLocally(condition || decisive), evidence, matchedBy: item.matchedBy, reason: hit.why };
+        }
       }
-    }
-    return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome: null, notes: '', evidence: '' };
-  });
+      return empty(agenda);
+    });
+  };
 
-  if (agendas.length === 0) return Promise.resolve({ data: [], source: 'LOCAL' as const, notice: 'این جلسه بند فعالی ندارد.' });
+  if (agendas.length === 0) return Promise.resolve({ data: [], source: 'LOCAL' as const });
+
+  const describe = (profile: AgendaProfile) => [
+    `- شناسه: ${profile.agenda.id}`,
+    `  عنوان: ${profile.agenda.title}`,
+    ...profile.people.map((p) => `  ${p.role}: ${p.name}`),
+    ...profile.topics.slice(1).map((t) => `  شرح/پیشنهاد مرتبط: ${t.replace(/\s+/g, ' ').slice(0, 300)}`),
+  ].join('\n');
 
   return runAi({
     feature: 'meetingRecorder',
     actorId,
     json: true,
-    maxTokens: 1500,
-    system: 'وظیفه: از روی متن پیاده‌شده گفتار جلسه، تصمیمی را که درباره هر بند دستورکار گرفته شده تشخیص بده. فقط اگر تصمیم صریحاً در متن آمده باشد. خروجی فقط JSON: items (آرایه {agendaItemId: دقیقاً یکی از شناسه‌های بندها, outcome: یکی از APPROVED | NOT_APPROVED | CONDITIONAL | DEFERRED | REFERRED | NEEDS_MORE_REVIEW | NEEDS_REVISION | CLOSED یا null اگر درباره این بند تصمیمی گفته نشده, notes: شرح کوتاه رسمی نتیجه (برای مشروط: شرط؛ برای ارجاع: به کجا), evidence: نقل‌قول دقیق یک جمله از خود متن که مبنای تشخیص است}). هرگز حدس نزن؛ اگر مطمئن نیستی outcome را null بگذار.',
-    messages: [{ role: 'user', content: `بندهای دستورکار:\n${agendas.map((a) => `${a.id}: ${a.title}`).join('\n')}\n\nمتن گفتار جلسه:\n${transcript.slice(0, 20000)}` }],
+    maxTokens: 2200,
+    system: 'وظیفه: از روی متن پیاده‌شده گفتار جلسه، تصمیمی را که درباره هر بند دستورکار گرفته شده تشخیص بده. هر بند فقط با عنوانش شناخته نمی‌شود: ممکن است در گفتار فقط به ارائه‌دهنده، پیشنهاددهنده یا افراد مرتبط آن («پیشنهاد آقای سلیمانی») یا به موضوع/شرح آن اشاره شود؛ همه این مشخصات را در نظر بگیر. نام افراد ممکن است بدون عنوان یا فقط با نام خانوادگی بیاید. فقط اگر تصمیم صریحاً در متن آمده باشد. خروجی فقط JSON: items (آرایه {agendaItemId: دقیقاً یکی از شناسه‌ها, outcome: یکی از APPROVED | NOT_APPROVED | CONDITIONAL | DEFERRED | REFERRED | NEEDS_MORE_REVIEW | NEEDS_REVISION | CLOSED یا null, notes: شرح کوتاه رسمی نتیجه (برای مشروط: شرط؛ برای ارجاع: به کجا؛ برای اصلاح: چه چیزی), evidence: نقل‌قول دقیق و بدون تغییر از خود متن (یک یا دو جمله پشت سر هم) که مبنای تشخیص است, matchedBy: چرا این بخش متن به همین بند مربوط است (مثلاً «ارائه‌دهنده بند: دکتر وحید سلیمانی» یا «عنوان بند»), reason: یک جمله توضیح اینکه چرا از این نقل‌قول چنین نتیجه‌ای گرفته شد}). هرگز حدس نزن؛ اگر مطمئن نیستی یا بحث به دو بند قابل نسبت است outcome را null بگذار.',
+    messages: [{ role: 'user', content: `بندهای دستورکار:\n${profiles.map(describe).join('\n')}\n\nمتن گفتار جلسه:\n${transcript.slice(0, 20000)}` }],
     parse: (text) => {
       const data = extractJson<{ items: Partial<AgendaOutcomeSuggestion>[] }>(text);
       const allowed = AGENDA_OUTCOME_OPTIONS.map((o) => o.value);
-      return agendas.map((agenda) => {
-        const item = (data.items || []).find((i) => i.agendaItemId === agenda.id);
+      const localResult = local();
+      return agendas.map((agenda, i) => {
+        const item = (data.items || []).find((x) => x.agendaItemId === agenda.id);
         const evidence = String(item?.evidence || '').trim();
         // شاهدی که در خود متن نیست پذیرفته نمی‌شود (جلوگیری از ساختگی بودن).
         const grounded = evidence.length > 5 && normTranscript.includes(norm(evidence).slice(0, 40));
         const outcome = item && allowed.includes(item.outcome as AgendaOutcome) && grounded ? item.outcome as AgendaOutcome : null;
-        return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome, notes: outcome ? String(item?.notes || evidence) : '', evidence: outcome ? evidence : '' };
+        if (!outcome) return localResult[i].outcome ? localResult[i] : empty(agenda);
+        return { agendaItemId: agenda.id, agendaTitle: agenda.title, outcome, notes: String(item?.notes || evidence), evidence, matchedBy: String(item?.matchedBy || ''), reason: String(item?.reason || '') };
       });
     },
     fallback: local,

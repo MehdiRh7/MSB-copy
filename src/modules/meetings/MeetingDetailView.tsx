@@ -563,6 +563,15 @@ export const MeetingDetailView: React.FC<MeetingDetailViewProps> = ({ meetingId 
                         </span>
                       )}
                       {ag.outcomeNotes && <div>{ag.outcomeNotes}</div>}
+                      {ag.outcomeEvidence?.quote && (
+                        <div className="mt-1.5 rounded-lg border border-slate-200 bg-white/70 p-2 text-[10.5px] text-slate-600 space-y-0.5">
+                          <div className="font-bold text-slate-700">مرجع در گفتار جلسه:</div>
+                          <div className="border-r-2 border-teal-400 pr-2 text-slate-800">«{ag.outcomeEvidence.quote}»</div>
+                          {ag.outcomeEvidence.matchedBy && <div><b>ارتباط با بند:</b> {ag.outcomeEvidence.matchedBy}</div>}
+                          {ag.outcomeEvidence.reason && <div><b>دلیل برداشت:</b> {ag.outcomeEvidence.reason}</div>}
+                          {ag.outcomeEvidence.audioRange && <div className="text-slate-500">زمان در فایل صوتی جلسه: {toPersianDigits(`${String(Math.floor(ag.outcomeEvidence.audioRange.start / 60)).padStart(2, '0')}:${String(Math.floor(ag.outcomeEvidence.audioRange.start % 60)).padStart(2, '0')}`)} تا {toPersianDigits(`${String(Math.floor(ag.outcomeEvidence.audioRange.end / 60)).padStart(2, '0')}:${String(Math.floor(ag.outcomeEvidence.audioRange.end % 60)).padStart(2, '0')}`)}</div>}
+                        </div>
+                      )}
                     </div>
                   )}
 

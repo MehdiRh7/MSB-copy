@@ -16,7 +16,7 @@ export interface OrganizationProfile {
 export const DEFAULT_ORGANIZATION_PROFILE: OrganizationProfile = {
   name: '',
   systemTitle: 'سامانه مدیریت جلسات و مصوبات',
-  logoUrl: '/pars-project.png',
+  logoUrl: '/tejarat-emblem.png',
   phone: '',
   email: '',
   website: '',
@@ -25,10 +25,15 @@ export const DEFAULT_ORGANIZATION_PROFILE: OrganizationProfile = {
   address: '',
 };
 
-export const getOrganizationProfile = (): OrganizationProfile => ({
-  ...DEFAULT_ORGANIZATION_PROFILE,
-  ...loadLocalValue<Partial<OrganizationProfile>>('organizationProfile', {}),
-});
+/** لوگوهای پیش‌فرض قبلی؛ اگر در تنظیمات ذخیره‌شده مانده باشند، لوگوی پیش‌فرض جدید جایگزین می‌شود. */
+const LEGACY_DEFAULT_LOGOS = ['/pars-project.png', '/postbank.png', '/POSTBANK_PM_LOGO.png', '/POSTBANK_MO_LOGO.png', '/POSTBANK_TM_LOGO.png'];
+
+export const getOrganizationProfile = (): OrganizationProfile => {
+  const saved = loadLocalValue<Partial<OrganizationProfile>>('organizationProfile', {});
+  const profile = { ...DEFAULT_ORGANIZATION_PROFILE, ...saved };
+  if (!profile.logoUrl || LEGACY_DEFAULT_LOGOS.includes(profile.logoUrl)) profile.logoUrl = DEFAULT_ORGANIZATION_PROFILE.logoUrl;
+  return profile;
+};
 
 export const saveOrganizationProfile = (profile: OrganizationProfile): void => {
   saveLocalValue('organizationProfile', profile);
