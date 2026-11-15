@@ -224,7 +224,7 @@ export const Sidebar: React.FC = () => {
     {isMobile && <div className="no-print fixed inset-0 top-[72px] z-40 bg-slate-950/40 backdrop-blur-[2px]" onClick={toggleSidebar} aria-hidden="true" />}
     <aside
       className={`no-print app-surface bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-l border-slate-200 dark:border-slate-800 transition-[width] duration-300 ease-in-out flex flex-col justify-start shrink-0 select-none ${
-        isMobile ? 'fixed right-0 top-[72px] bottom-0 z-50 w-72 shadow-2xl' : `z-30 h-full sticky top-0 shadow-xs relative ${isSidebarCollapsed ? 'w-16' : 'w-64'}`
+        isMobile ? 'fixed right-0 top-[72px] bottom-0 z-50 w-72 shadow-2xl' : `z-30 h-full sticky top-0 shadow-xs relative ${isSidebarCollapsed ? 'w-16' : 'w-56'}`
       }`}
     >
       {/* Floating drawer handle — the primary, always-reachable way to

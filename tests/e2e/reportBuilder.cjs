@@ -41,6 +41,8 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`[${ok ?
   // ===== صفحه گزارش‌ها: ساخت و نمایش =====
   await page.locator('aside, nav').locator('text=گزارش عملکرد').first().click();
   await page.waitForTimeout(900);
+  await page.locator('[role="tab"]', { hasText: 'گزارش‌ساز' }).click();
+  await page.waitForTimeout(400);
   check('بخش «گزارش‌ساز» در صفحه گزارش‌ها هست', await page.locator('text=گزارش‌ساز').count() > 0);
   await page.fill('textarea[aria-label="درخواست گزارش"]', 'یک لیست از همه مصوبات، یک نمودار دایره‌ای از وضعیت مصوبات و یک نمودار میله‌ای از تعداد مصوبات هر واحد');
   await page.locator('button', { hasText: 'ساخت گزارش' }).click();

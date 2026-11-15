@@ -2035,3 +2035,23 @@ html .app-btn-primary:hover, html .app-primary-button:hover { background: linear
 .drawer-switch span { position: absolute; top: 2px; right: 2px; width: calc(1.3rem - 4px); height: calc(1.3rem - 4px); border-radius: 999px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
 .drawer-switch.is-on { background: var(--app-primary); }
 .drawer-switch.is-on span { transform: translateX(-1rem); }
+
+/* ——— همه دکمه‌های رنگی سامانه به سبک سرمه‌ای براق ——— */
+html button[class*="bg-teal-6"], html button[class*="bg-teal-7"], html button[class*="bg-teal-8"],
+html button[class*="bg-blue-6"], html button[class*="bg-blue-7"], html button[class*="bg-indigo-6"], html button[class*="bg-indigo-7"],
+html button[class*="bg-[var(--app-primary)]"], html label[class*="bg-teal-7"], html a[class*="bg-teal-7"] {
+  color: #fff !important;
+  background: linear-gradient(180deg, #4a63a8 0%, #2f4590 55%, #263a76 100%) !important;
+  border: 1px solid #22356c !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 3px 8px -3px rgba(31, 47, 94, 0.55) !important;
+}
+html button[class*="bg-teal-7"]:hover, html button[class*="bg-blue-6"]:hover, html button[class*="bg-[var(--app-primary)]"]:hover { filter: brightness(1.08); }
+/* دکمه‌های لینکی (جلسه جدید، تقویم و...) به شکل دکمه کوچک */
+.db-link { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.3rem 0.7rem !important; border-radius: 8px; font-size: 12px; font-weight: 700; color: #fff !important; text-decoration: none !important;
+  background: linear-gradient(180deg, #4a63a8 0%, #2f4590 55%, #263a76 100%) !important; border: 1px solid #22356c; box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 2px 6px -3px rgba(31,47,94,.55); }
+.db-link:hover { filter: brightness(1.08); }
+/* تب‌های گزارش‌ها */
+.report-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; padding: 0.3rem; border-radius: 12px; background: #fff; border: 1px solid var(--app-border); width: fit-content; }
+.report-tabs button { padding: 0.45rem 1rem; border-radius: 9px; font-size: 13px; font-weight: 600; color: #475569; }
+.report-tabs button:hover { background: #f1f4f9; }
+.report-tabs button.is-active { color: #fff; background: linear-gradient(180deg, #4a63a8 0%, #2f4590 55%, #263a76 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 3px 8px -3px rgba(31,47,94,.55); }
