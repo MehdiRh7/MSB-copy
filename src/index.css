@@ -1983,3 +1983,7 @@ html .infographic-card::before, html .guide-card::before { background: var(--app
 @keyframes drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) { .layout-drawer { animation: none; } }
 .hdr-clock .hdr-clock-time { background: none !important; box-shadow: none !important; padding: 0 !important; border-radius: 0; color: var(--app-ink) !important; font-size: 13px; }
+.layout-drawer { border-radius: 0 !important; }
+.layout-gear { right: 0; top: 50%; transform: translateY(-50%); width: auto; height: auto; padding: 10px 8px 10px 10px; border-radius: 10px 0 0 10px; color: #475569; background: #fff; border: 1px solid var(--app-border); border-right: 0; box-shadow: -2px 2px 8px -4px rgba(20,30,61,.25); }
+.layout-gear:hover { transform: translateY(-50%); color: var(--app-primary); padding-left: 14px; }
+html .fixed.inset-0 > div.layout-drawer, html.theme-glass .fixed.inset-0 > div.layout-drawer.bg-white { border-radius: 0 !important; }
