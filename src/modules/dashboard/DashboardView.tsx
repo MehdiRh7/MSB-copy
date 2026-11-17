@@ -1,3 +1,4 @@
+import { ResolutionDetailModal } from '../resolutions/ResolutionDetailModal';
 import React, { useMemo, useState } from 'react';
 import {
   Activity,
@@ -52,6 +53,7 @@ const TONE_DOT: Record<DashboardActionItem['tone'], string> = { danger: 'bg-red-
 type ResTab = 'overdue' | 'running';
 
 export const DashboardView: React.FC = () => {
+  const [openRes, setOpenRes] = React.useState<string | null>(null);
   const { navigateTo, currentUser, refreshTrigger, hasPermission, openCreateMeetingModal } = useApp();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const model = useMemo(() => buildDashboardModel(currentUser), [currentUser, refreshTrigger]);
@@ -143,7 +145,7 @@ export const DashboardView: React.FC = () => {
       {/* ——— خلاصه امروز و وضعیت مصوبات، کنار هم ——— */}
       {(dash.isVisible('brief') || (dash.isVisible('status') && model.statusBreakdown.length > 0)) && (
         <div className="grid gap-4 lg:grid-cols-3" style={{ order: Math.min(dash.orderOf('brief'), dash.orderOf('status')) }}>
-          {dash.isVisible('brief') && <div className={model.statusBreakdown.length > 0 && dash.isVisible('status') ? 'lg:col-span-2' : 'lg:col-span-3'}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => { if (model.overdue[0]) navigateTo('resolutions', { resolutionId: model.overdue[0].id }); else if (model.actionItems[0]) navigateTo(model.actionItems[0].route, model.actionItems[0].params); else navigateTo('resolutions'); }} /></div>}
+          {dash.isVisible('brief') && <div className={model.statusBreakdown.length > 0 && dash.isVisible('status') ? 'lg:col-span-2' : 'lg:col-span-3'}><AiDailyBrief user={currentUser} model={model} onOpenTodo={() => { if (model.overdue[0]) setOpenRes(model.overdue[0].id); else if (model.actionItems[0]) navigateTo(model.actionItems[0].route, model.actionItems[0].params); else navigateTo('resolutions'); }} /></div>}
           {dash.isVisible('status') && model.statusBreakdown.length > 0 && (
             <section className={`db-card ${dash.isVisible('brief') ? '' : 'lg:col-span-3'}`}>
               <header className="db-card-head">
@@ -246,7 +248,7 @@ export const DashboardView: React.FC = () => {
                   const progress = Math.max(0, Math.min(100, r.progressPercent || 0));
                   return (
                     <li key={r.id}>
-                      <button onClick={() => navigateTo('resolutions', { resolutionId: r.id })} className={`db-res ${late ? 'db-res-late' : ''}`}>
+                      <button onClick={() => setOpenRes(r.id)} className={`db-res ${late ? 'db-res-late' : ''}`}>
                         <span className="min-w-0 flex-1 text-right">
                           <span className="block truncate text-[13px] font-bold text-slate-800">{r.topicTitle}</span>
                           <span className="block truncate text-[12px] text-slate-500">{r.mainResponsibleName || '—'} · {r.responsibleDepartmentName || ''}</span>
@@ -326,7 +328,7 @@ export const DashboardView: React.FC = () => {
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {model.activity.slice(0, 6).map((l) => (
               <li key={l.id}>
-                <button onClick={() => (l.targetType === 'MEETING' ? navigateTo('meeting-details', { meetingId: l.targetId }) : navigateTo('resolutions', { resolutionId: l.targetId }))} className="db-activity">
+                <button onClick={() => (l.targetType === 'MEETING' ? navigateTo('meeting-details', { meetingId: l.targetId }) : setOpenRes(l.targetId))} className="db-activity">
                   <span className="block truncate text-[13px] font-bold text-slate-800">{l.action}</span>
                   <span className="block truncate text-[11px] text-slate-500">{l.actorName} · {toPersianDigits(l.timestampJalali)}</span>
                 </button>
@@ -335,6 +337,7 @@ export const DashboardView: React.FC = () => {
           </ul>
         </section>
       )}
+      <ResolutionDetailModal resolutionId={openRes} onClose={() => setOpenRes(null)} />
     </div>
   );
 };
