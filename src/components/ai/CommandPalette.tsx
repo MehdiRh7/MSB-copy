@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Archive, BarChart3, Bell, BookOpen, Bot, Calendar, CalendarDays, ClipboardCheck, Command, CornerDownLeft, FileText, Gavel,
-  LayoutDashboard, Lightbulb, ListTodo, Loader2, Moon, Plus, Search, Send, Settings, Sun, Users, Zap,
+  LayoutDashboard, Lightbulb, ListTodo, Loader2, Moon, Plus, Search, Send, Settings, Sun, Users, X, Zap,
 } from 'lucide-react';
 import { AppRoute, useApp } from '../../context/AppContext';
 import { loadLocalCollection, loadLocalValue } from '../../services/localStore';
@@ -149,7 +149,7 @@ export const CommandPalette: React.FC = () => {
             className="flex-1 bg-transparent text-sm text-slate-800 placeholder-slate-400 focus:outline-none"
           />
           <VoiceInputButton className="p-2" onText={(text, isFinal) => { setQuery(text); if (isFinal && aiCommand) runNaturalLanguage(text); }} />
-          <kbd className="hidden sm:inline text-[11px] font-bold text-slate-400 border border-slate-200 rounded-md px-1.5 py-0.5">Esc</kbd>
+          <button type="button" onClick={close} aria-label="بستن" title="بستن (Esc)" className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"><X className="w-4 h-4" /></button>
         </div>
         <div className="max-h-[60vh] overflow-y-auto p-2 space-y-2">
           {filteredCommands.map((c, i) => {

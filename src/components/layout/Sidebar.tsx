@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
+import { PanelRightClose, PanelRightOpen,
   LayoutDashboard,
   Calendar,
   FileCheck2,
@@ -233,12 +233,12 @@ export const Sidebar: React.FC = () => {
       <button
         onClick={toggleSidebar}
         title={!showLabels ? 'باز کردن منو' : 'جمع کردن منو'}
-        className="group absolute top-6 -left-3 z-40 w-6 h-6 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-md hidden md:flex items-center justify-center text-slate-400 hover:text-white hover:bg-teal-700 hover:border-teal-700 dark:hover:bg-teal-600 dark:hover:border-teal-600 transition-all duration-200 cursor-pointer hover:scale-110 active:scale-95"
+        aria-label={!showLabels ? 'باز کردن منو' : 'جمع کردن منو'} className="sidebar-toggle group absolute top-[8.4rem] -left-3.5 z-50 w-7 h-7 rounded-lg hidden md:flex items-center justify-center cursor-pointer"
       >
         {!showLabels ? (
-          <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
+          <PanelRightOpen className="w-4 h-4" />
         ) : (
-          <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+          <PanelRightClose className="w-4 h-4" />
         )}
       </button>
 
