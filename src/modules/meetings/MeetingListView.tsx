@@ -182,7 +182,7 @@ export const MeetingListView: React.FC = () => {
                     <span className="text-[12px] font-medium text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
                       {getMeetingTypeLabel(meeting.type)}
                     </span>
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusMeta.bg}`}>
+                    <span className={`inline-flex whitespace-nowrap items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${statusMeta.bg}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${statusMeta.dot}`}></span>
                       <span>{statusMeta.label}</span>
                     </span>
@@ -247,7 +247,7 @@ export const MeetingListView: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {meetings.length === 0 ? <tr><td colSpan={7} className="p-10 text-center text-slate-500">{allMeetingsCount === 0 ? 'هنوز جلسه‌ای ثبت نشده است.' : 'نتیجه‌ای برای فیلتر پیدا نشد.'}</td></tr> : meetings.map((meeting) => {
                 const statusMeta = getMeetingStatusMeta(meeting.status);
-                return <tr key={meeting.id} onClick={() => navigateTo('meeting-details', { meetingId: meeting.id })} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{meeting.meetingNumber}</td><td className="p-3"><div className="font-bold text-slate-800">{meeting.title}</div><div className="mt-1 text-[11px] text-slate-500">{getMeetingTypeLabel(meeting.type)}</div></td><td className="p-3 text-slate-600">{toPersianDigits(meeting.dateJalali)}، {toPersianDigits(meeting.startTime)}</td><td className="p-3 text-slate-600">{meeting.organizerName}</td><td className="p-3 text-slate-600">{meeting.location}</td><td className="p-3">{toPersianDigits(meeting.resolutionsCount)}</td><td className="p-3"><span className={`px-2 py-1 rounded-full border font-bold ${statusMeta.bg}`}>{statusMeta.label}</span></td></tr>;
+                return <tr key={meeting.id} onClick={() => navigateTo('meeting-details', { meetingId: meeting.id })} className="hover:bg-slate-50 cursor-pointer transition-colors"><td className="p-3 font-bold text-blue-700">{meeting.meetingNumber}</td><td className="p-3"><div className="font-bold text-slate-800">{meeting.title}</div><div className="mt-1 text-[11px] text-slate-500">{getMeetingTypeLabel(meeting.type)}</div></td><td className="p-3 text-slate-600">{toPersianDigits(meeting.dateJalali)}، {toPersianDigits(meeting.startTime)}</td><td className="p-3 text-slate-600">{meeting.organizerName}</td><td className="p-3 text-slate-600">{meeting.location}</td><td className="p-3">{toPersianDigits(meeting.resolutionsCount)}</td><td className="p-3"><span className={`inline-block whitespace-nowrap px-2.5 py-1 rounded-full border font-bold ${statusMeta.bg}`}>{statusMeta.label}</span></td></tr>;
               })}
             </tbody>
           </table>
